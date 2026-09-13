@@ -42,7 +42,7 @@ namespace BeatLeader.API {
             var tokenProvider = new PlatformAuthenticationTokenProvider(platformUserModel, userInfo);
 
             return Platform switch {
-                AuthPlatform.Steam    => (await tokenProvider.GetAuthenticationToken()).sessionToken,
+                AuthPlatform.Steam    => (await tokenProvider.GetXPlatformAccessToken(CancellationToken.None)).token,
                 AuthPlatform.OculusPC => (await tokenProvider.GetXPlatformAccessToken(CancellationToken.None)).token,
                 _                     => throw new ArgumentOutOfRangeException()
             };

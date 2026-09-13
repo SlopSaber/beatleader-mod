@@ -67,11 +67,7 @@ namespace BeatLeader.Replayer {
         private static SettingsManager? _settingsManager;
 
         private void Awake() {
-            if (!_standardLevelScenesTransitionSetupDataSo) {
-                _standardLevelScenesTransitionSetupDataSo = Resources
-                    .FindObjectsOfTypeAll<StandardLevelScenesTransitionSetupDataSO>()
-                    .First();
-            }
+            _standardLevelScenesTransitionSetupDataSo ??= new StandardLevelScenesTransitionSetupData();
 
             if (_settingsManager == null) {
                 _settingsManager = Resources

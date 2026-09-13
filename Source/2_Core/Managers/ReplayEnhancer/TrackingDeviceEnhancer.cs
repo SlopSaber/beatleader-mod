@@ -15,20 +15,10 @@ namespace BeatLeader.Core.Managers.ReplayEnhancer {
         private IVRPlatformHelper _vrPlatformHelper;
 
         public void Enhance(Replay replay) {
-            var trackingSystem = _vrPlatformHelper.vrPlatformSDK;
-            replay.info.trackingSytem = trackingSystem.ToString();
-
-            switch (trackingSystem) {
-                case VRPlatformSDK.OpenXR:
-                    ProcessOpenXRControllers(replay);
-                    ProcessOpenXRHeadsetWithFallback(replay);
-                    ProcessOpenVRSettings(replay);
-                    
-                    break;
-                case VRPlatformSDK.Unknown:
-                    ProcessUnknownDevices(replay);
-                    break;
-            }
+            replay.info.trackingSytem = "OpenXR";
+            ProcessOpenXRControllers(replay);
+            ProcessOpenXRHeadsetWithFallback(replay);
+            ProcessOpenVRSettings(replay);
         }
 
         #endregion

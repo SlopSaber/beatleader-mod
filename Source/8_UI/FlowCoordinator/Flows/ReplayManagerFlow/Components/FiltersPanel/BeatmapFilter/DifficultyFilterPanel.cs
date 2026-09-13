@@ -47,7 +47,10 @@ namespace BeatLeader.UI.Hub {
 
         public void SetCharacteristic(BeatmapCharacteristicSO characteristic) {
             _characteristic = characteristic;
-            var sets = _beatmapLevel?.GetDifficulties(characteristic).ToArray();
+            var currentCharacteristic = Enum.GetValues(typeof(BeatmapCharacteristic))
+                .Cast<BeatmapCharacteristic>()
+                .FirstOrDefault(x => x.SerializedName() == characteristic.serializedName);
+            var sets = _beatmapLevel?.GetDifficulties(currentCharacteristic).ToArray();
             _difficultyPanel.SetData(sets);
         }
 

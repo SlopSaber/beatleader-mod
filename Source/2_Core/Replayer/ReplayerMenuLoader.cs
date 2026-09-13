@@ -7,11 +7,9 @@ using BeatLeader.DataManager;
 using BeatLeader.Interop;
 using BeatLeader.Models;
 using BeatLeader.Models.AbstractReplay;
-using BeatLeader.Models.AbstractReplay;
 using BeatLeader.Models.Replay;
 using BeatLeader.UI.Hub;
 using BeatLeader.Utils;
-using BeatSaber.BeatAvatarSDK;
 using BeatSaber.BeatAvatarSDK;
 using JetBrains.Annotations;
 using ModestTree;
@@ -354,11 +352,11 @@ namespace BeatLeader.Replayer {
             if (beatmapLevel == null) return default;
 
             var characteristic = beatmapLevel.GetCharacteristics()
-                .FirstOrDefault(x => x.serializedName == mode);
-            if (characteristic == null || token.IsCancellationRequested) return default;
+                .FirstOrDefault(x => x.SerializedName() == mode);
+            if (token.IsCancellationRequested) return default;
 
             var beatmapKey = beatmapLevel.GetBeatmapKeys()
-                .FirstOrDefault(k => k.beatmapCharacteristic == characteristic && k.difficulty == cdifficulty);
+                .FirstOrDefault(k => k.characteristic == characteristic && k.difficulty == cdifficulty);
             if (beatmapKey == null || token.IsCancellationRequested) return default;
 
             _cachedBeatmap = new(beatmapLevel, beatmapKey);

@@ -2,11 +2,19 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <OutputType>Library</OutputType>
+    <BSMTProjectType>BSIPA</BSMTProjectType>
     <LocalRefsDir Condition="Exists('..\Refs')">..\Refs</LocalRefsDir>
     <BeatSaberDir>$(LocalRefsDir)</BeatSaberDir>
     <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <ReactiveBeatSaberComponentsPath Condition="Exists('$(BeatSaberDir)\Plugins\Reactive.BeatSaber.Components.dll')">$(BeatSaberDir)\Plugins\Reactive.BeatSaber.Components.dll</ReactiveBeatSaberComponentsPath>
+    <ReactiveBeatSaberComponentsPath Condition="'$(ReactiveBeatSaberComponentsPath)' == '' AND Exists('D:\BSManager\BSInstances\1.44.0\Plugins\Reactive.BeatSaber.Components.dll')">D:\BSManager\BSInstances\1.44.0\Plugins\Reactive.BeatSaber.Components.dll</ReactiveBeatSaberComponentsPath>
+    <ReactiveComponentsPath Condition="Exists('$(BeatSaberDir)\Libs\Reactive.Components.dll')">$(BeatSaberDir)\Libs\Reactive.Components.dll</ReactiveComponentsPath>
+    <ReactiveComponentsPath Condition="'$(ReactiveComponentsPath)' == '' AND Exists('D:\BSManager\BSInstances\1.44.0\Libs\Reactive.Components.dll')">D:\BSManager\BSInstances\1.44.0\Libs\Reactive.Components.dll</ReactiveComponentsPath>
+    <ReactivePath Condition="Exists('$(BeatSaberDir)\Libs\Reactive.dll')">$(BeatSaberDir)\Libs\Reactive.dll</ReactivePath>
+    <ReactivePath Condition="'$(ReactivePath)' == '' AND Exists('D:\BSManager\BSInstances\1.44.0\Libs\Reactive.dll')">D:\BSManager\BSInstances\1.44.0\Libs\Reactive.dll</ReactivePath>
+    <NoWarn>$(NoWarn);CS0067;CS0108;CS0109;CS0168;CS0169;CS0414;CS0612;CS0618;CS0649;CS4014;CS8600;CS8601;CS8602;CS8603;CS8604;CS8622;CS8625;CS8629;CS8632;MA0009;MA0012;MA0015;MA0016;MA0025;MA0026;MA0062;MA0065;MA0134</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <Copyright>Copyright © 2024</Copyright>
@@ -31,15 +39,15 @@
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="Reactive.BeatSaber.Components">
-      <HintPath>$(BeatSaberDir)\Plugins\Reactive.BeatSaber.Components.dll</HintPath>
+      <HintPath>$(ReactiveBeatSaberComponentsPath)</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Reactive.Components">
-      <HintPath>$(BeatSaberDir)\Libs\Reactive.Components.dll</HintPath>
+      <HintPath>$(ReactiveComponentsPath)</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Reactive">
-      <HintPath>$(BeatSaberDir)\Libs\Reactive.dll</HintPath>
+      <HintPath>$(ReactivePath)</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AdditionalContentModel.Interfaces">
@@ -56,13 +64,18 @@
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="BeatSaber.GameSettings">
-      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.GameSettings.dll</HintPath>
+    <Reference Include="BeatSaber.Audio.Common">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.Audio.Common.dll</HintPath>
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="BeatSaber.PerformancePresets">
-      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.PerformancePresets.dll</HintPath>
+    <Reference Include="BeatSaber.Common.Pause">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.Common.Pause.dll</HintPath>
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="BeatSaber.GameSettings">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.GameSettings.dll</HintPath>
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
@@ -180,15 +193,6 @@
       <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Networking.dll</HintPath>
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="Oculus.Platform">
-      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Oculus.Platform.dll</HintPath>
-      <Private>False</Private>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="Oculus.VR">
-      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Oculus.VR.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="PlatformUserModel">
       <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\PlatformUserModel.dll</HintPath>

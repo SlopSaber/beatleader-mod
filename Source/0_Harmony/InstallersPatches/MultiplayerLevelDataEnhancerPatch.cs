@@ -12,7 +12,7 @@ namespace BeatLeader {
             MapEnhancer.beatmapLevel = beatmapLevel;
             MapEnhancer.gameplayModifiers = gameplayModifiers;
             MapEnhancer.playerSpecificSettings = playerSpecificSettings;
-            MapEnhancer.environmentName = beatmapLevel.GetEnvironmentName(beatmapKey.beatmapCharacteristic, beatmapKey.difficulty);
+            MapEnhancer.environmentName = beatmapLevel.GetEnvironmentName(beatmapKey.characteristic, beatmapKey.difficulty);
             MapEnhancer.colorScheme = overrideColorScheme;
         }
     }
