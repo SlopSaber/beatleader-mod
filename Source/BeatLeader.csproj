@@ -8,8 +8,8 @@
     <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <ReactiveBeatSaberComponentsPath Condition="Exists('$(BeatSaberDir)\Plugins\Reactive.BeatSaber.Components.dll')">$(BeatSaberDir)\Plugins\Reactive.BeatSaber.Components.dll</ReactiveBeatSaberComponentsPath>
-    <ReactiveBeatSaberComponentsPath Condition="'$(ReactiveBeatSaberComponentsPath)' == '' AND Exists('D:\BSManager\BSInstances\1.44.0\Plugins\Reactive.BeatSaber.Components.dll')">D:\BSManager\BSInstances\1.44.0\Plugins\Reactive.BeatSaber.Components.dll</ReactiveBeatSaberComponentsPath>
+    <ReactiveBeatSaberPath Condition="Exists('$(BeatSaberDir)\Plugins\Reactive.BeatSaber.dll')">$(BeatSaberDir)\Plugins\Reactive.BeatSaber.dll</ReactiveBeatSaberPath>
+    <ReactiveBeatSaberPath Condition="'$(ReactiveBeatSaberPath)' == '' AND Exists('D:\BSManager\BSInstances\1.44.0\Plugins\Reactive.BeatSaber.dll')">D:\BSManager\BSInstances\1.44.0\Plugins\Reactive.BeatSaber.dll</ReactiveBeatSaberPath>
     <ReactiveComponentsPath Condition="Exists('$(BeatSaberDir)\Libs\Reactive.Components.dll')">$(BeatSaberDir)\Libs\Reactive.Components.dll</ReactiveComponentsPath>
     <ReactiveComponentsPath Condition="'$(ReactiveComponentsPath)' == '' AND Exists('D:\BSManager\BSInstances\1.44.0\Libs\Reactive.Components.dll')">D:\BSManager\BSInstances\1.44.0\Libs\Reactive.Components.dll</ReactiveComponentsPath>
     <ReactivePath Condition="Exists('$(BeatSaberDir)\Libs\Reactive.dll')">$(BeatSaberDir)\Libs\Reactive.dll</ReactivePath>
@@ -38,8 +38,8 @@
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="Reactive.BeatSaber.Components">
-      <HintPath>$(ReactiveBeatSaberComponentsPath)</HintPath>
+    <Reference Include="Reactive.BeatSaber">
+      <HintPath>$(ReactiveBeatSaberPath)</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Reactive.Components">
