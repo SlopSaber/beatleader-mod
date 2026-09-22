@@ -30,7 +30,7 @@ namespace BeatLeader.Interop {
         private static void Init() {
             _startParametersConstructor = _startParametersType
                 .GetConstructors()
-                .First(x => x.GetParameters().Length > 1);
+                .First(x => x.GetParameters().Any(parameter => parameter.Name == "beatmapKey"));
         }
 
         public static object CreateStartData(
@@ -44,27 +44,30 @@ namespace BeatLeader.Interop {
             if (!IsInstalled) {
                 throw new InvalidOperationException("Heck is not installed");
             }
-            return _startParametersConstructor.Invoke(
-                new object?[] {
-                    gameMode,
-                    beatmapKey,
-                    beatmapLevel,
-                    overrideEnvironmentSettings,
-                    null, // overrideColorScheme
-                    null, // playerOverrideLightshowColors
-                    gameplayModifiers,
-                    playerSpecificSettings,
-                    null, // practiceSettings
-                    null, // environmentsListModel
-                    null, // gameplayAdditionalInformation
-                    null, // beforeSceneSwitchToGameplayCallback
-                    null, // afterSceneSwitchToGameplayCallback
-                    null, // levelFinishedCallback
-                    null, // levelRestartedCallback
-                    null, // beatmapLevelData
-                    null  // recordingToolData
-                }
-            );
+            // Heck follows the game's launch signature. In 1.45.1 the trailing
+            // recordingToolData parameter was removed; older builds still have it.
+            // Bind known parameters by name so optional plugin versions can coexist.
+            var parameters = _startParametersConstructor.GetParameters();
+            var arguments = new object?[parameters.Length];
+            for (var i = 0; i < parameters.Length; i++) {
+                var parameter = parameters[i];
+                arguments[i] = parameter.Name switch {
+                    "gameMode" => gameMode,
+                    "beatmapKey" => beatmapKey,
+                    "beatmapLevel" => beatmapLevel,
+                    "overrideEnvironmentSettings" => overrideEnvironmentSettings,
+                    "playerOverrideLightshowColors" => false,
+                    "gameplayModifiers" => gameplayModifiers,
+                    "playerSpecificSettings" => playerSpecificSettings,
+                    "overrideColorScheme" or "practiceSettings" or "environmentsListModel"
+                        or "gameplayAdditionalInformation" or "beforeSceneSwitchToGameplayCallback"
+                        or "afterSceneSwitchToGameplayCallback" or "levelFinishedCallback"
+                        or "levelRestartedCallback" or "beatmapLevelData" or "recordingToolData" => null,
+                    _ when parameter.HasDefaultValue => parameter.DefaultValue,
+                    _ => throw new NotSupportedException($"Unsupported Heck replay launch parameter: {parameter.Name}")
+                };
+            }
+            return _startParametersConstructor.Invoke(arguments);
         }
     }
 }
