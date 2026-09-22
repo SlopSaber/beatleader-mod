@@ -22,7 +22,7 @@ namespace BeatLeader.WebRequests {
             IWebRequestResponseParser<T>? requestResponseParser,
             CancellationToken token
         ) {
-            ValidateHttpMessage(requestMessage);
+            if (requestParams.RetryCount == 0) ValidateHttpMessage(requestMessage);
             _sendCallback = sendCallback;
             _requestMessage = requestMessage;
             RequestParams = requestParams;
@@ -193,7 +193,31 @@ namespace BeatLeader.WebRequests {
             using var timeoutTokenSource = GetTimeoutTokenSource(TimeSpan.FromSeconds(timeout), token);
             var linkedToken = timeoutTokenSource?.Token ?? token;
             try {
-                return await sendCallback(_requestMessage, linkedToken);
+                if (RequestParams.RetryCount == 0) {
+                    return await sendCallback(_requestMessage, linkedToken);
+                }
+
+                // HttpClient permits each message to be sent only once. Keep the
+                // original as a template and replay a buffered body for each attempt.
+                using var attempt = new HttpRequestMessage(_requestMessage.Method, _requestMessage.RequestUri) {
+                    Version = _requestMessage.Version
+                };
+                foreach (var header in _requestMessage.Headers) {
+                    attempt.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                }
+                foreach (var property in _requestMessage.Properties) {
+                    attempt.Properties[property.Key] = property.Value;
+                }
+                if (_requestMessage.Content != null) {
+                    _retryBody ??= await _requestMessage.Content.ReadAsByteArrayAsync();
+                    linkedToken.ThrowIfCancellationRequested();
+                    attempt.Content = new ByteArrayContent(_retryBody);
+                    foreach (var header in _requestMessage.Content.Headers) {
+                        attempt.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                    }
+                    ValidateHttpMessage(attempt);
+                }
+                return await sendCallback(attempt, linkedToken);
             } catch (OperationCanceledException) when (!token.IsCancellationRequested) {
                 throw new TimeoutException($"The request has failed after {timeout}s");
             } catch (WebException ex) when (
@@ -219,6 +243,7 @@ namespace BeatLeader.WebRequests {
 
         private Task<HttpResponseMessage?> _requestTask;
         private readonly HttpRequestMessage _requestMessage;
+        private byte[]? _retryBody;
         private readonly SendRequestDelegate _sendCallback;
         private readonly Task _processTask;
         

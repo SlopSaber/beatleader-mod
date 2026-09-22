@@ -29,6 +29,11 @@ namespace BeatLeader.WebRequests {
             await StreamUtils.CopyToByBufferAsync(inputStream, stream, _descriptor, contentLength);
         }
 
+        protected override void Dispose(bool disposing) {
+            if (disposing) _content.Dispose();
+            base.Dispose(disposing);
+        }
+
         protected override bool TryComputeLength(out long length) {
             length = _content.Headers.ContentLength.GetValueOrDefault();
             return true;
