@@ -9,11 +9,11 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ReactiveBeatSaberPath Condition="Exists('$(BeatSaberDir)\Plugins\Reactive.BeatSaber.dll')">$(BeatSaberDir)\Plugins\Reactive.BeatSaber.dll</ReactiveBeatSaberPath>
-    <ReactiveBeatSaberPath Condition="'$(ReactiveBeatSaberPath)' == '' AND Exists('D:\BSManager\BSInstances\1.44.0\Plugins\Reactive.BeatSaber.dll')">D:\BSManager\BSInstances\1.44.0\Plugins\Reactive.BeatSaber.dll</ReactiveBeatSaberPath>
+    <ReactiveBeatSaberPath Condition="'$(ReactiveBeatSaberPath)' == '' AND Exists('$(BeatSaberDir)\Plugins\Reactive.BeatSaber.dll')">$(BeatSaberDir)\Plugins\Reactive.BeatSaber.dll</ReactiveBeatSaberPath>
     <ReactiveComponentsPath Condition="Exists('$(BeatSaberDir)\Libs\Reactive.Components.dll')">$(BeatSaberDir)\Libs\Reactive.Components.dll</ReactiveComponentsPath>
-    <ReactiveComponentsPath Condition="'$(ReactiveComponentsPath)' == '' AND Exists('D:\BSManager\BSInstances\1.44.0\Libs\Reactive.Components.dll')">D:\BSManager\BSInstances\1.44.0\Libs\Reactive.Components.dll</ReactiveComponentsPath>
+    <ReactiveComponentsPath Condition="'$(ReactiveComponentsPath)' == '' AND Exists('$(BeatSaberDir)\Libs\Reactive.Components.dll')">$(BeatSaberDir)\Libs\Reactive.Components.dll</ReactiveComponentsPath>
     <ReactivePath Condition="Exists('$(BeatSaberDir)\Libs\Reactive.dll')">$(BeatSaberDir)\Libs\Reactive.dll</ReactivePath>
-    <ReactivePath Condition="'$(ReactivePath)' == '' AND Exists('D:\BSManager\BSInstances\1.44.0\Libs\Reactive.dll')">D:\BSManager\BSInstances\1.44.0\Libs\Reactive.dll</ReactivePath>
+    <ReactivePath Condition="'$(ReactivePath)' == '' AND Exists('$(BeatSaberDir)\Libs\Reactive.dll')">$(BeatSaberDir)\Libs\Reactive.dll</ReactivePath>
     <NoWarn>$(NoWarn);CS0067;CS0108;CS0109;CS0168;CS0169;CS0414;CS0612;CS0618;CS0649;CS4014;CS8600;CS8601;CS8602;CS8603;CS8604;CS8622;CS8625;CS8629;CS8632;MA0009;MA0012;MA0015;MA0016;MA0025;MA0026;MA0062;MA0065;MA0134</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
