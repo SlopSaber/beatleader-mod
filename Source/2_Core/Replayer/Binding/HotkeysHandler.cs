@@ -11,6 +11,7 @@ namespace BeatLeader.Replayer.Binding {
             new LayoutEditorModeHotkey(),
             new HideCursorHotkey(),
             new PauseHotkey(),
+            new ExitHotkey(),
             new RewindBackwardHotkey(),
             new RewindForwardHotkey()
         };
