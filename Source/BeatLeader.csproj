@@ -74,10 +74,6 @@
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="BeatSaber.Destinations">
-      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.Destinations.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="BeatSaber.Common.Pause">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.Common.Pause.dll</HintPath>
       <Private>False</Private>
