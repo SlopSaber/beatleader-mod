@@ -11,6 +11,7 @@ namespace BeatLeader.Replayer {
         [Inject] private readonly StandardLevelGameplayManager.InitData _gameplayManagerInitData = null!;
         [Inject] private readonly StandardLevelGameplayManager _gameplayManager = null!;
         [Inject] private readonly PauseController _pauseController = null!;
+        [Inject] private readonly IReturnToMenuController _returnToMenuController = null!;
         [Inject] private readonly ReplayLaunchData _launchData = null!;
         [Inject] private readonly GameSongController _songController = null!;
         [Inject] private readonly IGameEnergyCounter _gameEnergyCounter = null!;
@@ -53,7 +54,7 @@ namespace BeatLeader.Replayer {
         public void Exit() {
             ReplayWasLeftEvent?.Invoke();
             Plugin.Log.Notice("[Replayer] Returning to menu");
-            _pauseController.GetField<StandardLevelReturnToMenuController, PauseController>("_returnToMenuController").ReturnToMenu();
+            _returnToMenuController.ReturnToMenu();
         }
 
         private void HandleLevelFinished() {
