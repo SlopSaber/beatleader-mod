@@ -38,6 +38,10 @@ namespace BeatLeader.Replayer.Tweaking {
                     Plugin.Log.Notice("[Replayer] Restored audio listener on replay camera");
                 }
             }
+            var listeners = Resources.FindObjectsOfTypeAll<AudioListener>()
+                .Where(listener => listener.isActiveAndEnabled)
+                .Select(listener => listener.name);
+            Plugin.Log.Notice($"[Replayer] Audio listeners: {string.Join(", ", listeners)}; paused={AudioListener.pause}; volume={AudioListener.volume}");
         }
         public override void Dispose() {
             if (_replayAudioListener != null) {

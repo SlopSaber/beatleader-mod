@@ -9,6 +9,7 @@ namespace BeatLeader.Replayer.Binding {
         public override KeyCode Key => KeyCode.Escape;
 
         public override void OnKeyDown() {
+            Plugin.Log.Notice("[Replayer] Escape pressed");
             _finishController.Exit();
         }
     }

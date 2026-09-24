@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using IPA.Utilities;
 using UnityEngine;
 using Zenject;
@@ -66,6 +67,17 @@ namespace BeatLeader.Replayer {
             _callbacksInTimes = _beatmapCallbacksController
                 .GetField<Dictionary<float, CallbacksInTime>, BeatmapCallbacksController>("_callbacksInTimes");
             _audioTimeSyncController.Start();
+        }
+
+        protected void Start() {
+            StartCoroutine(LogAudioState());
+        }
+
+        private IEnumerator LogAudioState() {
+            yield return new WaitForSecondsRealtime(2f);
+            if (_beatmapAudioSource == null) yield break;
+
+            Plugin.Log.Notice($"[Replayer] Music source: state={_audioTimeSyncController.state}; playing={_beatmapAudioSource.isPlaying}; mute={_beatmapAudioSource.mute}; volume={_beatmapAudioSource.volume}; spatialBlend={_beatmapAudioSource.spatialBlend}; clip={_beatmapAudioSource.clip?.name}; clipState={_beatmapAudioSource.clip?.loadState}; mixer={_beatmapAudioSource.outputAudioMixerGroup?.name}; listenerPaused={AudioListener.pause}; listenerVolume={AudioListener.volume}");
         }
 
         private void OnDestroy() {
