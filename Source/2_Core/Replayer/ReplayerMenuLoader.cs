@@ -269,6 +269,7 @@ namespace BeatLeader.Replayer {
         }
 
         private void HandleReplayWasFinished(StandardLevelScenesTransitionSetupDataSO transitionData, ReplayLaunchData launchData) {
+            Plugin.Log.Notice("[Replayer] Popping replay scenes");
             launchData.ReplayWasFinishedEvent -= HandleReplayWasFinished;
             _scenesManager.PopScenes(0.3f);
 

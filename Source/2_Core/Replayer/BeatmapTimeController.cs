@@ -77,7 +77,18 @@ namespace BeatLeader.Replayer {
             yield return new WaitForSecondsRealtime(2f);
             if (_beatmapAudioSource == null) yield break;
 
-            Plugin.Log.Notice($"[Replayer] Music source: state={_audioTimeSyncController.state}; playing={_beatmapAudioSource.isPlaying}; mute={_beatmapAudioSource.mute}; volume={_beatmapAudioSource.volume}; spatialBlend={_beatmapAudioSource.spatialBlend}; clip={_beatmapAudioSource.clip?.name}; clipState={_beatmapAudioSource.clip?.loadState}; mixer={_beatmapAudioSource.outputAudioMixerGroup?.name}; listenerPaused={AudioListener.pause}; listenerVolume={AudioListener.volume}");
+            var clip = _beatmapAudioSource.clip;
+            var mixer = _beatmapAudioSource.outputAudioMixerGroup?.audioMixer;
+            var mainDb = float.NaN;
+            var musicDb = float.NaN;
+            if (mixer != null) {
+                mixer.GetFloat("MainVolume", out mainDb);
+                mixer.GetFloat("MusicVolume", out musicDb);
+            }
+            var listeners = Resources.FindObjectsOfTypeAll<AudioListener>()
+                .Where(listener => listener.isActiveAndEnabled)
+                .Select(listener => listener.name);
+            Plugin.Log.Notice($"[Replayer] Music source: state={_audioTimeSyncController.state}; playing={_beatmapAudioSource.isPlaying}; mute={_beatmapAudioSource.mute}; volume={_beatmapAudioSource.volume}; spatialBlend={_beatmapAudioSource.spatialBlend}; clipSamples={clip?.samples}; clipState={clip?.loadState}; mixer={_beatmapAudioSource.outputAudioMixerGroup?.name}; mainDb={mainDb}; musicDb={musicDb}; mainFade={_audioManager.mainVolumeFade}; listenerPaused={AudioListener.pause}; listenerVolume={AudioListener.volume}; listeners={string.Join(", ", listeners)}");
         }
 
         private void OnDestroy() {

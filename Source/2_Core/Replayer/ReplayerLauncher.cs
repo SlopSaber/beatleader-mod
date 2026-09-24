@@ -140,6 +140,7 @@ namespace BeatLeader.Replayer {
             StandardLevelScenesTransitionSetupDataSO transitionData,
             LevelCompletionResults completionResults
         ) {
+            Plugin.Log.Notice("[Replayer] Level finish received");
             transitionData.didFinishEvent -= HandleLevelFinish;
             LaunchData?.FinishReplay(transitionData);
             ReplayWasFinishedEvent?.Invoke(LaunchData!);

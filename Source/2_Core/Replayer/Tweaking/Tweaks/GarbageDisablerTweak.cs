@@ -1,5 +1,6 @@
 ﻿using BeatLeader.Utils;
 using BeatLeader.Models;
+using System;
 using System.Linq;
 using UnityEngine;
 using VRUIControls;
@@ -16,7 +17,9 @@ namespace BeatLeader.Replayer.Tweaking {
         [FirstResource] 
         private readonly VRLaserPointer _pointer;
 
+        private AudioListener[] _disabledAudioListeners = Array.Empty<AudioListener>();
         private AudioListener _replayAudioListener;
+        private bool _replayAudioListenerWasEnabled;
         private bool _createdReplayAudioListener;
 
         public override void Initialize() {
@@ -26,17 +29,21 @@ namespace BeatLeader.Replayer.Tweaking {
             _burnMarkArea.gameObject.SetActive(!InputUtils.UsesFPFC);
             _mainCamera.gameObject.SetActive(false);
 
-            if (!Resources.FindObjectsOfTypeAll<AudioListener>().Any(listener => listener.isActiveAndEnabled)) {
-                var replayCamera = _cameraController.Camera;
-                if (replayCamera != null) {
-                    _replayAudioListener = replayCamera.GetComponent<AudioListener>();
-                    if (_replayAudioListener == null) {
-                        _replayAudioListener = replayCamera.gameObject.AddComponent<AudioListener>();
-                        _createdReplayAudioListener = true;
-                    }
-                    _replayAudioListener.enabled = true;
-                    Plugin.Log.Notice("[Replayer] Restored audio listener on replay camera");
+            var replayCamera = _cameraController.Camera;
+            if (replayCamera != null) {
+                _disabledAudioListeners = Resources.FindObjectsOfTypeAll<AudioListener>()
+                    .Where(listener => listener.isActiveAndEnabled && listener.gameObject != replayCamera.gameObject)
+                    .ToArray();
+                foreach (var listener in _disabledAudioListeners) listener.enabled = false;
+
+                _replayAudioListener = replayCamera.GetComponent<AudioListener>();
+                if (_replayAudioListener == null) {
+                    _replayAudioListener = replayCamera.gameObject.AddComponent<AudioListener>();
+                    _createdReplayAudioListener = true;
+                } else {
+                    _replayAudioListenerWasEnabled = _replayAudioListener.enabled;
                 }
+                _replayAudioListener.enabled = true;
             }
             var listeners = Resources.FindObjectsOfTypeAll<AudioListener>()
                 .Where(listener => listener.isActiveAndEnabled)
@@ -45,8 +52,11 @@ namespace BeatLeader.Replayer.Tweaking {
         }
         public override void Dispose() {
             if (_replayAudioListener != null) {
-                _replayAudioListener.enabled = false;
-                if (_createdReplayAudioListener) Object.Destroy(_replayAudioListener);
+                _replayAudioListener.enabled = _replayAudioListenerWasEnabled;
+                if (_createdReplayAudioListener) UnityEngine.Object.Destroy(_replayAudioListener);
+            }
+            foreach (var listener in _disabledAudioListeners) {
+                if (listener != null) listener.enabled = true;
             }
 
             if (_pointer != null)
