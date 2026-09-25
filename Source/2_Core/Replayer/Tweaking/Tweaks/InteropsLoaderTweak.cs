@@ -28,7 +28,7 @@ namespace BeatLeader.Replayer.Tweaking {
 
         private void HandlePrimaryPlayerChanged(IVirtualPlayer player) {
             Cam2Interop.UnbindMovementProcessor();
-            Cam2Interop.BindMovementProcessor(player.MovementProcessor, _extraObjects.ReplayPoseOrigin);
+            Cam2Interop.BindMovementProcessor(player.MovementProcessor, _extraObjects);
         }
 
         private void HandleNoteWasDespawned(NoteController controller) {

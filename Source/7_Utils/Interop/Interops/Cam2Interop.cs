@@ -64,12 +64,13 @@ namespace BeatLeader.Interop {
         private class PoseReceiver : IVirtualPlayerPoseReceiver {
             public Vector3 Position { get; private set; }
             public Quaternion Rotation { get; private set; }
-            public Transform? Origin { get; set; }
+            public ReplayerExtraObjectsProvider? OriginProvider { get; set; }
 
             public void ApplyPose(Pose headPose, Pose leftHandPose, Pose rightHandPose) {
-                if (_updateWorldMethod != null && Origin != null) {
-                    _worldPoseArgs[0] = Origin.TransformPoint(headPose.position);
-                    _worldPoseArgs[1] = Origin.rotation * headPose.rotation;
+                if (_updateWorldMethod != null && OriginProvider != null) {
+                    var origin = OriginProvider.ReplayPoseOrigin;
+                    _worldPoseArgs[0] = origin.TransformPoint(headPose.position);
+                    _worldPoseArgs[1] = origin.rotation * headPose.rotation;
                     _updateWorldMethod.Invoke(_genericSourceInstance, _worldPoseArgs);
                 } else {
                     Position = headPose.position;
@@ -82,8 +83,9 @@ namespace BeatLeader.Interop {
         private static IVirtualPlayerMovementProcessor? _movementProcessor;
         private static bool _hasBoundProcessor;
 
-        public static void BindMovementProcessor(IVirtualPlayerMovementProcessor processor, Transform origin) {
-            poseReceiver.Origin = origin;
+        public static void BindMovementProcessor(IVirtualPlayerMovementProcessor processor, ReplayerExtraObjectsProvider originProvider) {
+            poseReceiver.OriginProvider = originProvider;
+            var origin = originProvider.ReplayPoseOrigin;
             Plugin.Log.Debug($"[Replayer] Camera2 pose origin: {origin.name} (parent: {origin.parent?.name})");
             processor.AddListener(poseReceiver);
             _movementProcessor = processor;
@@ -93,7 +95,7 @@ namespace BeatLeader.Interop {
         public static void UnbindMovementProcessor() {
             if (!_hasBoundProcessor) return;
             _movementProcessor!.RemoveListener(poseReceiver);
-            poseReceiver.Origin = null;
+            poseReceiver.OriginProvider = null;
             _hasBoundProcessor = false;
         }
 
