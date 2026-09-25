@@ -71,6 +71,7 @@ namespace BeatLeader {
         }
 
         protected override void OnDispose() {
+            RestoreLeaderboardFade();
             SceneManager.activeSceneChanged -= OnActiveSceneChanged;
             InterruptAllEvent -= InterruptAll;
             ActiveModals.Remove(_screen.GetHashCode());
@@ -202,6 +203,28 @@ namespace BeatLeader {
         [UIComponent("modal-view"), UsedImplicitly]
         private ModalView _modalView;
 
+        private readonly Dictionary<CanvasGroup, float> _leaderboardFadeGroups = new Dictionary<CanvasGroup, float>();
+
+        private void FadeLeaderboardViews() {
+            var animatedRoot = _modalView._parentCanvasGroup?.transform;
+            foreach (var view in _screen.GetComponentsInChildren<ViewControllerBase>(true)) {
+                if (!(view is ViewControllers.LeaderboardView || view is ViewControllers.LeaderboardPanel)) continue;
+                if (animatedRoot != null && (view.transform == animatedRoot || view.transform.IsChildOf(animatedRoot))) continue;
+
+                var group = view.GetComponent<CanvasGroup>() ?? view.gameObject.AddComponent<CanvasGroup>();
+                if (_leaderboardFadeGroups.ContainsKey(group)) continue;
+                _leaderboardFadeGroups.Add(group, group.alpha);
+                group.alpha *= 0.2f;
+            }
+        }
+
+        private void RestoreLeaderboardFade() {
+            foreach (var pair in _leaderboardFadeGroups) {
+                if (pair.Key != null) pair.Key.alpha = pair.Value;
+            }
+            _leaderboardFadeGroups.Clear();
+        }
+
         private void InitializeModal() {
             var background = _modalView.GetComponentInChildren<ImageView>();
             if (background != null) background.enabled = false;
@@ -218,16 +241,20 @@ namespace BeatLeader {
         }
 
         private void ShowModal(bool animated = true) {
-            if (_modalView == null || _modalView.isShown) return;
-            if (_modalView._viewIsValid) {
-                _modalView.transform.SetParent(Content.transform, false);
-                _modalView._viewIsValid = false;
+            if (_modalView == null) return;
+            if (!_modalView.isShown) {
+                if (_modalView._viewIsValid) {
+                    _modalView.transform.SetParent(Content.transform, false);
+                    _modalView._viewIsValid = false;
+                }
+                _modalView._animateParentCanvas = true;
+                _modalView.Show(animated, true);
             }
-            _modalView._animateParentCanvas = true;
-            _modalView.Show(animated, true);
+            FadeLeaderboardViews();
         }
 
         private void HideModal(bool animated = true) {
+            RestoreLeaderboardFade();
             if (_modalView == null) return;
             _modalView.Hide(animated);
         }
