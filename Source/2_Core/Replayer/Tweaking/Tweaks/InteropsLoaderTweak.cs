@@ -7,6 +7,7 @@ namespace BeatLeader.Replayer.Tweaking {
         [Inject] private readonly IVirtualPlayersManager _playersManager = null!;
         [Inject] private readonly IBeatmapTimeController _beatmapTimeController = null!;
         [Inject] private readonly BeatmapObjectManager _beatmapObjectManager = null!;
+        [Inject] private readonly ReplayerExtraObjectsProvider _extraObjects = null!;
         [Inject] private readonly DiContainer _container = null!;
 
         public override void Initialize() {
@@ -27,7 +28,7 @@ namespace BeatLeader.Replayer.Tweaking {
 
         private void HandlePrimaryPlayerChanged(IVirtualPlayer player) {
             Cam2Interop.UnbindMovementProcessor();
-            Cam2Interop.BindMovementProcessor(player.MovementProcessor);
+            Cam2Interop.BindMovementProcessor(player.MovementProcessor, _extraObjects.ReplayPoseOrigin);
         }
 
         private void HandleNoteWasDespawned(NoteController controller) {
