@@ -2,6 +2,7 @@ using BeatLeader.Components;
 using BeatLeader.Models;
 using Reactive;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace BeatLeader.UI.Replayer {
     internal class ToolbarEditorComponent : LayoutEditorComponent {
@@ -28,7 +29,7 @@ namespace BeatLeader.UI.Replayer {
                 launchData,
                 layoutEditor,
                 watermark,
-                true
+                GraphicsSettings.currentRenderPipeline == null
             );
         }
 
