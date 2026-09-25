@@ -5,7 +5,7 @@ using UnityEngine;
 using Zenject;
 
 namespace BeatLeader.Replayer {
-    internal class ReplayTimeController : BeatmapTimeController, IReplayTimeController {
+    internal class ReplayTimeController : BeatmapTimeController, IReplayTimeController, IReplayScrubController {
         [Inject] private readonly ReplayLaunchData _launchData = null!;
 
         public float ReplayEndTime {
@@ -23,6 +23,15 @@ namespace BeatLeader.Replayer {
 
         private bool _songReachedReplayEnd;
         private float _replayEndTime = -1;
+
+        public void BeginScrub() {
+            DeferAnimationRebuild = true;
+        }
+
+        public void EndScrub() {
+            DeferAnimationRebuild = false;
+            if (AnimationRebuildPending) RebuildAnimationsAtCurrentTime(true);
+        }
 
         public override void Rewind(float time, bool resumeAfterRewind = true) {
             time = Mathf.Clamp(time, SongStartTime, ReplayEndTime);

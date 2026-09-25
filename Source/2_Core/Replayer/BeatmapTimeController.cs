@@ -6,6 +6,7 @@ using UnityEngine;
 using Zenject;
 using BeatLeader.Utils;
 using BeatLeader.Models;
+using BeatLeader.Interop;
 using System.Reflection;
 using System.Linq;
 using JetBrains.Annotations;
@@ -52,6 +53,8 @@ namespace BeatLeader.Replayer {
         private Dictionary<float, CallbacksInTime> _callbacksInTimes = null!;
         private List<IBeatmapObjectController> _spawnedBeatmapObjectControllers = null!;
         private AudioSource _beatmapAudioSource = null!;
+        protected bool DeferAnimationRebuild;
+        protected bool AnimationRebuildPending;
 
         private readonly HarmonyAutoPatch _fetchCutSoundPoolPatch = new HarmonyPatchDescriptor(
             typeof(NoteCutSoundEffectManager).GetMethod(nameof(
@@ -124,6 +127,13 @@ namespace BeatLeader.Replayer {
 
             _audioTimeSyncController.SetField("_prevAudioSamplePos", -1);
             _audioTimeSyncController.SeekTo((time - SongStartTime) / _audioTimeSyncController.timeScale);
+            if (HeckInterop.IsReplaySeekTrackingActive) {
+                if (DeferAnimationRebuild) {
+                    AnimationRebuildPending = true;
+                } else {
+                    RebuildAnimationsAtCurrentTime(false);
+                }
+            }
             _beatmapCallbacksController.SetField("_prevSongTime", float.MinValue);
             foreach (var pair in _callbacksInTimes) {
                 pair.Value.lastProcessedNode = FindBeatmapItem(time);
@@ -137,6 +147,20 @@ namespace BeatLeader.Replayer {
             _soundSpawnerSilencer.Enabled = false;
 
             SongWasRewoundEvent?.Invoke(time);
+        }
+
+        protected void RebuildAnimationsAtCurrentTime(bool includeCurrentTime) {
+            if (!HeckInterop.IsReplaySeekTrackingActive || !_callbacksInTimes.TryGetValue(0f, out var callbacks)) return;
+            try {
+                var time = SongTime;
+                _beatmapCallbacksController.SetField("_songTime", time);
+                HeckInterop.RebuildAnimations(_beatmapData, callbacks, time, includeCurrentTime);
+            } catch (Exception ex) {
+                Plugin.Log.Error($"Failed to rebuild replay animations after seeking: {ex}");
+                HeckInterop.EndReplaySeekTracking();
+            } finally {
+                AnimationRebuildPending = false;
+            }
         }
 
         private LinkedListNode<BeatmapDataItem>? FindBeatmapItem(float time) {
