@@ -12,6 +12,7 @@ namespace BeatLeader.Replayer.Tweaking {
 
         public override void Initialize() {
             HeckInterop.BeginReplaySeekTracking(_container);
+            ChromaInterop.BeginReplaySeekTracking(_container);
             HandlePrimaryPlayerChanged(_playersManager.PrimaryPlayer);
             _playersManager.PrimaryPlayerWasChangedEvent += HandlePrimaryPlayerChanged;
             _beatmapObjectManager.noteWasDespawnedEvent += HandleNoteWasDespawned;
@@ -20,6 +21,7 @@ namespace BeatLeader.Replayer.Tweaking {
 
         public override void Dispose() {
             HeckInterop.EndReplaySeekTracking();
+            ChromaInterop.EndReplaySeekTracking();
             Cam2Interop.UnbindMovementProcessor();
             _playersManager.PrimaryPlayerWasChangedEvent -= HandlePrimaryPlayerChanged;
             _beatmapObjectManager.noteWasDespawnedEvent -= HandleNoteWasDespawned;

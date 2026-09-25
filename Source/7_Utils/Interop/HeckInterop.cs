@@ -92,6 +92,7 @@ namespace BeatLeader.Interop {
             if (!IsReplaySeekTrackingActive) return;
 
             _coroutineDummy!.StopAllCoroutines();
+            ChromaInterop.ResetForReplaySeek();
             foreach (var track in _tracks!.Values) {
                 _nullPropertiesMethod!.Invoke(track, null);
             }
@@ -109,12 +110,21 @@ namespace BeatLeader.Interop {
                 if (includeCurrentTime ? item.time > songTime : item.time >= songTime) break;
                 callbacks.CallCallbacks(item);
             }
+            ChromaInterop.FinishReplaySeek(songTime);
         }
 
         private static List<BeatmapDataItem> FindAnimationEvents(IReadonlyBeatmapData beatmapData) {
             var events = new List<BeatmapDataItem>();
             PropertyInfo? eventTypeProperty = null;
             foreach (var item in beatmapData.allBeatmapDataItems) {
+                if (item is BasicBeatmapEventData lightEvent) {
+                    if (ChromaInterop.IsLightingEvent(lightEvent)) events.Add(item);
+                    continue;
+                }
+                if (item is ColorBoostBeatmapEventData && ChromaInterop.IsReplaySeekTrackingActive) {
+                    events.Add(item);
+                    continue;
+                }
                 if (item.GetType().FullName != "CustomJSONData.CustomBeatmap.CustomEventData") continue;
                 eventTypeProperty ??= item.GetType().GetProperty("eventType");
                 var eventType = (string?)eventTypeProperty?.GetValue(item);
