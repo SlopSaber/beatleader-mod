@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using BeatLeader.Models;
 using BeatLeader.Utils;
 using IPA.Utilities;
@@ -92,6 +93,7 @@ namespace BeatLeader.DataManager {
             }
         }
 
+        [StructLayout(LayoutKind.Sequential)]
         public struct SortEntry {
             public float HighestStars;
             public float HighestTechStars;

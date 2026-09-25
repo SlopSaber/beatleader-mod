@@ -17,7 +17,8 @@
     <ReactiveComponentsPath Condition="'$(ReactiveComponentsPath)' == '' AND Exists('$(GameDirectory)\Libs\Reactive.Components.dll')">$(GameDirectory)\Libs\Reactive.Components.dll</ReactiveComponentsPath>
     <ReactivePath Condition="Exists('$(GameDirectory)\Libs\Reactive.dll')">$(GameDirectory)\Libs\Reactive.dll</ReactivePath>
     <ReactivePath Condition="'$(ReactivePath)' == '' AND Exists('$(GameDirectory)\Libs\Reactive.dll')">$(GameDirectory)\Libs\Reactive.dll</ReactivePath>
-    <NoWarn>$(NoWarn);CS0067;CS0108;CS0109;CS0168;CS0169;CS0414;CS0612;CS0618;CS0649;CS4014;CS8600;CS8601;CS8602;CS8603;CS8604;CS8622;CS8625;CS8629;CS8632;MA0009;MA0012;MA0015;MA0016;MA0025;MA0026;MA0062;MA0065;MA0134</NoWarn>
+    <!-- System.Threading.Lock (MA0158) is unavailable in the game's .NET Framework 4.8 runtime. -->
+    <NoWarn>$(NoWarn);CS0067;CS0108;CS0109;CS0168;CS0169;CS0414;CS0612;CS0618;CS0649;CS4014;CS8600;CS8601;CS8602;CS8603;CS8604;CS8622;CS8625;CS8629;CS8632;MA0009;MA0012;MA0015;MA0016;MA0025;MA0026;MA0062;MA0065;MA0134;MA0158</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <Copyright>Copyright © 2024</Copyright>
@@ -27,6 +28,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="netstandard" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\netstandard.dll" Private="false" />
+    <Reference Include="System.Net.Http" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\System.Net.Http.dll" Private="false" />
+    <Reference Include="System.IO.Compression" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\System.IO.Compression.dll" Private="false" />
     <Reference Include="BeatSaber.Multiplayer.Core">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.Multiplayer.Core.dll</HintPath>
       <Private>False</Private>
@@ -165,9 +168,6 @@
     <Reference Include="HMUI" Publicize="True">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\HMUI.dll</HintPath>
       <Private>False</Private>
-    </Reference>
-    <Reference Include="Interactable">
-      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\Interactable.dll</HintPath>
     </Reference>
     <Reference Include="Main" Publicize="true">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\Main.dll</HintPath>
@@ -363,8 +363,8 @@
     <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BeatSaberModdingTools.Tasks" Version="2.0.0-beta7" PrivateAssets="all" />
-    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" PrivateAssets="all" />
+    <PackageReference Include="BeatSaberModdingTools.Tasks" Version="2.0.0-beta7" PrivateAssets="all" IncludeAssets="build;buildtransitive" />
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" PrivateAssets="all" IncludeAssets="build;buildtransitive;contentfiles" />
     <PackageReference Include="Meziantou.Analyzer" Version="2.0.264">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
