@@ -1,8 +1,10 @@
 ﻿using BeatLeader.Utils;
 using UnityEngine;
+using Zenject;
 
 namespace BeatLeader.Replayer {
     internal class ReplayerExtraObjectsProvider : MonoBehaviour {
+        [Inject] private readonly PlayerTransforms _playerTransforms = null!;
         [FirstResource]
         private readonly MainSystemInit _mainSystemInit = null!;
 
@@ -12,13 +14,18 @@ namespace BeatLeader.Replayer {
         public Transform ReplayerCore => transform;
         public Transform ReplayerCenterAdjust { get; private set; } = null!;
         public Transform VRGameCore => _origin;
+        public Transform ReplayPoseOrigin => _playerTransforms._originParentTransform != null
+            ? _playerTransforms._originParentTransform
+            : VRGameCore;
 
         private Vector3 _posOffset;
         private Quaternion _rotOffset;
 
         private void Awake() {
             this.LoadResources();
-            ReplayerCore.SetParent(VRGameCore, false);
+            // Replay poses were recorded relative to this transform. Noodle moves it
+            // when a map assigns the player to a track.
+            ReplayerCore.SetParent(ReplayPoseOrigin, false);
             name = "ReplayerCore";
 
             ReplayerCenterAdjust = new GameObject("CenterAdjust").transform;
