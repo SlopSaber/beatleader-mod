@@ -24,9 +24,11 @@ namespace BeatLeader.Interop {
         private static PropertyInfo? _headPosProp;
         private static PropertyInfo? _headRotProp;
         private static MethodInfo? _updateWorldMethod;
+        private static MethodInfo? _updateWorldFromOriginMethod;
         private static MethodInfo? _setActiveMethod;
         private static object? _genericSourceInstance;
         private static readonly object[] _worldPoseArgs = new object[2];
+        private static readonly object[] _originPoseArgs = new object[3];
 
         [InteropEntry]
         private static void Init() {
@@ -43,6 +45,7 @@ namespace BeatLeader.Interop {
             if (worldSourceType != null) {
                 _updateWorldMethod = worldSourceType.GetMethod("UpdateWorld", ReflectionUtils.DefaultFlags)
                     ?? throw new MissingMethodException(worldSourceType.FullName, "UpdateWorld");
+                _updateWorldFromOriginMethod = worldSourceType.GetMethod("UpdateWorldFromOrigin", ReflectionUtils.DefaultFlags);
             } else {
                 _headPosProp = sourceType.GetProperty("localHeadPosition", ReflectionUtils.DefaultFlags);
                 _headRotProp = sourceType.GetProperty("localHeadRotation", ReflectionUtils.DefaultFlags);
@@ -67,7 +70,13 @@ namespace BeatLeader.Interop {
             public ReplayerExtraObjectsProvider? OriginProvider { get; set; }
 
             public void ApplyPose(Pose headPose, Pose leftHandPose, Pose rightHandPose) {
-                if (_updateWorldMethod != null && OriginProvider != null) {
+                if (_updateWorldFromOriginMethod != null && OriginProvider != null) {
+                    var origin = OriginProvider.ReplayPoseOrigin;
+                    _originPoseArgs[0] = origin;
+                    _originPoseArgs[1] = headPose.position;
+                    _originPoseArgs[2] = headPose.rotation;
+                    _updateWorldFromOriginMethod.Invoke(_genericSourceInstance, _originPoseArgs);
+                } else if (_updateWorldMethod != null && OriginProvider != null) {
                     var origin = OriginProvider.ReplayPoseOrigin;
                     _worldPoseArgs[0] = origin.TransformPoint(headPose.position);
                     _worldPoseArgs[1] = origin.rotation * headPose.rotation;
