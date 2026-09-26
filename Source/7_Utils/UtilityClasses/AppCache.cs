@@ -67,12 +67,16 @@ namespace BeatLeader {
             _loadTask = null;
         }
 
-        public void SaveDetached() {
-            if (!_initialized || _saveTask != null) {
+        public void SaveDetached(T snapshot) {
+            if (!_initialized) {
                 return;
             }
 
-            _saveTask = Task.Run(() => Save(join: false)).RunCatching();
+            var previousSave = _saveTask;
+            _saveTask = Task.Run(async () => {
+                if (previousSave != null) await previousSave;
+                SaveSnapshot(snapshot);
+            }).RunCatching();
         }
 
         public void Save(bool join = true) {
@@ -85,16 +89,18 @@ namespace BeatLeader {
                 return;
             }
 
+            SaveSnapshot(_cache!);
+        }
+
+        private void SaveSnapshot(T snapshot) {
             try {
-                var ser = JsonConvert.SerializeObject(_cache, Formatting.Indented);
+                var ser = JsonConvert.SerializeObject(snapshot, Formatting.Indented, _serializerSettings);
                 File.WriteAllText(_path, ser);
 
                 Plugin.Log.Debug($"Saved cache ({typeof(T).Name})");
             } catch (Exception ex) {
                 Plugin.Log.Error($"Failed to save cache ({typeof(T).Name})\n{ex}");
             }
-
-            _saveTask = null;
         }
     }
 }

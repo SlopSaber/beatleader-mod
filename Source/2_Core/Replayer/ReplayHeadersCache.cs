@@ -17,7 +17,7 @@ namespace BeatLeader {
 
         public static void SaveCache() {
             lock (locker) {
-                infoCache.SaveDetached();
+                infoCache.SaveDetached(new Dictionary<string, SerializableReplayInfo?>(infoCache.Cache));
             }
         }
 
