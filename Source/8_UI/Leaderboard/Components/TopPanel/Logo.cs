@@ -60,6 +60,7 @@ namespace BeatLeader.Components {
         private float _spinnerRotation;
 
         private bool _isThinking;
+        private bool _animationSettled;
         private const float HalfPI = Mathf.PI / 2;
 
         private bool Thinking {
@@ -67,12 +68,15 @@ namespace BeatLeader.Components {
             set {
                 if (_isThinking.Equals(value)) return;
                 _isThinking = value;
+                _animationSettled = false;
                 if (value) return;
                 _targetSpinnerRotation = Mathf.CeilToInt(_spinnerRotation / HalfPI) * HalfPI;
             }
         }
 
         private void Update() {
+            if (_animationSettled) return;
+
             var deltaTime = Time.deltaTime;
             var slowT = deltaTime * 10f;
             var fastT = deltaTime * 20f;
@@ -95,6 +99,24 @@ namespace BeatLeader.Components {
                 _spinnerRotation = Mathf.Lerp(_spinnerRotation, _targetSpinnerRotation, fastT);
             }
 
+            if (!Thinking &&
+                Mathf.Abs(_glow - IdleGlow) < 0.001f &&
+                Mathf.Abs(_dotScale - IdleDotScale) < 0.001f &&
+                Mathf.Abs(_blockScale - IdleBlockScale) < 0.001f &&
+                Mathf.Abs(_cornerRadius - IdleCornerRadius) < 0.001f &&
+                Mathf.Abs(_thickness - IdleThickness) < 0.001f &&
+                Mathf.Abs(_fill - IdleFill) < 0.001f &&
+                Mathf.Abs(_spinnerRotation - _targetSpinnerRotation) < 0.001f) {
+                _glow = IdleGlow;
+                _dotScale = IdleDotScale;
+                _blockScale = IdleBlockScale;
+                _cornerRadius = IdleCornerRadius;
+                _thickness = IdleThickness;
+                _fill = IdleFill;
+                _spinnerRotation = _targetSpinnerRotation;
+                _animationSettled = true;
+            }
+
             SetMaterialProperties();
         }
 
@@ -113,6 +135,7 @@ namespace BeatLeader.Components {
         #region Initialize/Dispose
 
         protected override void OnInitialize() {
+            _animationSettled = false;
             SetMaterial();
 
             UserRequest.StateChangedEvent += OnProfileRequestStateChanged;
@@ -128,6 +151,7 @@ namespace BeatLeader.Components {
             ClanScoresRequest.StateChangedEvent -= OnScoresRequestStateChanged;
             ClanScoresRequest.StateChangedEvent -= OnClanScoresRequestStateChanged;
             UploadReplayRequest.StateChangedEvent -= OnUploadRequestStateChanged;
+            if (_materialInstance != null) Object.Destroy(_materialInstance);
         }
 
         #endregion
