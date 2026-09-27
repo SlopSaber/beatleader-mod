@@ -26,7 +26,11 @@ namespace BeatLeader.Interop {
             if (!IsInstalled || _managerType == null) return;
 
             try {
-                _manager = container.Resolve(_managerType);
+                _manager = container.TryResolve(_managerType);
+                if (_manager == null) {
+                    EndReplaySeekTracking();
+                    return;
+                }
                 _colorizers = (IDictionary?)_managerType.GetProperty("Colorizers")?.GetValue(_manager);
                 _resetMethod = _managerType.GetMethod("ResetForReplaySeek", ReflectionUtils.DefaultFlags);
                 _finishMethod = _managerType.GetMethod("FinishReplaySeek", ReflectionUtils.DefaultFlags);
