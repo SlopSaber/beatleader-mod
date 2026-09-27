@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -323,6 +322,7 @@ namespace BeatLeader.WebRequests {
         #region IO Buffer
 
         private static readonly List<byte[]> bufferPool = new();
+        private static readonly object bufferPoolLock = new();
 
         byte[] IIoOperationDescriptor.Buffer {
             get => _buffer ?? throw new InvalidOperationException("Unable to access buffer");
@@ -337,21 +337,29 @@ namespace BeatLeader.WebRequests {
         private byte[]? _buffer;
 
         private void ReloadBuffer(long size) {
-            ReleaseBufferIfNeeded();
-            size = AdjustBufferSize(size);
-            var buffer = bufferPool.FirstOrDefault(x => x.LongLength >= size);
-            if (buffer is not null) {
-                bufferPool.Remove(buffer);
-            } else {
-                buffer = new byte[size];
+            size = Math.Max(1, AdjustBufferSize(size));
+            lock (bufferPoolLock) {
+                if (_buffer is not null) {
+                    bufferPool.Add(_buffer);
+                    _buffer = null;
+                }
+
+                var index = bufferPool.FindIndex(buffer => buffer.LongLength >= size);
+                if (index >= 0) {
+                    _buffer = bufferPool[index];
+                    bufferPool.RemoveAt(index);
+                } else {
+                    _buffer = new byte[size];
+                }
             }
-            _buffer = buffer;
         }
 
         private void ReleaseBufferIfNeeded() {
-            if (_buffer is null) return;
-            bufferPool.Add(_buffer);
-            _buffer = null;
+            lock (bufferPoolLock) {
+                if (_buffer is null) return;
+                bufferPool.Add(_buffer);
+                _buffer = null;
+            }
         }
 
         public void Dispose() => ReleaseBufferIfNeeded();
