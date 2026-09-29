@@ -103,15 +103,15 @@ namespace BeatLeader.Components {
             _downloadButtonImage.Use(textParent);
             _downloadButtonSpinner.Use(textParent);
 
-            StaticReplayRequest.ProgressChangedEvent += OnDownloadProgressChanged;
-            StaticReplayRequest.StateChangedEvent += OnDownloadRequestStateChanged;
+            StaticReplayRequest.Request.ProgressChangedEvent += OnDownloadProgressChanged;
+            StaticReplayRequest.Request.StateChangedEvent += OnDownloadRequestStateChanged;
 
             LeaderboardState.AddSelectedBeatmapListener(OnSelectedBeatmapChanged);
         }
 
         protected override void OnDispose() {
-            StaticReplayRequest.ProgressChangedEvent -= OnDownloadProgressChanged;
-            StaticReplayRequest.StateChangedEvent -= OnDownloadRequestStateChanged;
+            StaticReplayRequest.Request.ProgressChangedEvent -= OnDownloadProgressChanged;
+            StaticReplayRequest.Request.StateChangedEvent -= OnDownloadRequestStateChanged;
 
             LeaderboardState.RemoveSelectedBeatmapListener(OnSelectedBeatmapChanged);
         }

@@ -3,10 +3,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
-using System.Threading.Tasks;
-using BeatLeader.API;
-using BeatLeader.Utils;
-using IPA.Utilities.Async;
 using JetBrains.Annotations;
 
 namespace BeatLeader.WebRequests {
@@ -65,8 +61,7 @@ namespace BeatLeader.WebRequests {
         where TDescriptor : IWebRequestResponseParser<TResult>, new() {
         private static readonly TDescriptor descriptor = new();
 
-        private static IWebRequest<TResult>? Instance = null;
-        private static CancellationTokenSource tokenSource = new CancellationTokenSource();
+        public static PersistentRequest<TResult> Request { get; } = new();
 
         protected static void SendRet(
             string url,
@@ -77,94 +72,46 @@ namespace BeatLeader.WebRequests {
             TDescriptor? customParser = default,
             bool waitForLogin = true
         ) {
-            var requestMessage = CreateAndValidateRequestMessage(url, method, content, headersCallback);
-
-            if (Instance != null) {
-                tokenSource.Cancel();
-                tokenSource.Dispose();
-                tokenSource = new CancellationTokenSource();
-                Instance.StateChangedEvent -= Instance_StateChangedEvent;
-                Instance.ProgressChangedEvent -= Instance_ProgressChangedEvent;
-                Instance.Dispose();
-            }
-
-            _ = Task.Run(async () => {
-                    Instance = WebRequestFactory.Send(requestMessage, customParser ?? descriptor, requestParams, tokenSource.Token, waitForLogin);
-                    Instance.StateChangedEvent += Instance_StateChangedEvent;
-                    Instance.ProgressChangedEvent += Instance_ProgressChangedEvent;
-                    Instance_StateChangedEvent(Instance, RequestState, FailReason);
-                }
-            ).RunCatching();
+            var message = CreateAndValidateRequestMessage(url, method, content, headersCallback);
+            Request.Send(message, customParser ?? descriptor, requestParams, waitForLogin);
         }
 
-        private const string ObsoleteMessage = "This code was added for compatibility only. Rely on instances and async instead.";
+        private const string ObsoleteMessage = "Use the persistent Request instance instead.";
 
         [Obsolete(ObsoleteMessage)]
-        public static void Cancel() {
-            if (Instance != null) {
-                tokenSource.Cancel();
-            }
-        }
+        public static void Cancel() => Request.Cancel();
 
         [Obsolete(ObsoleteMessage)]
-        public static TResult? Result => Instance != null ? Instance.Result : default;
+        public static TResult? Result => Request.Result;
 
         [Obsolete(ObsoleteMessage)]
-        public static RequestState RequestState => Instance != null ? Instance.RequestState : RequestState.Uninitialized;
+        public static RequestState RequestState => Request.RequestState;
 
         [Obsolete(ObsoleteMessage)]
-        public static HttpStatusCode RequestStatusCode => Instance != null ? Instance.RequestStatusCode : default;
+        public static HttpStatusCode RequestStatusCode => Request.RequestStatusCode;
 
         [Obsolete(ObsoleteMessage)]
-        public static string? FailReason => Instance != null ? Instance.FailReason : default;
+        public static string? FailReason => Request.FailReason;
 
         [Obsolete(ObsoleteMessage)]
-        public static float DownloadProgress => Instance != null ? Instance.DownloadProgress : 0;
+        public static float DownloadProgress => Request.DownloadProgress;
 
         [Obsolete(ObsoleteMessage)]
-        public static float UploadProgress => Instance != null ? Instance.UploadProgress : 0;
+        public static float UploadProgress => Request.UploadProgress;
 
         [Obsolete(ObsoleteMessage)]
-        public static float OverallProgress => Instance != null ? Instance.OverallProgress : 0;
-        
-        private static event WebRequestStateChangedDelegate<IWebRequest<TResult>>? StateChangedEventInternal;
+        public static float OverallProgress => Request.OverallProgress;
 
         [Obsolete(ObsoleteMessage)]
         public static event WebRequestStateChangedDelegate<IWebRequest<TResult>>? StateChangedEvent {
-            add {
-                StateChangedEventInternal += value;
-                value?.Invoke(Instance, Instance != null ? RequestState : RequestState.Uninitialized, Instance != null ? FailReason : null);
-            }
-            remove {
-                StateChangedEventInternal -= value;
-            }
+            add => Request.StateChangedEvent += value;
+            remove => Request.StateChangedEvent -= value;
         }
-
-        internal static void Instance_StateChangedEvent(IWebRequest<TResult> instance, RequestState state, string? failReason) {
-            _ = UnityMainThreadTaskScheduler.Factory.StartNew(() => {
-                    StateChangedEventInternal?.Invoke(instance, state, failReason);
-                }
-            ).RunCatching();
-        }
-
-        private static event WebRequestProgressChangedDelegate<IWebRequest<TResult>>? ProgressChangedEventInternal;
 
         [Obsolete(ObsoleteMessage)]
         public static event WebRequestProgressChangedDelegate<IWebRequest<TResult>>? ProgressChangedEvent {
-            add {
-                ProgressChangedEventInternal += value;
-                if (Instance != null) value?.Invoke(Instance, DownloadProgress, UploadProgress, OverallProgress);
-            }
-            remove {
-                ProgressChangedEventInternal -= value;
-            }
-        }
-
-        internal static void Instance_ProgressChangedEvent(IWebRequest<TResult> instance, float downloadProgress, float uploadProgress, float overallProgress) {
-            _ = UnityMainThreadTaskScheduler.Factory.StartNew(() => {
-                    ProgressChangedEventInternal?.Invoke(instance, downloadProgress, uploadProgress, overallProgress);
-                }
-            ).RunCatching();
+            add => Request.ProgressChangedEvent += value;
+            remove => Request.ProgressChangedEvent -= value;
         }
     }
 }

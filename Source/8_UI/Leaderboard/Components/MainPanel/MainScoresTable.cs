@@ -25,8 +25,8 @@ namespace BeatLeader.Components {
         protected override void OnInitialize() {
             base.OnInitialize();
 
-            ScoresRequest.StateChangedEvent += OnScoresRequestStateChanged;
-            ClanScoresRequest.StateChangedEvent += OnScoresRequestStateChanged;
+            ScoresRequest.Request.StateChangedEvent += OnScoresRequestStateChanged;
+            ClanScoresRequest.Request.StateChangedEvent += OnScoresRequestStateChanged;
 
             LeaderboardState.IsVisibleChangedEvent += OnLeaderboardVisibleChanged;
             PluginConfig.LeaderboardTableMaskChangedEvent += OnLeaderboardTableMaskChanged;
@@ -41,8 +41,8 @@ namespace BeatLeader.Components {
         protected override void OnDispose() {
             base.OnDispose();
 
-            ScoresRequest.StateChangedEvent -= OnScoresRequestStateChanged;
-            ClanScoresRequest.StateChangedEvent -= OnScoresRequestStateChanged;
+            ScoresRequest.Request.StateChangedEvent -= OnScoresRequestStateChanged;
+            ClanScoresRequest.Request.StateChangedEvent -= OnScoresRequestStateChanged;
 
             LeaderboardState.IsVisibleChangedEvent -= OnLeaderboardVisibleChanged;
             PluginConfig.LeaderboardTableMaskChangedEvent -= OnLeaderboardTableMaskChanged;

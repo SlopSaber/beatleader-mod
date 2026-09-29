@@ -15,7 +15,7 @@ namespace BeatLeader.API {
             var authToken = await Authentication.PlatformTicket();
                 
             if (authToken == null) {
-                Instance_StateChangedEvent(null, WebRequests.RequestState.Failed, "Authentication failed");
+                Request.Fail("Authentication failed");
                 return;
             }
 

@@ -11,14 +11,14 @@ namespace BeatLeader.Components {
         #region OnInitialize
 
         protected override void OnInitialize() {
-            ScoresRequest.StateChangedEvent += OnScoresRequestStateChanged;
-            ClanScoresRequest.StateChangedEvent += OnScoresRequestStateChanged;
+            ScoresRequest.Request.StateChangedEvent += OnScoresRequestStateChanged;
+            ClanScoresRequest.Request.StateChangedEvent += OnScoresRequestStateChanged;
             ApplyAlpha();
         }
 
         protected override void OnDispose() {
-            ScoresRequest.StateChangedEvent -= OnScoresRequestStateChanged;
-            ClanScoresRequest.StateChangedEvent -= OnScoresRequestStateChanged;
+            ScoresRequest.Request.StateChangedEvent -= OnScoresRequestStateChanged;
+            ClanScoresRequest.Request.StateChangedEvent -= OnScoresRequestStateChanged;
         }
 
         #endregion

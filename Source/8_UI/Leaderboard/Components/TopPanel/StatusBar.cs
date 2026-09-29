@@ -14,17 +14,17 @@ namespace BeatLeader.Components {
         protected override void OnInitialize() {
             LeaderboardEvents.StatusMessageEvent += OnStatusMessage;
 
-            UserRequest.StateChangedEvent += OnProfileRequestStateChanged;
-            VoteRequest.StateChangedEvent += OnVoteRequestStateChanged;
-            UploadReplayRequest.StateChangedEvent += OnUploadRequestStateChanged;
+            UserRequest.Request.StateChangedEvent += OnProfileRequestStateChanged;
+            VoteRequest.Request.StateChangedEvent += OnVoteRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent += OnUploadRequestStateChanged;
         }
 
         protected override void OnDispose() {
             LeaderboardEvents.StatusMessageEvent -= OnStatusMessage;
 
-            UserRequest.StateChangedEvent -= OnProfileRequestStateChanged;
-            VoteRequest.StateChangedEvent -= OnVoteRequestStateChanged;
-            UploadReplayRequest.StateChangedEvent -= OnUploadRequestStateChanged;
+            UserRequest.Request.StateChangedEvent -= OnProfileRequestStateChanged;
+            VoteRequest.Request.StateChangedEvent -= OnVoteRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent -= OnUploadRequestStateChanged;
         }
 
         private void OnDisable() {

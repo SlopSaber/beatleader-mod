@@ -107,10 +107,10 @@ namespace BeatLeader.DataManager {
         private static bool _initialized;
         
         public void Initialize() {
-            UserRequest.StateChangedEvent += OnUserRequestStateChanged;
-            UploadReplayRequest.StateChangedEvent += OnUploadRequestStateChanged;
-            AddFriendRequest.StateChangedEvent += OnAddFriendRequestStateChanged;
-            RemoveFriendRequest.StateChangedEvent += OnRemoveFriendRequestStateChanged;
+            UserRequest.Request.StateChangedEvent += OnUserRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent += OnUploadRequestStateChanged;
+            AddFriendRequest.Request.StateChangedEvent += OnAddFriendRequestStateChanged;
+            RemoveFriendRequest.Request.StateChangedEvent += OnRemoveFriendRequestStateChanged;
             LeaderboardEvents.AddFriendWasPressedEvent += OnAddFriendWasPressed;
             LeaderboardEvents.RemoveFriendWasPressedEvent += OnRemoveFriendWasPressed;
 
@@ -121,10 +121,10 @@ namespace BeatLeader.DataManager {
         public void Dispose() {
             _profileLoadTaskCompletionSource = null;
             _initialized = false;
-            UserRequest.StateChangedEvent -= OnUserRequestStateChanged;
-            UploadReplayRequest.StateChangedEvent -= OnUploadRequestStateChanged;
-            AddFriendRequest.StateChangedEvent -= OnAddFriendRequestStateChanged;
-            RemoveFriendRequest.StateChangedEvent -= OnRemoveFriendRequestStateChanged;
+            UserRequest.Request.StateChangedEvent -= OnUserRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent -= OnUploadRequestStateChanged;
+            AddFriendRequest.Request.StateChangedEvent -= OnAddFriendRequestStateChanged;
+            RemoveFriendRequest.Request.StateChangedEvent -= OnRemoveFriendRequestStateChanged;
             LeaderboardEvents.AddFriendWasPressedEvent -= OnAddFriendWasPressed;
             LeaderboardEvents.RemoveFriendWasPressedEvent -= OnRemoveFriendWasPressed;
         }

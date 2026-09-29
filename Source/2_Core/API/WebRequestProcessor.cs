@@ -288,7 +288,6 @@ namespace BeatLeader.WebRequests {
 
         private async Task ProcessFailure(HttpResponseMessage? httpResponse, Exception? ex) {
             if (ex != null) {
-                RequestState = RequestState.Failed;
                 if (ex is TaskCanceledException) {
                     FailReason = "Request cancelled";
                     Plugin.Log.Debug($"[Request({_requestTask.GetHashCode()})] Cancelled");
@@ -296,6 +295,7 @@ namespace BeatLeader.WebRequests {
                     FailReason = "Exception occured, please report on Discord";
                     Plugin.Log.Info($"[Request({_requestTask.GetHashCode()})] Exception: {ex}");
                 }
+                RequestState = RequestState.Failed;
             } else if (httpResponse != null) {
                 NetworkingUtils.GetRequestFailReason(httpResponse, out string failReason, out bool shouldRetry);
 
@@ -303,8 +303,8 @@ namespace BeatLeader.WebRequests {
                     await Retry();
                     return;
                 } else {
-                    RequestState = RequestState.Failed;
                     FailReason = failReason;
+                    RequestState = RequestState.Failed;
                     Plugin.Log.Info($"[Request({_requestTask.GetHashCode()})] Fail reason: {failReason}");
                 }
             }

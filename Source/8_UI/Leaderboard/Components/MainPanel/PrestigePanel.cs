@@ -25,15 +25,15 @@ namespace BeatLeader.Components {
         protected override void OnInitialize() {
             base.OnInitialize();
             InitializePrestigeButtons();
-            UserRequest.StateChangedEvent += OnProfileRequestStateChanged;
-            UploadReplayRequest.StateChangedEvent += OnUploadStateChanged;
+            UserRequest.Request.StateChangedEvent += OnProfileRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent += OnUploadStateChanged;
 
             fireworksController = UnityEngine.Object.FindObjectsByType<FireworksController>(FindObjectsSortMode.None).FirstOrDefault();
         }
 
         protected override void OnDispose() {
-            UserRequest.StateChangedEvent -= OnProfileRequestStateChanged;
-            UploadReplayRequest.StateChangedEvent -= OnUploadStateChanged;
+            UserRequest.Request.StateChangedEvent -= OnProfileRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent -= OnUploadStateChanged;
         }
 
         #endregion

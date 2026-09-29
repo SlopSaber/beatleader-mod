@@ -56,12 +56,12 @@ namespace BeatLeader.DataManager {
         #region Start
 
         public void Initialize() {
-            LatestReleasesRequest.StateChangedEvent += OnLatestReleasesRequestStateChanged;
+            LatestReleasesRequest.Request.StateChangedEvent += OnLatestReleasesRequestStateChanged;
             LatestReleasesRequest.Send();
         }
 
         public void Dispose() {
-            LatestReleasesRequest.StateChangedEvent -= OnLatestReleasesRequestStateChanged;
+            LatestReleasesRequest.Request.StateChangedEvent -= OnLatestReleasesRequestStateChanged;
         }
 
         #endregion

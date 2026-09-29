@@ -20,12 +20,12 @@ namespace BeatLeader.DataManager {
             _taskSource = new();
             _ = FullCacheUpdate().RunCatching();
             LeaderboardState.AddSelectedBeatmapListener(OnSelectedBeatmapWasChanged);
-            LeaderboardRequest.StateChangedEvent += LeaderboardRequest_StateChangedEvent;
+            LeaderboardRequest.Request.StateChangedEvent += LeaderboardRequest_StateChangedEvent;
         }
 
         private void OnDestroy() {
             LeaderboardState.RemoveSelectedBeatmapListener(OnSelectedBeatmapWasChanged);
-            LeaderboardRequest.StateChangedEvent -= LeaderboardRequest_StateChangedEvent;
+            LeaderboardRequest.Request.StateChangedEvent -= LeaderboardRequest_StateChangedEvent;
         }
 
         #endregion

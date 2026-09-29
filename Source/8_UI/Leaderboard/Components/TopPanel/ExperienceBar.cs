@@ -117,10 +117,10 @@ namespace BeatLeader.Components {
             _initialized = false;
             SetMaterial();
             GlobalSettingsView.ExperienceBarConfigEvent += OnExperienceBarConfigChanged;
-            UserRequest.StateChangedEvent += OnProfileRequestStateChanged;
+            UserRequest.Request.StateChangedEvent += OnProfileRequestStateChanged;
             if (ConfigFileData.Instance.ExperienceBarEnabled) {
-                UploadReplayRequest.StateChangedEvent += OnUploadStateChanged;
-                PrestigeRequest.StateChangedEvent += OnPrestigeRequestStateChanged;
+                UploadReplayRequest.Request.StateChangedEvent += OnUploadStateChanged;
+                PrestigeRequest.Request.StateChangedEvent += OnPrestigeRequestStateChanged;
             } else {
                 LevelText = "";
                 NextLevelText = "";
@@ -131,9 +131,9 @@ namespace BeatLeader.Components {
 
         protected override void OnDispose() {
             GlobalSettingsView.ExperienceBarConfigEvent -= OnExperienceBarConfigChanged;
-            UserRequest.StateChangedEvent -= OnProfileRequestStateChanged;
-            UploadReplayRequest.StateChangedEvent -= OnUploadStateChanged;
-            PrestigeRequest.StateChangedEvent -= OnPrestigeRequestStateChanged;
+            UserRequest.Request.StateChangedEvent -= OnProfileRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent -= OnUploadStateChanged;
+            PrestigeRequest.Request.StateChangedEvent -= OnPrestigeRequestStateChanged;
             if (_materialInstance != null) Object.Destroy(_materialInstance);
         }
 
@@ -150,12 +150,12 @@ namespace BeatLeader.Components {
             _experienceBar.gameObject.SetActive(enabled);
             ResetExperienceBarData();
             if (enabled && !_initialized) {
-                UploadReplayRequest.StateChangedEvent += OnUploadStateChanged;
-                PrestigeRequest.StateChangedEvent += OnPrestigeRequestStateChanged;
+                UploadReplayRequest.Request.StateChangedEvent += OnUploadStateChanged;
+                PrestigeRequest.Request.StateChangedEvent += OnPrestigeRequestStateChanged;
                 SetLevelText(_level);
             } else if (!enabled && _initialized) {
-                UploadReplayRequest.StateChangedEvent -= OnUploadStateChanged;
-                PrestigeRequest.StateChangedEvent -= OnPrestigeRequestStateChanged;
+                UploadReplayRequest.Request.StateChangedEvent -= OnUploadStateChanged;
+                PrestigeRequest.Request.StateChangedEvent -= OnPrestigeRequestStateChanged;
                 LevelText = "";
                 NextLevelText = "";
                 HoverHint = "";

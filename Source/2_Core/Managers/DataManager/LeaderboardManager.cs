@@ -29,11 +29,11 @@ namespace BeatLeader.DataManager {
         public void Start() {
             SetFakeBloomProperty();
 
-            ScoresRequest.StateChangedEvent += OnScoresRequestStateChanged;
-            ClanScoresRequest.StateChangedEvent += OnScoresRequestStateChanged;
+            ScoresRequest.Request.StateChangedEvent += OnScoresRequestStateChanged;
+            ClanScoresRequest.Request.StateChangedEvent += OnScoresRequestStateChanged;
 
-            UploadReplayRequest.StateChangedEvent += OnUploadRequestStateChanged;
-            UserRequest.StateChangedEvent += OnUserRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent += OnUploadRequestStateChanged;
+            UserRequest.Request.StateChangedEvent += OnUserRequestStateChanged;
 
             PluginConfig.ScoresContextChangedEvent += OnScoresContextWasChanged;
             LeaderboardState.ScoresScopeChangedEvent += OnScoresScopeWasSelected;
@@ -50,11 +50,11 @@ namespace BeatLeader.DataManager {
         }
 
         private void OnDestroy() {
-            ScoresRequest.StateChangedEvent -= OnScoresRequestStateChanged;
-            ClanScoresRequest.StateChangedEvent -= OnScoresRequestStateChanged;
+            ScoresRequest.Request.StateChangedEvent -= OnScoresRequestStateChanged;
+            ClanScoresRequest.Request.StateChangedEvent -= OnScoresRequestStateChanged;
 
-            UploadReplayRequest.StateChangedEvent -= OnUploadRequestStateChanged;
-            UserRequest.StateChangedEvent -= OnUserRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent -= OnUploadRequestStateChanged;
+            UserRequest.Request.StateChangedEvent -= OnUserRequestStateChanged;
 
             PluginConfig.ScoresContextChangedEvent -= OnScoresContextWasChanged;
             LeaderboardState.ScoresScopeChangedEvent -= OnScoresScopeWasSelected;

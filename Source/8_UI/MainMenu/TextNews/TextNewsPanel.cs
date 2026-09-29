@@ -13,11 +13,11 @@ namespace BeatLeader.UI.MainMenu {
 
         protected override void OnInitialize() {
             NewsRequest.SendRequest();
-            NewsRequest.StateChangedEvent += OnRequestStateChanged;
+            NewsRequest.Request.StateChangedEvent += OnRequestStateChanged;
         }
 
         protected override void OnDestroy() {
-            NewsRequest.StateChangedEvent -= OnRequestStateChanged;
+            NewsRequest.Request.StateChangedEvent -= OnRequestStateChanged;
         }
 
         private void OnRequestStateChanged(WebRequests.IWebRequest<Paged<NewsPost>> instance, WebRequests.RequestState state, string? failReason) {

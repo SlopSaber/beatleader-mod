@@ -69,15 +69,15 @@ namespace BeatLeader.Components {
             _tabSelector._hideCellBackground = false;
             _tabSelector.SetTexts(new[] { "Scores", "Players" });
 
-            ScoresOfClanRequest.StateChangedEvent += OnScoresRequestStateChanged;
+            ScoresOfClanRequest.Request.StateChangedEvent += OnScoresRequestStateChanged;
 
-            ClanPlayersRequest.StateChangedEvent += OnScoresRequestStateChanged;
+            ClanPlayersRequest.Request.StateChangedEvent += OnScoresRequestStateChanged;
         }
 
         protected override void OnDispose() {
-            ScoresOfClanRequest.StateChangedEvent -= OnScoresRequestStateChanged;
+            ScoresOfClanRequest.Request.StateChangedEvent -= OnScoresRequestStateChanged;
 
-            ClanPlayersRequest.StateChangedEvent -= OnScoresRequestStateChanged;
+            ClanPlayersRequest.Request.StateChangedEvent -= OnScoresRequestStateChanged;
         }
 
         private void Update() {

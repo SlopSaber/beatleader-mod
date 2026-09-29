@@ -138,19 +138,19 @@ namespace BeatLeader.Components {
             _animationSettled = false;
             SetMaterial();
 
-            UserRequest.StateChangedEvent += OnProfileRequestStateChanged;
-            ScoresRequest.StateChangedEvent += OnScoresRequestStateChanged;
-            ClanScoresRequest.StateChangedEvent += OnScoresRequestStateChanged;
-            ClanScoresRequest.StateChangedEvent += OnClanScoresRequestStateChanged;
-            UploadReplayRequest.StateChangedEvent += OnUploadRequestStateChanged;
+            UserRequest.Request.StateChangedEvent += OnProfileRequestStateChanged;
+            ScoresRequest.Request.StateChangedEvent += OnScoresRequestStateChanged;
+            ClanScoresRequest.Request.StateChangedEvent += OnScoresRequestStateChanged;
+            ClanScoresRequest.Request.StateChangedEvent += OnClanScoresRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent += OnUploadRequestStateChanged;
         }
 
         protected override void OnDispose() {
-            UserRequest.StateChangedEvent -= OnProfileRequestStateChanged;
-            ScoresRequest.StateChangedEvent -= OnScoresRequestStateChanged;
-            ClanScoresRequest.StateChangedEvent -= OnScoresRequestStateChanged;
-            ClanScoresRequest.StateChangedEvent -= OnClanScoresRequestStateChanged;
-            UploadReplayRequest.StateChangedEvent -= OnUploadRequestStateChanged;
+            UserRequest.Request.StateChangedEvent -= OnProfileRequestStateChanged;
+            ScoresRequest.Request.StateChangedEvent -= OnScoresRequestStateChanged;
+            ClanScoresRequest.Request.StateChangedEvent -= OnScoresRequestStateChanged;
+            ClanScoresRequest.Request.StateChangedEvent -= OnClanScoresRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent -= OnUploadRequestStateChanged;
             if (_materialInstance != null) Object.Destroy(_materialInstance);
         }
 

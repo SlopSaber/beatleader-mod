@@ -54,16 +54,16 @@ namespace BeatLeader.Components {
         protected override void OnInitialize() {
             InitializeBackground();
 
-            AddFriendRequest.StateChangedEvent += OnAddFriendRequestStateChanged;
-            RemoveFriendRequest.StateChangedEvent += OnRemoveFriendRequestStateChanged;
+            AddFriendRequest.Request.StateChangedEvent += OnAddFriendRequestStateChanged;
+            RemoveFriendRequest.Request.StateChangedEvent += OnRemoveFriendRequestStateChanged;
             ProfileManager.FriendsUpdatedEvent += UpdateFriendButton;
             HiddenPlayersCache.HiddenPlayersUpdatedEvent += UpdateHideButton;
             UpdateLayout();
         }
 
         protected override void OnDispose() {
-            AddFriendRequest.StateChangedEvent -= OnAddFriendRequestStateChanged;
-            RemoveFriendRequest.StateChangedEvent -= OnRemoveFriendRequestStateChanged;
+            AddFriendRequest.Request.StateChangedEvent -= OnAddFriendRequestStateChanged;
+            RemoveFriendRequest.Request.StateChangedEvent -= OnRemoveFriendRequestStateChanged;
             ProfileManager.FriendsUpdatedEvent -= UpdateFriendButton;
             HiddenPlayersCache.HiddenPlayersUpdatedEvent -= UpdateHideButton;
         }

@@ -11,13 +11,13 @@ namespace BeatLeader.DataManager {
         #region Initialize / Dispose
 
         public void Initialize() {
-            UploadReplayRequest.StateChangedEvent += OnUploadRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent += OnUploadRequestStateChanged;
             LeaderboardState.AddSelectedBeatmapListener(OnSelectedBeatmapWasChanged);
             LeaderboardEvents.SubmitVoteEvent += SubmitVote;
         }
 
         public void Dispose() {
-            UploadReplayRequest.StateChangedEvent -= OnUploadRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent -= OnUploadRequestStateChanged;
             LeaderboardState.RemoveSelectedBeatmapListener(OnSelectedBeatmapWasChanged);
             LeaderboardEvents.SubmitVoteEvent -= SubmitVote;
         }

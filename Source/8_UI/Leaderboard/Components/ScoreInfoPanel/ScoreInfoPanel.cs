@@ -71,14 +71,14 @@ namespace BeatLeader.Components {
             _middlePanel.raycastTarget = true;
             _bottomPanel.raycastTarget = true;
 
-            ScoreStatsRequest.StateChangedEvent += OnScoreStatsRequestStateChanged;
+            ScoreStatsRequest.Request.StateChangedEvent += OnScoreStatsRequestStateChanged;
             LeaderboardState.ScoreInfoPanelTabChangedEvent += OnTabWasSelected;
             HiddenPlayersCache.HiddenPlayersUpdatedEvent += RefreshPlayer;
             OnTabWasSelected(LeaderboardState.ScoreInfoPanelTab);
         }
 
         protected override void OnDispose() {
-            ScoreStatsRequest.StateChangedEvent -= OnScoreStatsRequestStateChanged;
+            ScoreStatsRequest.Request.StateChangedEvent -= OnScoreStatsRequestStateChanged;
             HiddenPlayersCache.HiddenPlayersUpdatedEvent -= RefreshPlayer;
             LeaderboardState.ScoreInfoPanelTabChangedEvent -= OnTabWasSelected;
         }

@@ -16,14 +16,14 @@ namespace BeatLeader.Components {
             InitializeComponents();
 
             ScoreUtil.ReplayUploadStartedEvent += OnReplayUploadStarted;
-            UploadReplayRequest.StateChangedEvent += OnUploadRequestStateChanged;
-            UploadReplayRequest.ProgressChangedEvent += OnUploadRequestProgressChanged;
+            UploadReplayRequest.Request.StateChangedEvent += OnUploadRequestStateChanged;
+            UploadReplayRequest.Request.ProgressChangedEvent += OnUploadRequestProgressChanged;
         }
 
         protected override void OnDispose() {
             ScoreUtil.ReplayUploadStartedEvent -= OnReplayUploadStarted;
-            UploadReplayRequest.StateChangedEvent -= OnUploadRequestStateChanged;
-            UploadReplayRequest.ProgressChangedEvent -= OnUploadRequestProgressChanged;
+            UploadReplayRequest.Request.StateChangedEvent -= OnUploadRequestStateChanged;
+            UploadReplayRequest.Request.ProgressChangedEvent -= OnUploadRequestProgressChanged;
         }
 
         #endregion

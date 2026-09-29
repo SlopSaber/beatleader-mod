@@ -39,7 +39,7 @@ namespace BeatLeader.DataManager {
             _mainThreadSynchronizationContext = SynchronizationContext.Current;
             _loading = true;
 
-            PrestigeLevelsRequest.StateChangedEvent += OnPrestigeLevelsRequestStateChanged;
+            PrestigeLevelsRequest.Request.StateChangedEvent += OnPrestigeLevelsRequestStateChanged;
             PrestigeLevelsRequest.Send();
         }
 

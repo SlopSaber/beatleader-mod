@@ -16,11 +16,11 @@ namespace BeatLeader.UI.MainMenu {
 
         protected override void OnInitialize() {
             TrendingMapsRequest.Send();
-            TrendingMapsRequest.StateChangedEvent += OnRequestStateChanged;
+            TrendingMapsRequest.Request.StateChangedEvent += OnRequestStateChanged;
         }
 
         protected override void OnDestroy() {
-            TrendingMapsRequest.StateChangedEvent -= OnRequestStateChanged;
+            TrendingMapsRequest.Request.StateChangedEvent -= OnRequestStateChanged;
         }
 
         private void OnRequestStateChanged(WebRequests.IWebRequest<Paged<TrendingMapData>> instance, WebRequests.RequestState state, string? failReason) {

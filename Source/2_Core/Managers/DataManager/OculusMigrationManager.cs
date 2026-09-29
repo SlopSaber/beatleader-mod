@@ -28,7 +28,7 @@ namespace BeatLeader.DataManager {
 
         private void Start() {
             LeaderboardEvents.OculusMigrationButtonWasPressedAction += OnOculusMigrationButtonWasPressed;
-            GetOculusUserRequest.StateChangedEvent += GetOculusUserRequest_StateChangedEvent;
+            GetOculusUserRequest.Request.StateChangedEvent += GetOculusUserRequest_StateChangedEvent;
 
             CheckMigrationState();
         }
@@ -43,6 +43,7 @@ namespace BeatLeader.DataManager {
 
         private void OnDestroy() {
             LeaderboardEvents.OculusMigrationButtonWasPressedAction -= OnOculusMigrationButtonWasPressed;
+            GetOculusUserRequest.Request.StateChangedEvent -= GetOculusUserRequest_StateChangedEvent;
         }
 
         #endregion

@@ -15,13 +15,13 @@ namespace BeatLeader.Components {
         protected override void OnInitialize() {
             SetMaterial();
 
-            VoteRequest.StateChangedEvent += OnVoteRequestStateChanged;
-            VoteStatusRequest.StateChangedEvent += OnVoteStatusRequestStateChanged;
+            VoteRequest.Request.StateChangedEvent += OnVoteRequestStateChanged;
+            VoteStatusRequest.Request.StateChangedEvent += OnVoteStatusRequestStateChanged;
         }
 
         protected override void OnDispose() {
-            VoteRequest.StateChangedEvent -= OnVoteRequestStateChanged;
-            VoteStatusRequest.StateChangedEvent -= OnVoteStatusRequestStateChanged;
+            VoteRequest.Request.StateChangedEvent -= OnVoteRequestStateChanged;
+            VoteStatusRequest.Request.StateChangedEvent -= OnVoteStatusRequestStateChanged;
         }
 
         #endregion

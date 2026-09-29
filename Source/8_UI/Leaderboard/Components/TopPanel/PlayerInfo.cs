@@ -32,8 +32,8 @@ namespace BeatLeader.Components {
         protected override void OnInitialize() {
             _prestigeIcon.Size = 5;
             
-            UserRequest.StateChangedEvent += OnProfileRequestStateChanged;
-            UploadReplayRequest.StateChangedEvent += OnUploadRequestStateChanged;
+            UserRequest.Request.StateChangedEvent += OnProfileRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent += OnUploadRequestStateChanged;
             PrestigePanel.PrestigeWasPressedEvent += IncrementPrestigeIcon;
             GlobalSettingsView.ExperienceBarConfigEvent += OnExperienceBarConfigChanged;
             PluginConfig.ScoresContextChangedEvent += ChangeScoreContext;
@@ -41,8 +41,8 @@ namespace BeatLeader.Components {
         }
 
         protected override void OnDispose() {
-            UserRequest.StateChangedEvent -= OnProfileRequestStateChanged;
-            UploadReplayRequest.StateChangedEvent -= OnUploadRequestStateChanged;
+            UserRequest.Request.StateChangedEvent -= OnProfileRequestStateChanged;
+            UploadReplayRequest.Request.StateChangedEvent -= OnUploadRequestStateChanged;
             PrestigePanel.PrestigeWasPressedEvent -= IncrementPrestigeIcon;
             GlobalSettingsView.ExperienceBarConfigEvent -= OnExperienceBarConfigChanged;
             PluginConfig.ScoresContextChangedEvent -= ChangeScoreContext;

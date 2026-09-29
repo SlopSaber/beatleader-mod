@@ -9,11 +9,11 @@ namespace BeatLeader.Components {
         #region Initialize
 
         protected override void OnInitialize() {
-            ScoreStatsRequest.StateChangedEvent += OnScoreStatsRequestStateChanged;
+            ScoreStatsRequest.Request.StateChangedEvent += OnScoreStatsRequestStateChanged;
         }
 
         protected override void OnDispose() {
-            ScoreStatsRequest.StateChangedEvent -= OnScoreStatsRequestStateChanged;
+            ScoreStatsRequest.Request.StateChangedEvent -= OnScoreStatsRequestStateChanged;
         }
 
         #endregion
