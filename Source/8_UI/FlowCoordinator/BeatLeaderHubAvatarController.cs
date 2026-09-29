@@ -142,9 +142,9 @@ namespace BeatLeader.UI.Hub {
             _editAvatarFlowCoordinator.didFinishEvent += HandleFlowCoordinatorEditFinished;
         }
 
-        private void HandleFlowCoordinatorEditFinished(AvatarEditorFlowCoordinator _, IAvatarSystemMetadata _1, AvatarEditorFlowCoordinator.FinishAction finishAction) {
+        private void HandleFlowCoordinatorEditFinished(AvatarEditorFlowCoordinator coordinator, IAvatarSystemMetadata _1, AvatarEditorFlowCoordinator.FinishAction finishAction) {
             if (finishAction is AvatarEditorFlowCoordinator.FinishAction.Apply) {
-                UploadAvatar().RunCatching();
+                _ = UploadAvatar().RunCatching();
             }
             _editAvatarFlowCoordinator.DismissSelf();
         }

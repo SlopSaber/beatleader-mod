@@ -18,7 +18,7 @@ namespace BeatLeader.DataManager {
 
         private void Start() {
             _taskSource = new();
-            FullCacheUpdate().RunCatching();
+            _ = FullCacheUpdate().RunCatching();
             LeaderboardState.AddSelectedBeatmapListener(OnSelectedBeatmapWasChanged);
             LeaderboardRequest.StateChangedEvent += LeaderboardRequest_StateChangedEvent;
         }
@@ -91,17 +91,17 @@ namespace BeatLeader.DataManager {
                 page = result.metadata.page + 1;
             }
 
-            void OnFail(string reason) {
+            void OnFail(string? reason) {
                 failed = true;
                 Plugin.Log.Debug($"{lastTimestamp} | {page}/{totalPages} | cache update failed! {reason}");
             }
 
             do {
                 var result = await LeaderboardsRequest.Send(lastTimestamp, page, itemsPerPage).Join();
-                if (result.RequestState == WebRequests.RequestState.Finished) {
-                    OnSuccess(result.Result);
-                } else if (result.RequestState == WebRequests.RequestState.Failed) {
-                    OnFail(result.FailReason);
+                if (result.RequestState == WebRequests.RequestState.Finished && result.Result is { } pageResult) {
+                    OnSuccess(pageResult);
+                } else {
+                    OnFail(result.FailReason ?? "No leaderboard data returned");
                 }
             } while (!failed && page <= totalPages);
 

@@ -52,7 +52,7 @@ namespace BeatLeader.UI.Hub {
         private void RefreshVisuals(State state) {
             _state = state;
             if (state is State.ReadyToDownload) {
-                _mapDetailPanel.SetData(_mapDetail).ConfigureAwait(true);
+                _ = _mapDetailPanel.SetData(_mapDetail).RunCatching();
             }
             //text
             _titleLabel.Text = state switch {
@@ -143,11 +143,11 @@ namespace BeatLeader.UI.Hub {
         }
 
         private void SearchForBeatmap() {
-            SearchForBeatmapAsync(_tokenSource.Token).ConfigureAwait(true);
+            _ = SearchForBeatmapAsync(_tokenSource.Token).RunCatching();
         }
 
         private void DownloadBeatmap() {
-            DownloadBeatmapAsync(_tokenSource.Token).ConfigureAwait(true);
+            _ = DownloadBeatmapAsync(_tokenSource.Token).RunCatching();
         }
 
         protected override void OnInitialize() {

@@ -12,7 +12,7 @@ namespace BeatLeader.Utils {
         // ReSharper disable once InconsistentNaming
         private struct XrInstance_T { }
 
-        [Flags, UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+        [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
         private enum XrResult {
             XR_SUCCESS = 0,
             XR_ERROR_VALIDATION_FAILURE = -1,

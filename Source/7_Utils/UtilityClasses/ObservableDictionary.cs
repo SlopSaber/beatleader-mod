@@ -68,11 +68,13 @@ namespace BeatLeader {
         }
 
         void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex) {
-            throw new NotImplementedException();
+            ((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).CopyTo(array, arrayIndex);
         }
 
         bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item) {
-            throw new NotImplementedException();
+            if (!((ICollection<KeyValuePair<TKey, TValue>>)_dictionary).Remove(item)) return false;
+            ItemRemovedEvent?.Invoke(item.Key);
+            return true;
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _dictionary.GetEnumerator();

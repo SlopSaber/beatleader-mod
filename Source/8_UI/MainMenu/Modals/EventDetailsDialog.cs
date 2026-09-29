@@ -52,13 +52,13 @@ namespace BeatLeader.UI.MainMenu {
         private async Task DownloadPlaylist() {
             var result = await PlaylistRequest.Send(Context.playlistId.ToString()).Join();
 
-            if (result.RequestState == WebRequests.RequestState.Finished) {
+            if (result.RequestState == WebRequests.RequestState.Finished && result.Result is { } playlistBytes) {
                 var filename = Context.name.Replace(" ", "_");
                 FileManager.DeletePlaylist(filename);
 
-                if (FileManager.TrySaveRankedPlaylist(filename, result.Result)) {
+                if (FileManager.TrySaveRankedPlaylist(filename, playlistBytes)) {
                     PlaylistsLibInterop.TryRefreshPlaylists(true);
-                    SongCore.Loader.Instance.RefreshSongs(false);
+                    SongCore.Loader.Instance?.RefreshSongs(false);
                     await Task.Delay(TimeSpan.FromSeconds(2));
 
                     var playlist = PlaylistsLibInterop.TryFindPlaylist(filename);
@@ -91,7 +91,7 @@ namespace BeatLeader.UI.MainMenu {
             _loadingContainer.SetActive(true);
             offClickCloses = false;
 
-            DownloadPlaylist().RunCatching();
+            _ = DownloadPlaylist().RunCatching();
         }
 
         #endregion

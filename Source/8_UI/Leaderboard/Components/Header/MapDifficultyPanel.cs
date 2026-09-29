@@ -50,7 +50,7 @@ namespace BeatLeader.Components {
             IsActive = false;
 
             if (_diffInfo != null) {
-                SetDiffInfo((DiffInfo)_diffInfo);
+                if (_diffInfo is { } diffInfo) SetDiffInfo(diffInfo);
             }
         }
 
@@ -106,7 +106,7 @@ namespace BeatLeader.Components {
             _gameplayModifiers = modifiers;
             _modifiersRating = GameplayModifiersPanelPatch.ModifiersRating;
             _modifiersMap = GameplayModifiersPanelPatch.ModifiersMap;
-            SetDiffInfo((DiffInfo)_diffInfo);
+            if (_diffInfo is { } diffInfo) SetDiffInfo(diffInfo);
         }
 
         #endregion

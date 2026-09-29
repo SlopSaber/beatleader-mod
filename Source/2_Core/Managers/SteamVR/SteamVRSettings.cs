@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+using BeatLeader.Utils;
 
 namespace BeatLeader.SteamVR {
     internal static class SteamVRSettings {
@@ -41,9 +42,10 @@ namespace BeatLeader.SteamVR {
         private const int TimeoutSeconds = 15;
 
         public static void UpdateAsync() {
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(1000 * TimeoutSeconds);
-            Task.Run(() => UpdateTask(cts.Token), cts.Token);
+            _ = Task.Run(async () => {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(TimeoutSeconds));
+                await UpdateTask(cts.Token);
+            }).RunCatching();
         }
 
         private static async Task UpdateTask(CancellationToken cancellationToken) {

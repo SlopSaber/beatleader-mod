@@ -123,11 +123,11 @@ namespace BeatLeader.Components {
 
             tokenSource?.Cancel();
             tokenSource = new CancellationTokenSource();
-            StartCoroutine(LoadImage());
+            StartCoroutine(LoadImage(_url, tokenSource.Token));
         }
 
-        private IEnumerator LoadImage() {
-            var loadTask = AvatarStorage.GetPlayerAvatarCoroutine(_url, false, OnAvatarLoadSuccess, OnAvatarLoadFailed, tokenSource.Token);
+        private IEnumerator LoadImage(string url, CancellationToken cancellationToken) {
+            var loadTask = AvatarStorage.GetPlayerAvatarCoroutine(url, false, OnAvatarLoadSuccess, OnAvatarLoadFailed, cancellationToken);
             yield return loadTask;
         }
 

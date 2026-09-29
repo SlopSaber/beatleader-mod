@@ -14,7 +14,7 @@ namespace BeatLeader.API {
         private static string WithCookieEndpoint => BLConstants.BEATLEADER_API_URL + "/v2/replayoculus?{0}";
 
         public static void Send(Replay replay, PlayEndData data) {
-            Task.Run(() => {
+            _ = Task.Run(() => {
                 var query = new Dictionary<string, object>() {
                     { "time", data.Time },
                     { "type", (int)data.EndType }

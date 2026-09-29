@@ -104,7 +104,7 @@ namespace BeatLeader.UI.Hub {
 
         private void HandleDownloadBeatmapDialogClosed(IModal modal, bool closed) {
             if (closed) return;
-            SetDataInternalAsync(Header!, CancellationToken).ConfigureAwait(true);
+            _ = SetDataInternalAsync(Header!, CancellationToken).RunCatching();
         }
 
         private void HandleDeleteButtonClicked() {

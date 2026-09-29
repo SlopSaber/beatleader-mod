@@ -122,7 +122,7 @@ namespace BeatLeader.Components {
 
                 if (neverLoaded) {
                     _blockedUntilLoaded = true;
-                    BlockUntilLoaded().RunCatching();
+                    _ = BlockUntilLoaded().RunCatching();
                 }
             }
         }
@@ -220,11 +220,11 @@ namespace BeatLeader.Components {
                         RefreshDownloadButton(DownloadButtonState.Unavailable);
                         RefreshPlayButton(PlayButtonState.Unavailable);
 
-                        StartReplay(instance.Result!).RunCatching();
+                        _ = StartReplay(instance.Result!).RunCatching();
                     }
                     // When initiated using the download button
                     else {
-                        Task.Run(async () => {
+                        _ = Task.Run(async () => {
                                 var result = await ReplayManager.SaveAnyReplayAsync(instance.Result!, null, CancellationToken.None);
                                 _replayHeader = result.Header;
                             }
@@ -257,7 +257,7 @@ namespace BeatLeader.Components {
                 _downloadButton.interactable = false;
                 _playButton.interactable = false;
 
-                LoadAndStartReplay().RunCatching();
+                _ = LoadAndStartReplay().RunCatching();
                 return;
             }
 
@@ -308,7 +308,7 @@ namespace BeatLeader.Components {
             StaticReplayRequest.Send(_score!.replay);
         }
 
-        private static string FormatFailString(string failReason) {
+        private static string FormatFailString(string? failReason) {
             return $"<color=red>Fail: {failReason}</color>";
         }
 

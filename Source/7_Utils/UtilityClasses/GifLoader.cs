@@ -122,7 +122,7 @@ namespace B83.Image.GIF
         public EScreenDescriptorFlags flags;
         public byte bgColorIndex;
         public byte pixelAspectRatio;
-        public Color32[] globalColorTable;
+        public Color32[]? globalColorTable;
         public bool HasGlobalColorTable
         {
             get { return (flags & EScreenDescriptorFlags.GlobalColorTableFlag) > 0; }
@@ -174,13 +174,13 @@ namespace B83.Image.GIF
     {
         public GIFImage Parent { get; set; }
         public EBlockType blockType { get { return EBlockType.ImageDescriptor; } }
-        public GIFGraphicControlExt graphicControl { get; set; }
+        public GIFGraphicControlExt graphicControl { get; set; } = new GIFGraphicControlExt();
         public ushort xPos;
         public ushort yPos;
         public ushort width;
         public ushort height;
         public EImageDescriptorFlags flags;
-        public Color32[] colorTable;
+        public Color32[]? colorTable;
         public Color32[] usedColorTable;
         public List<byte> data;
         public int packedSize;
@@ -279,7 +279,10 @@ namespace B83.Image.GIF
             }
             if (IsInterlaced)
                 CalcInterlacedLimits();
-            var bgColor = Parent.screen.globalColorTable[bgColorIndex];
+            var globalColors = Parent.screen.globalColorTable;
+            var bgColor = globalColors != null && bgColorIndex >= 0 && bgColorIndex < globalColors.Length
+                ? globalColors[bgColorIndex]
+                : default;
             if (Parent.BackgroundTransparent)
                 bgColor.a = 0;
             for (int y = 0; y < height; y++)
@@ -295,7 +298,7 @@ namespace B83.Image.GIF
                     int index = xPos + aXOffset + x + (iy + aYOffset) * aWidth;
                     if (col == trColor)
                     {
-                        if (useBKColor)
+                        if (useBKColor && index >= 0 && index < aData.Length)
                             //aData[index] = usedColorTable[bgColor];
                             aData[index] = bgColor;
                             
@@ -308,9 +311,11 @@ namespace B83.Image.GIF
         }
         public void Dispose(Color32[] aData, int aWidth, int aHeight, int aXOffset = 0, int aYOffset = 0)
         {
-            if (graphicControl.DisposalMethod == EDisposalMethod.RestoreBackgroundColor && Parent.screen.HasGlobalColorTable)
+            if (graphicControl.DisposalMethod == EDisposalMethod.RestoreBackgroundColor
+                && Parent.screen.globalColorTable is { } globalColors
+                && Parent.screen.bgColorIndex < globalColors.Length)
             {
-                var col = Parent.screen.globalColorTable[Parent.screen.bgColorIndex];
+                var col = globalColors[Parent.screen.bgColorIndex];
                 if (Parent.BackgroundTransparent)
                     col.a = 0;
                 for (int y = 0; y < height; y++)
@@ -320,7 +325,7 @@ namespace B83.Image.GIF
                     for (int x = 0; x < width; x++)
                     {
                         int index = xPos + aXOffset + x + (iy + aYOffset) * aWidth;
-                        aData[index] = col;
+                        if (index >= 0 && index < aData.Length) aData[index] = col;
                     }
                 }
 
@@ -333,7 +338,7 @@ namespace B83.Image.GIF
         public GIFImage Parent { get; set; }
         public EBlockType blockType { get { return EBlockType.Extension; } }
         public EExtensionType extType { get { return EExtensionType.PlainText; } }
-        public GIFGraphicControlExt graphicControl { get; set; }
+        public GIFGraphicControlExt graphicControl { get; set; } = new GIFGraphicControlExt();
         public ushort xPos;
         public ushort yPos;
         public ushort width;
@@ -345,11 +350,11 @@ namespace B83.Image.GIF
         public string text;
         public void DrawTo(Color32[] aData, int aWidth, int aHeight, int aXOffset = 0, int aYOffset = 0)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("GIF plain-text rendering is not supported.");
         }
         public void Dispose(Color32[] aData, int aWidth, int aHeight, int aXOffset = 0, int aYOffset = 0)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("GIF plain-text rendering is not supported.");
         }
 
     }
@@ -425,21 +430,21 @@ namespace B83.Image.GIF
     public class GIFLoader
     {
         byte[] buf = new byte[255];
-        GIFGraphicControlExt lastGrCtrl = null;
+        GIFGraphicControlExt? lastGrCtrl;
 
-        public GIFImage Load(string aFileName)
+        public GIFImage? Load(string aFileName)
         {
             using (var stream = File.OpenRead(aFileName))
                 return Load(stream);
         }
 
-        public GIFImage Load(Stream aStream)
+        public GIFImage? Load(Stream aStream)
         {
             using (var reader = new BinaryReader(aStream))
                 return Load(reader);
         }
 
-        public GIFImage Load(BinaryReader aReader)
+        public GIFImage? Load(BinaryReader aReader)
         {
             GIFImage img = new GIFImage();
             if (!ReadFileHeader(aReader, img))
@@ -487,7 +492,7 @@ namespace B83.Image.GIF
             return img.screen.HasGlobalColorTable ^ img.screen.globalColorTable == null;
         }
 
-        private IGIFBlock ReadBlock(BinaryReader aReader, GIFImage aImage)
+        private IGIFBlock? ReadBlock(BinaryReader aReader, GIFImage aImage)
         {
             byte blockType = aReader.ReadByte();
             switch ((EBlockType)blockType)
@@ -648,7 +653,8 @@ namespace B83.Image.GIF
             else
             {
                 res.colorTable = null;
-                res.usedColorTable = aImage.screen.globalColorTable;
+                res.usedColorTable = aImage.screen.globalColorTable
+                    ?? throw new InvalidDataException("GIF image has no local or global color table.");
             }
             if (lastGrCtrl != null)
             {

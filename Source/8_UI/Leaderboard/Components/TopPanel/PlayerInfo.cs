@@ -65,13 +65,13 @@ namespace BeatLeader.Components {
                     OnProfileRequestFailed("Error");
                     break;
                 case WebRequests.RequestState.Failed:
-                    OnProfileRequestFailed(failReason);
+                    OnProfileRequestFailed(failReason ?? "Profile request failed");
                     break;
                 case WebRequests.RequestState.Started:
                     OnProfileRequestStarted();
                     break;
-                case WebRequests.RequestState.Finished:
-                    player = instance.Result;
+                case WebRequests.RequestState.Finished when instance.Result is { } result:
+                    player = result;
                     OnProfileUpdated(player);
                     break;
                 default: return;

@@ -78,7 +78,7 @@ namespace BeatLeader.ViewControllers {
         }
 
         private void HandleReplayButtonClicked() {
-            ReplayerMenuLoader.Instance!.StartLastReplayAsync().RunCatching();
+            _ = ReplayerMenuLoader.Instance!.StartLastReplayAsync().RunCatching();
         }
 
         private void PresentVotingModal() {

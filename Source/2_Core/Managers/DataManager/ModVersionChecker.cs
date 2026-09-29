@@ -25,7 +25,7 @@ namespace BeatLeader.DataManager {
         public static ReleaseInfo LatestReleaseInfo {
             get => _latestReleaseInfo;
             private set {
-                if (_latestReleaseInfo.Equals(value)) return;
+                if (_latestReleaseInfo.version == value.version && _latestReleaseInfo.link == value.link) return;
                 _latestReleaseInfo = value;
                 var current = Version.TryParse(CurrentReleaseInfo.version, out var tmp) ? tmp : new Version(0, 0);
                 var latest = Version.TryParse(value.version, out tmp) ? tmp : new Version(0, 0);

@@ -1,5 +1,6 @@
 ﻿using BeatLeader.API;
 using BeatLeader.Models;
+using BeatLeader.Utils;
 using BeatSaberMarkupLanguage.Attributes;
 using JetBrains.Annotations;
 using System;
@@ -13,7 +14,7 @@ namespace BeatLeader.Components {
     internal class PrestigePanel : AbstractReeModal<object> {
         #region Init / Dispose
 
-        private FireworksController fireworksController = null;
+        private FireworksController? fireworksController = null;
 
         [UIComponent("primaryText"), UsedImplicitly]
         private TextMeshProUGUI primaryText = default!;
@@ -41,8 +42,8 @@ namespace BeatLeader.Components {
 
         private void OnProfileRequestStateChanged(WebRequests.IWebRequest<Player> instance, WebRequests.RequestState state, string? failReason) {
             switch (state) {
-                case WebRequests.RequestState.Finished:
-                    UpdatePanelContent(instance.Result);
+                case WebRequests.RequestState.Finished when instance.Result is { } player:
+                    UpdatePanelContent(player);
                     break;
                 default: return;
             }
@@ -52,8 +53,8 @@ namespace BeatLeader.Components {
             string? failReason) {
             switch (state) {
                 case WebRequests.RequestState.Finished:
-                    if (instance.Result.Status != ScoreUploadStatus.Error) {
-                        UpdatePanelContent(instance.Result.Score.Player);
+                    if (instance.Result is { } result && result.Status != ScoreUploadStatus.Error) {
+                        UpdatePanelContent(result.Score.Player);
                     }
                     break;
                 default: return;
@@ -90,16 +91,15 @@ namespace BeatLeader.Components {
             PrestigeWasPressedEvent?.Invoke();
             _PrestigeYesButton.interactable = false;
             if (fireworksController != null) {
-                Task.Run(() => Fireworks(5));
+                _ = Fireworks(fireworksController, 5).RunCatching();
             }
             Close();
         }
 
-        private async Task<bool> Fireworks(double duration) {
-            fireworksController.enabled = true;
+        private static async Task Fireworks(FireworksController controller, double duration) {
+            controller.enabled = true;
             await Task.Delay(TimeSpan.FromSeconds(duration));
-            fireworksController.enabled = false;
-            return true;
+            if (controller != null) controller.enabled = false;
         }
 
         #endregion

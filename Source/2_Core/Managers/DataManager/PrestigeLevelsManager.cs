@@ -46,11 +46,11 @@ namespace BeatLeader.DataManager {
         private static void OnPrestigeLevelsRequestStateChanged(
             WebRequests.IWebRequest<List<PrestigeLevel>> instance,
             WebRequests.RequestState state,
-            string failReason
+            string? failReason
         ) {
             switch (state) {
                 case WebRequests.RequestState.Finished:
-                    var levels = instance.Result!;
+                    if (instance.Result is not { } levels) break;
 
                     foreach (var level in levels) {
                         if (string.IsNullOrEmpty(level.BigIcon)) {

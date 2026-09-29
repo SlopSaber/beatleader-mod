@@ -53,7 +53,7 @@ namespace BeatLeader.Utils {
         }
 
         private static void SaveReplay(Replay replay, PlayEndData data) {
-            ReplayManager.SaveReplayAsync(replay, data, CancellationToken.None).RunCatching();
+            _ = ReplayManager.SaveReplayAsync(replay, data, CancellationToken.None).RunCatching();
         }
 
         public static void UploadReplay(Replay replay, PlayEndData data) {

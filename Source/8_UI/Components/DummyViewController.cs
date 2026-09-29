@@ -17,7 +17,7 @@ namespace BeatLeader.Components {
         }
 
         public override void __Init(Screen screen, ViewController parentViewController, ContainerViewController containerViewController) {
-            if (_originalViewController == null) throw new ArgumentNullException(nameof(_originalViewController));
+            if (_originalViewController == null) throw new InvalidOperationException("The original view controller has not been assigned.");
             _originalScreen = _originalViewController.screen;
             _originalParentController = _originalViewController.parentViewController;
             _originalParent = transform.parent;
@@ -27,7 +27,7 @@ namespace BeatLeader.Components {
         }
 
         public override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
-            if (_originalViewController == null) throw new ArgumentNullException(nameof(_originalViewController));
+            if (_originalViewController == null) throw new InvalidOperationException("The original view controller has not been assigned.");
             _originalViewController.__Activate(!_originalIsInHierarchy && addedToHierarchy, screenSystemEnabling);
         }
 

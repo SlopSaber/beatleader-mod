@@ -88,7 +88,7 @@ namespace BeatLeader.WebRequests {
                 Instance.Dispose();
             }
 
-            Task.Run(async () => {
+            _ = Task.Run(async () => {
                     Instance = WebRequestFactory.Send(requestMessage, customParser ?? descriptor, requestParams, tokenSource.Token, waitForLogin);
                     Instance.StateChangedEvent += Instance_StateChangedEvent;
                     Instance.ProgressChangedEvent += Instance_ProgressChangedEvent;
@@ -141,7 +141,7 @@ namespace BeatLeader.WebRequests {
         }
 
         internal static void Instance_StateChangedEvent(IWebRequest<TResult> instance, RequestState state, string? failReason) {
-            UnityMainThreadTaskScheduler.Factory.StartNew(() => {
+            _ = UnityMainThreadTaskScheduler.Factory.StartNew(() => {
                     StateChangedEventInternal?.Invoke(instance, state, failReason);
                 }
             ).RunCatching();
@@ -161,7 +161,7 @@ namespace BeatLeader.WebRequests {
         }
 
         internal static void Instance_ProgressChangedEvent(IWebRequest<TResult> instance, float downloadProgress, float uploadProgress, float overallProgress) {
-            UnityMainThreadTaskScheduler.Factory.StartNew(() => {
+            _ = UnityMainThreadTaskScheduler.Factory.StartNew(() => {
                     ProgressChangedEventInternal?.Invoke(instance, downloadProgress, uploadProgress, overallProgress);
                 }
             ).RunCatching();

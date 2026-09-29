@@ -22,7 +22,7 @@ namespace BeatLeader.Installers {
         public override void InstallBindings() {
             Plugin.Log.Debug("OnMenuInstaller");
             
-            Authentication.Login().RunCatching();
+            _ = Authentication.Login().RunCatching();
 
             _menuContainer = base.Container;
             BindLeaderboard();

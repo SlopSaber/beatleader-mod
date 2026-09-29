@@ -26,12 +26,12 @@ namespace BeatLeader.Components {
         #region Events
 
         private void OnScoresRequestStateChanged(IWebRequest<ScoresTableContent> instance, WebRequests.RequestState state, string? failReason) {
-            if (state is not WebRequests.RequestState.Finished) {
+            if (state is not WebRequests.RequestState.Finished || instance.Result is not { } result) {
                 DisableAllInteraction();
                 return;
             }
 
-            OnScoresFetched(instance.Result);
+            OnScoresFetched(result);
         }
 
         private void OnScoresFetched(ScoresTableContent scoresData) {

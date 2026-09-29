@@ -17,7 +17,7 @@ namespace BeatLeader.DataManager {
             { PlaylistType.Ranked, new PlaylistInfo("ranked", "BeatLeader ranked") },
         };
 
-        private static bool TryGetPlaylistInfo(PlaylistType playlistType, out PlaylistInfo playlistInfo) {
+        private static bool TryGetPlaylistInfo(PlaylistType playlistType, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out PlaylistInfo? playlistInfo) {
             if (!Playlists.ContainsKey(playlistType)) {
                 playlistInfo = null;
                 return false;
@@ -73,9 +73,9 @@ namespace BeatLeader.DataManager {
 
         private void Start() {
             LeaderboardEvents.PlaylistUpdateButtonWasPressedAction += UpdatePlaylist;
-            VerifyPlaylistVersion(PlaylistType.Nominated);
-            VerifyPlaylistVersion(PlaylistType.Qualified);
-            VerifyPlaylistVersion(PlaylistType.Ranked);
+            _ = VerifyPlaylistVersion(PlaylistType.Nominated).RunCatching();
+            _ = VerifyPlaylistVersion(PlaylistType.Qualified).RunCatching();
+            _ = VerifyPlaylistVersion(PlaylistType.Ranked).RunCatching();
         }
 
         private void OnDestroy() {
@@ -95,9 +95,9 @@ namespace BeatLeader.DataManager {
             }
 
             var result = await PlaylistRequest.Send(playlistInfo.PlaylistId).Join();
-            if (result.RequestState == WebRequests.RequestState.Finished) {
-                SetPlaylistState(playlistType, ComparePlaylists(result.Result, stored) ? PlaylistState.UpToDate : PlaylistState.Outdated);
-            } else if (result.RequestState == WebRequests.RequestState.Failed) {
+            if (result.RequestState == WebRequests.RequestState.Finished && result.Result is { } playlistBytes) {
+                SetPlaylistState(playlistType, ComparePlaylists(playlistBytes, stored) ? PlaylistState.UpToDate : PlaylistState.Outdated);
+            } else if (result.RequestState is WebRequests.RequestState.Failed or WebRequests.RequestState.Finished) {
                 Plugin.Log.Debug($"{playlistType} playlist check failed: {result.FailReason}");
             }
         }
@@ -125,24 +125,24 @@ namespace BeatLeader.DataManager {
 
             var result = await PlaylistRequest.Send(playlistInfo.PlaylistId).Join();
 
-            if (result.RequestState == WebRequests.RequestState.Finished) {
+            if (result.RequestState == WebRequests.RequestState.Finished && result.Result is { } playlistBytes) {
                 FileManager.DeletePlaylist(playlistInfo.FileName);
 
-                if (FileManager.TrySaveRankedPlaylist(playlistInfo.FileName, result.Result)) {
+                if (FileManager.TrySaveRankedPlaylist(playlistInfo.FileName, playlistBytes)) {
                     PlaylistsLibInterop.TryRefreshPlaylists(true);
-                    SongCore.Loader.Instance.RefreshSongs(false);
+                    SongCore.Loader.Instance?.RefreshSongs(false);
                     SetPlaylistState(playlistType, PlaylistState.UpToDate);
                 }
 
                 PlaylistUpdateFinishedEvent?.Invoke(playlistType);
-            } else if (result.RequestState == WebRequests.RequestState.Failed) {
+            } else if (result.RequestState is WebRequests.RequestState.Failed or WebRequests.RequestState.Finished) {
                 Plugin.Log.Debug($"{playlistType} playlist update failed: {result.FailReason}");
                 PlaylistUpdateFinishedEvent?.Invoke(playlistType);
             }
         }
 
         public void UpdatePlaylist(PlaylistType playlistType) {
-            UpdatePlaylistAsync(playlistType).RunCatching();
+            _ = UpdatePlaylistAsync(playlistType).RunCatching();
         }
 
         #endregion

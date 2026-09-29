@@ -9,12 +9,12 @@ namespace BeatLeader.Models {
 
         public readonly bool IsAnimated;
         private readonly Texture2D _originalTexture;
-        private readonly GIFImage _gifImage;
+        private readonly GIFImage? _gifImage;
 
         private AvatarImage(
             Texture2D originalTexture,
             bool isAnimated,
-            GIFImage gifImage
+            GIFImage? gifImage
         ) {
             IsAnimated = isAnimated;
             _originalTexture = originalTexture;
@@ -34,7 +34,7 @@ namespace BeatLeader.Models {
         #region PlaybackCoroutine
 
         public IEnumerator PlaybackCoroutine(RenderTexture targetTexture) {
-            if (!IsAnimated) {
+            if (!IsAnimated || _gifImage == null) {
                 Graphics.Blit(_originalTexture, targetTexture);
                 yield break;
             }

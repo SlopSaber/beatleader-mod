@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BeatLeader.Utils;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -101,7 +102,7 @@ namespace BeatLeader.UI.Hub {
         private BeatmapPreviewPanel _beatmapPreviewPanel = null!;
 
         private void SetBeatmapLevel(BeatmapLevel level) {
-            _beatmapPreviewPanel.SetBeatmapLevel(level).ConfigureAwait(true);
+            _ = _beatmapPreviewPanel.SetBeatmapLevel(level).RunCatching();
         }
 
         protected override GameObject Construct() {

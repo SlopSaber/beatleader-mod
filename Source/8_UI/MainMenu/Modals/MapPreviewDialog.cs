@@ -160,7 +160,7 @@ namespace BeatLeader.UI.MainMenu {
 
             // Load cover image
             if (!string.IsNullOrEmpty(Context.song.coverImage)) {
-                LoadCoverImage().RunCatching();
+                _ = LoadCoverImage().RunCatching();
             }
         }
 
@@ -210,7 +210,7 @@ namespace BeatLeader.UI.MainMenu {
             if (!string.IsNullOrEmpty(Context.song.hash)) {
                 _downloadCancellationSource?.Cancel();
                 _downloadCancellationSource = new CancellationTokenSource();
-                LoadAndPlayPreview(_downloadCancellationSource.Token).RunCatching();
+                _ = LoadAndPlayPreview(_downloadCancellationSource.Token).RunCatching();
             }
         }
 

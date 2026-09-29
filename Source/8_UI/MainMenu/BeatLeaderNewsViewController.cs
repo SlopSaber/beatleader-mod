@@ -16,7 +16,7 @@ namespace BeatLeader.UI.MainMenu {
             _newsPanel = new NewsViewPanel();
             _newsPanel.Use(transform);
 
-            LoadPlatformEvents().RunCatching();
+            _ = LoadPlatformEvents().RunCatching();
 
             UpdateScreen();
         }

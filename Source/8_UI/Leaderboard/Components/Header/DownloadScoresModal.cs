@@ -246,7 +246,7 @@ namespace BeatLeader.Components {
             }
 
             _saveReplaysToggle.SetActive(false, false);
-            CheckReplaysDownloaded().RunCatching();
+            _ = CheckReplaysDownloaded().RunCatching();
         }
 
         protected override void OnClose(bool closed) {

@@ -235,7 +235,7 @@ namespace BeatLeader.UI.Hub {
             _beatmapPanel.ShowComponent = beatmap.HasValue;
 
             if (beatmap.HasValue) {
-                _beatmapPreviewPanel.SetBeatmap(beatmap).RunCatching();
+                _ = _beatmapPreviewPanel.SetBeatmap(beatmap).RunCatching();
             }
         }
 

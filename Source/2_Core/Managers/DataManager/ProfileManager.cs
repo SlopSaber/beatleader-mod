@@ -25,14 +25,14 @@ namespace BeatLeader.DataManager {
             get => _profile;
             private set {
                 _profile = value;
-                HasProfile = true;
+                HasProfile = value != null;
             }
         }
 
         private static TaskCompletionSource<object?>? _profileLoadTaskCompletionSource;
         private static Player? _profile;
 
-        public static bool IsCurrentPlayer(string otherId) {
+        public static bool IsCurrentPlayer(string? otherId) {
             return HasProfile && string.Equals(Profile!.id, otherId, StringComparison.Ordinal);
         }
 
@@ -44,14 +44,14 @@ namespace BeatLeader.DataManager {
             return HasProfile && Profile is { } profile && profile.clans.Length > 0 && profile.clans[0].id == clan.id;
         }
         
-        public static bool TryGetUserId(out string? userId) {
-            if (!HasProfile) {
+        public static bool TryGetUserId([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? userId) {
+            if (!HasProfile || Profile is not { } profile) {
                 userId = null;
                 return false;
             }
 
-            userId = Profile!.id;
-            return true;
+            userId = profile.id;
+            return userId != null;
         }
         
         public static Task WaitUntilProfileLoad() {
@@ -152,7 +152,7 @@ namespace BeatLeader.DataManager {
                     LeaderboardEvents.ShowStatusMessage(failReason, LeaderboardEvents.StatusMessageType.Bad);
                     break;
                 case WebRequests.RequestState.Finished:
-                    AddFriend(instance.Result);
+                    if (instance.Result is { } player) AddFriend(player);
                     break;
             }
         }
@@ -163,7 +163,7 @@ namespace BeatLeader.DataManager {
                     LeaderboardEvents.ShowStatusMessage(failReason, LeaderboardEvents.StatusMessageType.Bad);
                     break;
                 case WebRequests.RequestState.Finished:
-                    RemoveFriend(instance.Result);
+                    if (instance.Result is { } player) RemoveFriend(player);
                     break;
             }
         }
@@ -171,7 +171,10 @@ namespace BeatLeader.DataManager {
         private static void OnUserRequestStateChanged(WebRequests.IWebRequest<Player> instance, WebRequests.RequestState state, string? failReason) {
             if (state is WebRequests.RequestState.Failed) FinishTask();
             if (state is not WebRequests.RequestState.Finished) return;
-            var result = instance.Result;
+            if (instance.Result is not { } result) {
+                FinishTask();
+                return;
+            }
             Profile = result;
             Roles = FormatUtils.ParsePlayerRoles(result.role);
             SetFriends(result.friends);

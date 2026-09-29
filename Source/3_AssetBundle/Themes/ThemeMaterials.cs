@@ -12,7 +12,7 @@ namespace BeatLeader.Themes {
         public Material tier3AvatarFull;
         public Material tier3AvatarSmall;
 
-        public bool TryGetAvatarMaterial(ThemeTier tier, bool smallVersion, out Material material) {
+        public bool TryGetAvatarMaterial(ThemeTier tier, bool smallVersion, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Material? material) {
             switch (tier) {
                 case ThemeTier.Tier1:
                     material = smallVersion ? tier1AvatarSmall : tier1AvatarFull;

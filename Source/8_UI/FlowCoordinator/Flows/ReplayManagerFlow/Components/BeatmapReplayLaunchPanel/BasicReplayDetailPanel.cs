@@ -108,7 +108,7 @@ namespace BeatLeader.UI.Hub {
             if (header == Header) return;
             _tokenSource.Cancel();
             _tokenSource = new();
-            SetDataAsync(header, _tokenSource.Token).RunCatching();
+            _ = SetDataAsync(header, _tokenSource.Token).RunCatching();
         }
 
         private async Task SetDataAsync(IReplayHeader? header, CancellationToken token) {

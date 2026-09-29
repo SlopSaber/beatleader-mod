@@ -50,7 +50,7 @@ namespace BeatLeader.DataManager {
         #region CheckMigrationState
 
         private void CheckMigrationState() {
-            GetOculusUserRequest.Send().RunCatching();
+            _ = GetOculusUserRequest.Send().RunCatching();
         }
 
         #endregion

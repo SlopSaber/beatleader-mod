@@ -10,7 +10,7 @@ namespace BeatLeader.Themes {
         public ThemeMaterials sparks;
         public ThemeMaterials special;
 
-        public bool TryGetThemeMaterials(ThemeType themeType, out ThemeMaterials themeMaterials) {
+        public bool TryGetThemeMaterials(ThemeType themeType, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out ThemeMaterials? themeMaterials) {
             switch (themeType) {
                 case ThemeType.Booster:
                     themeMaterials = booster;

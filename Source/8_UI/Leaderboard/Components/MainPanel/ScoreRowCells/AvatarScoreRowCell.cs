@@ -21,10 +21,10 @@ namespace BeatLeader.Components {
         #region Implementation
 
         public struct Data {
-            public readonly string url;
+            public readonly string? url;
             public readonly ProfileSettings? profileSettings;
 
-            public Data(string url, ProfileSettings? profileSettings) {
+            public Data(string? url, ProfileSettings? profileSettings) {
                 this.url = url;
                 this.profileSettings = profileSettings;
             }

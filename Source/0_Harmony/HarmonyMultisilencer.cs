@@ -7,8 +7,8 @@ using System.Reflection;
 namespace BeatLeader {
     //TODO: rework
     internal class HarmonyMultisilencer : IDisposable {
-        public HarmonyMultisilencer(IEnumerable<MethodInfo> methods = null, bool enable = true) {
-            silencedMethods = new(methods);
+        public HarmonyMultisilencer(IEnumerable<MethodInfo>? methods = null, bool enable = true) {
+            silencedMethods = new(methods ?? Array.Empty<MethodInfo>());
             silencedMethods.CollectionChanged += HandleObservableCollectionChanged;
             Enabled = enable;
             HandleObservableCollectionChanged(null, null);
@@ -31,7 +31,7 @@ namespace BeatLeader {
             silencedMethods.Clear();
         }
 
-        private void HandleObservableCollectionChanged(object sender, EventArgs e) {
+        private void HandleObservableCollectionChanged(object? sender, EventArgs? e) {
             _silencers.ToList().ForEach(x => {
                 if (!silencedMethods.Contains(x.method)) {
                     _silencers.Remove(x);

@@ -26,7 +26,7 @@ internal class SpecialEventMapPanel : ReactiveComponent {
     }
 
     public void PlayPreview() {
-        LoadAndPlayPreview(CancellationToken.None).RunCatching();
+        _ = LoadAndPlayPreview(CancellationToken.None).RunCatching();
     }
 
     public void CancelPreview() {

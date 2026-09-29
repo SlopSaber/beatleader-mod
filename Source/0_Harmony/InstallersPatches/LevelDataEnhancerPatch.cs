@@ -24,12 +24,11 @@ namespace BeatLeader
             string environmentName = beatmapLevel.GetEnvironmentName(beatmapKey.characteristic, beatmapKey.difficulty);
 
             if (overrideEnvironmentSettings?.overrideEnvironments == true) {
-                environmentName = overrideEnvironmentSettings
-                    .GetOverrideEnvironmentInfoForType(
-                        environmentsListModel
-                            .GetEnvironmentInfoBySerializedName(environmentName)
-                            .environmentType)
-                    .environmentName;
+                var environment = environmentsListModel.GetEnvironmentInfoBySerializedName(environmentName);
+                if (environment != null) {
+                    var overrideEnvironment = overrideEnvironmentSettings.GetOverrideEnvironmentInfoForType(environment.environmentType);
+                    if (overrideEnvironment != null) environmentName = overrideEnvironment.environmentName;
+                }
             }
 
             MapEnhancer.beatmapKey = beatmapKey;
