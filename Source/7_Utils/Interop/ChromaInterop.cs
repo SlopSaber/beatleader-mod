@@ -12,7 +12,7 @@ namespace BeatLeader.Interop {
         public static bool IsInstalled { get; private set; }
 
         [PluginType("Chroma.Colorizer.LightColorizerManager")]
-        private static Type? _managerType;
+        private static Type? _managerType = default!;
 
         private static object? _manager;
         private static IDictionary? _colorizers;

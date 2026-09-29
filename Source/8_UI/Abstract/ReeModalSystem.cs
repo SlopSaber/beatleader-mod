@@ -90,7 +90,7 @@ namespace BeatLeader {
         #region Pool
 
         [UIComponent("container"), UsedImplicitly]
-        private Transform _container;
+        private Transform _container = default!;
 
         private readonly Dictionary<Type, IReeModal> _pool = new Dictionary<Type, IReeModal>();
 
@@ -201,7 +201,7 @@ namespace BeatLeader {
         #region ModalView
 
         [UIComponent("modal-view"), UsedImplicitly]
-        private ModalView _modalView;
+        private ModalView _modalView = default!;
 
         private readonly Dictionary<CanvasGroup, float> _leaderboardFadeGroups = new Dictionary<CanvasGroup, float>();
 

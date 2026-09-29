@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <GameDirectory>D:\BSManager\BSInstances\1.45.1</GameDirectory>
+    <GameDirectory>D:\BSManager\BSInstances\1.45.2</GameDirectory>
     <TargetFramework>net48</TargetFramework>
     <EnableFrameworkPathOverride>true</EnableFrameworkPathOverride>
     <FrameworkPathOverride>$(GameDirectory)\Beat Saber_Data\Managed</FrameworkPathOverride>
@@ -18,13 +18,13 @@
     <ReactivePath Condition="Exists('$(GameDirectory)\Libs\Reactive.dll')">$(GameDirectory)\Libs\Reactive.dll</ReactivePath>
     <ReactivePath Condition="'$(ReactivePath)' == '' AND Exists('$(GameDirectory)\Libs\Reactive.dll')">$(GameDirectory)\Libs\Reactive.dll</ReactivePath>
     <!-- System.Threading.Lock (MA0158) is unavailable in the game's .NET Framework 4.8 runtime. -->
-    <NoWarn>$(NoWarn);CS0067;CS0108;CS0109;CS0168;CS0169;CS0414;CS0612;CS0618;CS0649;CS4014;CS8600;CS8601;CS8602;CS8603;CS8604;CS8622;CS8625;CS8629;CS8632;MA0009;MA0012;MA0015;MA0016;MA0025;MA0026;MA0062;MA0065;MA0134;MA0158</NoWarn>
+    <NoWarn>$(NoWarn);MA0158</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <Copyright>Copyright © 2024</Copyright>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <WarningLevel>3</WarningLevel>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="netstandard" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\netstandard.dll" Private="false" />

@@ -10,7 +10,7 @@ namespace BeatLeader.Components {
         #region Init / Dispose
 
         [UIComponent("main-button"), UsedImplicitly]
-        private ClickableImage _mainButton;
+        private ClickableImage _mainButton = default!;
 
         protected override void OnInitialize() {
             InitializeMainButton();

@@ -9,8 +9,8 @@ namespace BeatLeader.Replayer.Tweaking
 {
     internal class InputSystemTweak : GameTweak
     {
-        [Inject] private readonly VRInputModule _inputModule;
-        [Inject] private readonly DiContainer _container;
+        [Inject] private readonly VRInputModule _inputModule = default!;
+        [Inject] private readonly DiContainer _container = default!;
 
         private EventSystem _baseEventSystem;
         private EventSystem _customEventSystem;

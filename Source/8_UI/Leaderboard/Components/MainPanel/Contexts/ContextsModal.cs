@@ -10,7 +10,7 @@ namespace BeatLeader.Components {
     internal class ContextsModal : AbstractReeModal<object> {
         #region Components
 
-        [UIComponent("OptionsList"), UsedImplicitly] private CustomListTableData _optionsList;
+        [UIComponent("OptionsList"), UsedImplicitly] private CustomListTableData _optionsList = default!;
 
         protected override void OnInitialize() {
             base.OnInitialize();

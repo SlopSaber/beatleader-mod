@@ -10,7 +10,7 @@ namespace BeatLeader.Interop {
         private static readonly Assembly _assembly;
 
         [PluginType("NoodleExtensions.Managers.NoodleObjectsCallbacksManager")]
-        private static readonly Type _neCallbacksControllerType;
+        private static readonly Type _neCallbacksControllerType = default!;
 
         private static HarmonyAutoPatch _callbacksControllerPatch;
         private static MethodInfo _neCallbacksControllerUpdateMethod;

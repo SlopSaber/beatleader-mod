@@ -31,7 +31,7 @@ namespace BeatLeader.Components {
 
         #region Components
 
-        [UIComponent("root"), UsedImplicitly] private Transform _root;
+        [UIComponent("root"), UsedImplicitly] private Transform _root = default!;
 
         [UIValue("skill-triangle"), UsedImplicitly] private SkillTriangle _skillTriangle;
 

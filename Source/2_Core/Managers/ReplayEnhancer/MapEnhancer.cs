@@ -11,7 +11,7 @@ namespace BeatLeader.Core.Managers.ReplayEnhancer
         public static GameplayModifiers gameplayModifiers;
         public static PlayerSpecificSettings playerSpecificSettings;
         public static PracticeSettings practiceSettings;
-        public static bool useTestNoteCutSoundEffects;
+        public static bool useTestNoteCutSoundEffects = false;
         public static string environmentName;
         public static ColorScheme colorScheme;
         public static float energy;

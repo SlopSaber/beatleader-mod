@@ -143,8 +143,8 @@ namespace BeatLeader.DataManager {
         }
         
         private class CacheFileData {
-            public List<LeaderboardCacheEntry>? Entries;
-            public long LastCheckTime;
+            public List<LeaderboardCacheEntry>? Entries { get; set; }
+            public long LastCheckTime { get; set; }
         }
 
         #endregion

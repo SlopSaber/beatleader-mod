@@ -26,7 +26,7 @@ namespace BeatLeader.Components {
         #region Components
 
         [UIComponent("Root"), UsedImplicitly]
-        private protected LayoutElement _root;
+        private protected LayoutElement _root = default!;
 
         [UIValue("extra-score-row"), UsedImplicitly]
         private protected T _extraRow;

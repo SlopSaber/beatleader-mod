@@ -10,7 +10,7 @@ namespace BeatLeader.Components {
         #region Components
 
         [UIComponent("image-component"), UsedImplicitly]
-        private ClickableImage _imageComponent;
+        private ClickableImage _imageComponent = default!;
 
         #endregion
 

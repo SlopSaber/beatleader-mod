@@ -9,16 +9,16 @@ namespace BeatLeader.Components {
         #region Components
 
         [UIComponent("image-component"), UsedImplicitly]
-        private ImageView _triangleImage;
+        private ImageView _triangleImage = default!;
 
         [UIComponent("text-component-a"), UsedImplicitly]
-        private TextMeshProUGUI _textComponentA;
+        private TextMeshProUGUI _textComponentA = default!;
 
         [UIComponent("text-component-b"), UsedImplicitly]
-        private TextMeshProUGUI _textComponentB;
+        private TextMeshProUGUI _textComponentB = default!;
 
         [UIComponent("text-component-c"), UsedImplicitly]
-        private TextMeshProUGUI _textComponentC;
+        private TextMeshProUGUI _textComponentC = default!;
 
         #endregion
 

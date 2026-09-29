@@ -202,7 +202,7 @@ namespace BeatLeader.Components {
         #region Image & Material
 
         [UIComponent("logo-image"), UsedImplicitly]
-        private Image _logoImage;
+        private Image _logoImage = default!;
 
         private Material _materialInstance;
 

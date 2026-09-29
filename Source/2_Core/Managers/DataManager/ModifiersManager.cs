@@ -12,7 +12,7 @@ namespace BeatLeader.DataManager {
     internal class ModifiersManager : MonoBehaviour {
         #region Start / OnDestroy
 
-        [Inject, UsedImplicitly] private GameplaySetupViewController _gameplayController;
+        [Inject, UsedImplicitly] private GameplaySetupViewController _gameplayController = default!;
         private GameplayModifiersPanelController _modifiersController;
 
         private enum State { Default, Overriden }

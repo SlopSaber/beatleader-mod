@@ -114,7 +114,7 @@ namespace BeatLeader.Components {
         #region Text
 
         [UIComponent("text-component"), UsedImplicitly]
-        private TextMeshProUGUI _textComponent;
+        private TextMeshProUGUI _textComponent = default!;
 
         private string _messageText = "";
 

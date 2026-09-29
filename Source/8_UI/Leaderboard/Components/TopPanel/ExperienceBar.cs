@@ -261,7 +261,7 @@ namespace BeatLeader.Components {
         #region Image & Material
 
         [UIComponent("experience-bar"), UsedImplicitly]
-        private Image _experienceBar;
+        private Image _experienceBar = default!;
 
         private Material _materialInstance;
 

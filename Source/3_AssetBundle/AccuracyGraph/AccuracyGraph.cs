@@ -8,8 +8,8 @@ namespace BeatLeader {
     public class AccuracyGraph: UIBehaviour {
         #region Serialized
 
-        [SerializeField] private AccuracyGraphLine graphLine;
-        [SerializeField] private Material backgroundMaterial;
+        [SerializeField] private AccuracyGraphLine graphLine = default!;
+        [SerializeField] private Material backgroundMaterial = default!;
 
         public Canvas Canvas => graphLine.canvas;
 

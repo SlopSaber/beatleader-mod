@@ -40,7 +40,7 @@ namespace BeatLeader.Components {
 
         #region Events
 
-        public bool isOnResultsScreen;
+        public bool isOnResultsScreen = false;
 
         protected override void OnResume() {
             if (isOnResultsScreen == LeaderboardState.IsVisible) return;

@@ -65,7 +65,7 @@ namespace BeatLeader {
                     using (var reader = new BinaryReader(new MemoryStream(data))) {
                         return new GIFLoader().Load(reader);
                     }
-                } catch (Exception e) { return null; }
+                } catch (Exception) { return null; }
             });
 
             if (token.IsCancellationRequested) return;

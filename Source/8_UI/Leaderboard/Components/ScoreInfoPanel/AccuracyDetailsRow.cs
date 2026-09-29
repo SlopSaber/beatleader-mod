@@ -106,7 +106,7 @@ namespace BeatLeader.Components {
         #region Background
 
         [UIComponent("background"), UsedImplicitly]
-        private ImageView _backgroundImage;
+        private ImageView _backgroundImage = default!;
 
         private void SetMaterials() {
             _backgroundImage.material = BundleLoader.AccDetailsRowMaterial;

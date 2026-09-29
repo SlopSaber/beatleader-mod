@@ -37,11 +37,11 @@ namespace BeatLeader.DataManager {
         }
 
         public static bool IsCurrentPlayerInClan(Clan clan) {
-            return HasProfile && Profile.clans.Any(profileClan => profileClan.id == clan.id);
+            return HasProfile && Profile is { } profile && profile.clans.Any(profileClan => profileClan.id == clan.id);
         }
 
         public static bool IsCurrentPlayerTopClan(Clan clan) {
-            return HasProfile && Profile.clans.Length > 0 && Profile.clans[0].id == clan.id;
+            return HasProfile && Profile is { } profile && profile.clans.Length > 0 && profile.clans[0].id == clan.id;
         }
         
         public static bool TryGetUserId(out string? userId) {
@@ -179,7 +179,7 @@ namespace BeatLeader.DataManager {
         }
 
         private static void OnUploadRequestStateChanged(WebRequests.IWebRequest<ScoreUploadResponse> instance, WebRequests.RequestState state, string? failReason) {
-            if (state is not WebRequests.RequestState.Finished || instance.Result.Status != ScoreUploadStatus.Uploaded) return;
+            if (state is not WebRequests.RequestState.Finished || instance.Result?.Status != ScoreUploadStatus.Uploaded) return;
             Profile = instance.Result.Score.Player;
         }
 

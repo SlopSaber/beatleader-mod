@@ -36,8 +36,8 @@ namespace BeatLeader.Components {
 
         #region Setup
 
-        [UIComponent("label-root"), UsedImplicitly] private RectTransform _labelRoot;
-        [UIComponent("label-component"), UsedImplicitly] private TextMeshProUGUI _labelComponent;
+        [UIComponent("label-root"), UsedImplicitly] private RectTransform _labelRoot = default!;
+        [UIComponent("label-component"), UsedImplicitly] private TextMeshProUGUI _labelComponent = default!;
 
         public void Setup(Sprite sprite, bool labelOnLeft) {
             _imageComponent.sprite = sprite;
@@ -82,7 +82,7 @@ namespace BeatLeader.Components {
         #region State
 
         [UIObject("root"), UsedImplicitly]
-        private GameObject _rootObject;
+        private GameObject _rootObject = default!;
 
         private State _state = State.InteractableFaded;
 
@@ -120,7 +120,7 @@ namespace BeatLeader.Components {
 
         #region Image
 
-        [UIComponent("image-component"), UsedImplicitly] private ClickableImage _imageComponent;
+        [UIComponent("image-component"), UsedImplicitly] private ClickableImage _imageComponent = default!;
 
         private void InitializeImage() {
             _imageComponent.material = BundleLoader.UIAdditiveGlowMaterial;

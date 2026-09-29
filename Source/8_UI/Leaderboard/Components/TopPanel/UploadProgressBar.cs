@@ -80,13 +80,13 @@ namespace BeatLeader.Components {
         #region Components
 
         [UIComponent("text-root"), UsedImplicitly]
-        private ImageView _textRoot;
+        private ImageView _textRoot = default!;
 
         [UIComponent("text-component"), UsedImplicitly]
-        private TextMeshProUGUI _textComponent;
+        private TextMeshProUGUI _textComponent = default!;
 
         [UIComponent("retry-button"), UsedImplicitly]
-        private Button _retryButton;
+        private Button _retryButton = default!;
 
         private void InitializeComponents() {
             _textRoot.raycastTarget = false;

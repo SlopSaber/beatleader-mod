@@ -11,10 +11,10 @@ namespace BeatLeader.Components {
         #region Components
 
         [UIComponent("button"), UsedImplicitly]
-        private Button _button;
+        private Button _button = default!;
 
         [UIComponent("button"), UsedImplicitly]
-        private TextMeshProUGUI _buttonText;
+        private TextMeshProUGUI _buttonText = default!;
 
         protected override void OnInitialize() {
             _button.onClick.AddListener(() => OnClick?.Invoke());

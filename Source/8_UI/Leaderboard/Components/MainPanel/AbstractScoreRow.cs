@@ -84,16 +84,16 @@ namespace BeatLeader.Components {
         #region Components
 
         [UIComponent("Underline"), UsedImplicitly]
-        private protected ClickableImage _underline;
+        private protected ClickableImage _underline = default!;
 
         [UIComponent("Background"), UsedImplicitly]
-        private protected ImageView _background;
+        private protected ImageView _background = default!;
 
         [UIComponent("CellsContainer"), UsedImplicitly]
-        private protected RectTransform _animationRoot;
+        private protected RectTransform _animationRoot = default!;
 
         [UIComponent("CellsContainer"), UsedImplicitly]
-        private protected RectTransform _cellsContainer;
+        private protected RectTransform _cellsContainer = default!;
 
         private Material _underlineMaterialInstance;
 

@@ -7,7 +7,7 @@ namespace BeatLeader.Components {
         #region RootNode
 
         [UIComponent("root-node"), UsedImplicitly]
-        public LayoutElement rootNode;
+        public LayoutElement rootNode = default!;
 
         public void SetCellWidth(float value) {
             _cellWidth = value;

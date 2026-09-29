@@ -11,8 +11,8 @@ namespace BeatLeader.WebRequests {
     public interface IWebRequest<TResult> : IDisposable {
         TResult? Result { get; }
         
-        new event WebRequestStateChangedDelegate<IWebRequest<TResult>>? StateChangedEvent;
-        new event WebRequestProgressChangedDelegate<IWebRequest<TResult>>? ProgressChangedEvent;
+        event WebRequestStateChangedDelegate<IWebRequest<TResult>>? StateChangedEvent;
+        event WebRequestProgressChangedDelegate<IWebRequest<TResult>>? ProgressChangedEvent;
         
         RequestState RequestState { get; }
         HttpStatusCode RequestStatusCode { get; }

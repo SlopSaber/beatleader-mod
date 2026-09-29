@@ -63,50 +63,50 @@ namespace BeatLeader {
         #region Inject
 
         [Inject, UsedImplicitly]
-        private SaberManager _saberManager;
+        private SaberManager _saberManager = default!;
 
         [Inject, UsedImplicitly]
-        private IVRPlatformHelper _vrPlatformHelper;
+        private IVRPlatformHelper _vrPlatformHelper = default!;
 
         [Inject, UsedImplicitly]
-        private PlayerTransforms _playerTransforms;
+        private PlayerTransforms _playerTransforms = default!;
 
         [Inject, UsedImplicitly]
-        private BeatmapObjectManager _beatmapObjectManager;
+        private BeatmapObjectManager _beatmapObjectManager = default!;
 
         [Inject, UsedImplicitly]
-        private VariableMovementDataProvider _movementDataProvider;
+        private VariableMovementDataProvider _movementDataProvider = default!;
 
         [Inject, UsedImplicitly]
-        private BeatmapObjectSpawnController _beatSpawnController;
+        private BeatmapObjectSpawnController _beatSpawnController = default!;
 
         [Inject, UsedImplicitly]
-        private StandardLevelScenesTransitionSetupDataSO _transitionSetup;
+        private StandardLevelScenesTransitionSetupDataSO _transitionSetup = default!;
 
         [Inject, UsedImplicitly]
-        private MultiplayerLevelScenesTransitionSetupDataSO _mpTransitionSetup;
+        private MultiplayerLevelScenesTransitionSetupDataSO _mpTransitionSetup = default!;
 
         [Inject, UsedImplicitly]
-        private AudioTimeSyncController _timeSyncController;
+        private AudioTimeSyncController _timeSyncController = default!;
 
         [Inject, UsedImplicitly]
-        private ScoreController _scoreController;
+        private ScoreController _scoreController = default!;
 
         [Inject, UsedImplicitly]
-        private PlayerHeadAndObstacleInteraction _phaoi;
+        private PlayerHeadAndObstacleInteraction _phaoi = default!;
 
         [Inject, UsedImplicitly]
-        private GameEnergyCounter _gameEnergyCounter;
+        private GameEnergyCounter _gameEnergyCounter = default!;
 
         [Inject, UsedImplicitly]
-        private TrackingDeviceEnhancer _trackingDeviceEnhancer;
+        private TrackingDeviceEnhancer _trackingDeviceEnhancer = default!;
 
         [InjectOptional, UsedImplicitly]
-        private PlayerHeightDetector _playerHeightDetector;
+        private PlayerHeightDetector _playerHeightDetector = default!;
 
         // Optional for MP support, there is no pause mechanic in multiplayer gameplay.
         [InjectOptional, UsedImplicitly]
-        private PauseController _pauseController;
+        private PauseController _pauseController = default!;
 
         #endregion
 

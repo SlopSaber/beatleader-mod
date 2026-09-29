@@ -8,7 +8,7 @@ namespace BeatLeader.Replayer.Binding {
     internal class LayoutEditorModeHotkey : GameHotkey {
         public override KeyCode Key => _launchData.Settings.Shortcuts.LayoutEditorPartialModeHotkey;
 
-        [InjectOptional] private readonly ReplayerDesktopViewController? _viewController;
+        [InjectOptional] private readonly ReplayerDesktopViewController? _viewController = default!;
         [Inject] private readonly ReplayLaunchData _launchData = null!;
 
         public override void OnKeyDown() {

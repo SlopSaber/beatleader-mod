@@ -10,7 +10,7 @@ namespace BeatLeader.Components {
         #region Components
 
         [UIComponent("captor-clan-text"), UsedImplicitly]
-        private TextMeshProUGUI _captorClanText;
+        private TextMeshProUGUI _captorClanText = default!;
 
         [UIValue("clan-tag"), UsedImplicitly]
         private ClanTag _captorClanTag;

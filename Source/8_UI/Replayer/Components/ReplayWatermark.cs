@@ -7,7 +7,7 @@ using Zenject;
 
 namespace BeatLeader.Components {
     internal class ReplayWatermark : MonoBehaviour, IReplayWatermark {
-        [Inject] private readonly ReplayLaunchData _launchData;
+        [Inject] private readonly ReplayLaunchData _launchData = default!;
 
         public bool Enabled {
             get => _text.gameObject.activeSelf;

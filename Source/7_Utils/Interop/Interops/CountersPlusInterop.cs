@@ -12,7 +12,7 @@ namespace BeatLeader.Interop {
         private static Type _missedCounterType = null!;
 
         [PluginState, UsedImplicitly]
-        private static bool _isInitialized;
+        private static bool _isInitialized = default!;
 
         private static HarmonyPatchDescriptor _missedCounterInitDescriptor = null!;
         private static HarmonyAutoPatch _missedCounterInitPatch = null!;

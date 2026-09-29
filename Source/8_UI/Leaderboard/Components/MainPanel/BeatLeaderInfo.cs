@@ -114,13 +114,13 @@ namespace BeatLeader.Components {
         #region PlaylistButtons
 
         [UIComponent("nominated-playlist-button"), UsedImplicitly]
-        private Button _nominatedPlaylistButton;
+        private Button _nominatedPlaylistButton = default!;
 
         [UIComponent("qualified-playlist-button"), UsedImplicitly]
-        private Button _qualifiedPlaylistButton;
+        private Button _qualifiedPlaylistButton = default!;
 
         [UIComponent("ranked-playlist-button"), UsedImplicitly]
-        private Button _rankedPlaylistButton;
+        private Button _rankedPlaylistButton = default!;
 
         private bool TryGetPlaylistButtonForType(PlaylistsManager.PlaylistType playlistType, out Button button) {
             switch (playlistType) {

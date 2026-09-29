@@ -160,10 +160,10 @@ namespace BeatLeader.Components {
         #region UIComponents
 
         [UIComponent("graph-container"), UsedImplicitly]
-        private RectTransform _graphContainer;
+        private RectTransform _graphContainer = default!;
 
         [UIComponent("graph-container"), UsedImplicitly]
-        private ImageView _graphBackground;
+        private ImageView _graphBackground = default!;
 
         [UIComponent("cursor-hint"), UsedImplicitly]
         private RectTransform _hintTransform;

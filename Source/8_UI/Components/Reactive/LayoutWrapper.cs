@@ -6,7 +6,7 @@ namespace BeatLeader.UI.Reactive.Components {
     internal class LayoutWrapper : GameObjectWrapper {
         public LayoutWrapper(Func<GameObject> go) : base(go, false) { }
         
-        public Action? OnRecalculateLayout;
+        public Action? OnRecalculateLayout = null;
         public Action? OnLayoutRecalculated;
 
         private bool _pendingUpdateCall;

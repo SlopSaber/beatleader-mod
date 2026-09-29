@@ -13,7 +13,7 @@ namespace BeatLeader.DataManager {
         #region Properties
 
         [Inject, UsedImplicitly]
-        private BeatmapLevelsModel _beatmapLevelsModel;
+        private BeatmapLevelsModel _beatmapLevelsModel = default!;
 
         private ScoresScope _selectedScoreScope;
         private int _selectedScoreContext;

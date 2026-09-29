@@ -25,7 +25,7 @@ namespace BeatLeader.Replayer {
         private readonly ComboUIController _comboUIController = null!;
 
         [FirstResource(RequireActiveInHierarchy = true)]
-        private readonly GameEnergyUIPanel? _gameEnergyUIPanel;
+        private readonly GameEnergyUIPanel? _gameEnergyUIPanel = default!;
 
         [FirstResource(RequireActiveInHierarchy = true)]
         private readonly ObstacleSaberSparkleEffectManager _sparkleEffectManager = null!;

@@ -27,7 +27,7 @@ namespace BeatLeader.DataManager {
         #region Events
 
         private static void OnUploadRequestStateChanged(WebRequests.IWebRequest<ScoreUploadResponse> instance, WebRequests.RequestState state, string? failReason) {
-            if (state is not WebRequests.RequestState.Finished || instance.Result.Status != ScoreUploadStatus.Uploaded) return;
+            if (state is not WebRequests.RequestState.Finished || instance.Result?.Status != ScoreUploadStatus.Uploaded) return;
             UpdateVoteStatus();
         }
 

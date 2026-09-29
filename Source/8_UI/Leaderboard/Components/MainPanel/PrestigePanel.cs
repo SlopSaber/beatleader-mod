@@ -16,10 +16,10 @@ namespace BeatLeader.Components {
         private FireworksController fireworksController = null;
 
         [UIComponent("primaryText"), UsedImplicitly]
-        private TextMeshProUGUI primaryText;
+        private TextMeshProUGUI primaryText = default!;
 
         [UIComponent("secondaryText"), UsedImplicitly]
-        private TextMeshProUGUI secondaryText;
+        private TextMeshProUGUI secondaryText = default!;
 
         protected override void OnInitialize() {
             base.OnInitialize();
@@ -107,10 +107,10 @@ namespace BeatLeader.Components {
         #region PlaylistButtons
 
         [UIComponent("prestige-yes-button"), UsedImplicitly]
-        private Button _PrestigeYesButton;
+        private Button _PrestigeYesButton = default!;
 
         [UIComponent("prestige-no-button"), UsedImplicitly]
-        private Button _PrestigeNoButton;
+        private Button _PrestigeNoButton = default!;
 
         private void InitializePrestigeButtons() {
             _PrestigeYesButton.onClick.AddListener(() => RequestPrestige());

@@ -36,7 +36,7 @@ namespace BeatLeader.Components {
         #region Image
 
         [UIComponent("image-component"), UsedImplicitly]
-        private Image _image;
+        private Image _image = default!;
 
         public void SetAlpha(float value) {
             _image.color = new Color(1, 1, 1, value);

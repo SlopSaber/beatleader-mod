@@ -45,7 +45,7 @@ namespace BeatLeader.Components {
 
         #region Image
 
-        [UIComponent("image-component"), UsedImplicitly] private ImageView _imageComponent;
+        [UIComponent("image-component"), UsedImplicitly] private ImageView _imageComponent = default!;
 
         private void InitializeMaterial() {
             _imageComponent.material = BundleLoader.UIAdditiveGlowMaterial;

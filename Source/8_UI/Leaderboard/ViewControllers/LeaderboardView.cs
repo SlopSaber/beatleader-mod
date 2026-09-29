@@ -21,7 +21,7 @@ namespace BeatLeader.ViewControllers {
         #region PreParser
 
         [Inject, UsedImplicitly]
-        private PreParser _preParser;
+        private PreParser _preParser = default!;
 
         public class PreParser : MonoBehaviour {
             public MainScoresTable scoresTable;

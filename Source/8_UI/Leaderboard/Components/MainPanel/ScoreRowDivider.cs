@@ -48,7 +48,7 @@ namespace BeatLeader.Components {
         #region Icon
 
         [UIComponent("divider-icon"), UsedImplicitly]
-        private ImageView _dividerIcon;
+        private ImageView _dividerIcon = default!;
 
         #endregion
     }

@@ -103,13 +103,13 @@ namespace BeatLeader.Components {
         #region Components
 
         [UIComponent("up-component"), UsedImplicitly]
-        private ClickableImage _upComponent;
+        private ClickableImage _upComponent = default!;
 
         [UIComponent("around-component"), UsedImplicitly]
-        private ClickableImage _aroundComponent;
+        private ClickableImage _aroundComponent = default!;
 
         [UIComponent("down-component"), UsedImplicitly]
-        private ClickableImage _downComponent;
+        private ClickableImage _downComponent = default!;
 
         private void FlipUpButton() {
             _upComponent.transform.Rotate(0, 0, 180);

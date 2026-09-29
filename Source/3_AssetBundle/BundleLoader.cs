@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
 
-#nullable disable
+#nullable disable warnings
 
 namespace BeatLeader {
     public static class BundleLoader {

@@ -26,7 +26,7 @@ namespace BeatLeader.Components {
         #region UI Components
 
         [UIComponent("text"), UsedImplicitly]
-        private TMP_Text? _text;
+        private TMP_Text? _text = default!;
 
         public TMP_Text TextObject {
             get {

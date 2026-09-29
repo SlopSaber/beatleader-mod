@@ -9,16 +9,16 @@ namespace BeatLeader.Interop {
         #region Init
 
         [PluginType("CustomNotes.Components.CustomNoteController")]
-        private static readonly Type _customNoteControllerType;
+        private static readonly Type _customNoteControllerType = default!;
 
         [PluginType("CustomNotes.Components.CustomBombController")]
-        private static readonly Type _customBombControllerType;
+        private static readonly Type _customBombControllerType = default!;
 
         [PluginType("CustomNotes.Components.CustomBurstSliderController")]
-        private static readonly Type _customSliderControllerType;
+        private static readonly Type _customSliderControllerType = default!;
 
         [PluginState]
-        private static readonly bool _isInitialized;
+        private static readonly bool _isInitialized = default!;
 
         private static MethodInfo _missNoteControllerMethod;
         private static MethodInfo _missSliderControllerMethod;

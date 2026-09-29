@@ -150,7 +150,7 @@ namespace BeatLeader.Components {
         private static Color HoverColor => new Color(1, 0, 0, 1);
 
         [UIComponent("image-component"), UsedImplicitly]
-        private ClickableImage _imageComponent;
+        private ClickableImage _imageComponent = default!;
 
         private Material _material;
 

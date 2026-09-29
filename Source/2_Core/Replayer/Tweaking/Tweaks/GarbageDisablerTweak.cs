@@ -8,15 +8,15 @@ using Zenject;
 
 namespace BeatLeader.Replayer.Tweaking {
     internal class GarbageDisablerTweak : GameTweak {
-        [Inject] private readonly MainCamera _mainCamera;
-        [Inject] private readonly ICameraController _cameraController;
-        [Inject] private readonly ReplayerExtraObjectsProvider _extraObjects;
+        [Inject] private readonly MainCamera _mainCamera = default!;
+        [Inject] private readonly ICameraController _cameraController = default!;
+        [Inject] private readonly ReplayerExtraObjectsProvider _extraObjects = default!;
 
         [FirstResource(RequireActiveInHierarchy = true)] 
-        private readonly SaberBurnMarkArea _burnMarkArea;
+        private readonly SaberBurnMarkArea _burnMarkArea = default!;
         
         [FirstResource] 
-        private readonly VRLaserPointer _pointer;
+        private readonly VRLaserPointer _pointer = default!;
 
         private AudioListener[] _disabledAudioListeners = Array.Empty<AudioListener>();
         private AudioListener _replayAudioListener;

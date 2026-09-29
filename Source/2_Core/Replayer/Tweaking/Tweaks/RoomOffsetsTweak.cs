@@ -5,7 +5,7 @@ using Zenject;
 namespace BeatLeader.Replayer.Tweaking {
     internal class RoomOffsetsTweak : GameTweak {
         [FirstResource] private readonly MainSystemInit _mainSystemInit = null!;
-        [Inject] private readonly VRCenterAdjust _centerAdjust;
+        [Inject] private readonly VRCenterAdjust _centerAdjust = default!;
 
         public override void Initialize() {
             this.LoadResources();

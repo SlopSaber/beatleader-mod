@@ -8,7 +8,7 @@ using UnityEngine;
 namespace BeatLeader.UI.MainMenu {
     internal class TextNewsPostHeaderPanel : ReactiveComponent {
         private string _nameValue = "Loading...";
-        public string Name {
+        public new string Name {
             get => _nameValue;
             set => _nameLabel.Text = value;
         }

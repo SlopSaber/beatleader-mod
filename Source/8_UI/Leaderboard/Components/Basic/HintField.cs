@@ -11,13 +11,13 @@ namespace BeatLeader.Components {
         #region Components
 
         [UIComponent("root-component"), UsedImplicitly]
-        private RectTransform _root;
+        private RectTransform _root = default!;
 
         [UIComponent("root-component"), UsedImplicitly]
-        private ImageView _backgroundImage;
+        private ImageView _backgroundImage = default!;
 
         [UIComponent("text-component"), UsedImplicitly]
-        private TextMeshProUGUI _textComponent;
+        private TextMeshProUGUI _textComponent = default!;
 
         #endregion
 

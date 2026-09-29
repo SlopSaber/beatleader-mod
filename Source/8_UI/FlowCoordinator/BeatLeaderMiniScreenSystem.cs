@@ -24,13 +24,13 @@ namespace BeatLeader.UI.Hub {
             private static void PresentPostfix(FlowCoordinator __instance) {
                 if (__instance is not RootFlowCoordinator instance) return;
                 UnbindKeyboard(instance._originalScreenSystem!);
-                BindKeyboard(instance._screenSystem!);
+                BindKeyboard(instance._miniScreenSystem!);
             }
 
             [HarmonyPatch(typeof(FlowCoordinator), "DismissFlowCoordinator"), HarmonyPostfix]
             private static void DismissPostfix(FlowCoordinator __instance) {
                 if (__instance is not RootFlowCoordinator instance) return;
-                UnbindKeyboard(instance._screenSystem!);
+                UnbindKeyboard(instance._miniScreenSystem!);
                 BindKeyboard(instance._originalScreenSystem!);
             }
 
@@ -55,16 +55,16 @@ namespace BeatLeader.UI.Hub {
             #region Setup
 
             private GameObject? _originalScreenSystem;
-            private GameObject? _screenSystem;
+            private GameObject? _miniScreenSystem;
 
             public void Setup(GameObject screenSystem, GameObject originalScreenSystem) {
-                _screenSystem = screenSystem;
+                _miniScreenSystem = screenSystem;
                 _originalScreenSystem = originalScreenSystem;
             }
 
             private void Start() {
-                if (_screenSystem == null) return;
-                UnbindKeyboard(_screenSystem);
+                if (_miniScreenSystem == null) return;
+                UnbindKeyboard(_miniScreenSystem);
             }
 
             public override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {

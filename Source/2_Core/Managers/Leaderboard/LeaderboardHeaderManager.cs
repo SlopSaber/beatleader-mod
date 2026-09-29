@@ -17,13 +17,13 @@ namespace BeatLeader {
         #region Initialize & Dispose
         
         [Inject, UsedImplicitly]
-        private LeaderboardView _leaderboardView;
+        private LeaderboardView _leaderboardView = default!;
 
         [Inject, UsedImplicitly]
-        private IReplayerViewNavigator _viewNavigator;
+        private IReplayerViewNavigator _viewNavigator = default!;
         
         [Inject, UsedImplicitly] 
-        private SoloFreePlayFlowCoordinator _soloFlowCoordinator;
+        private SoloFreePlayFlowCoordinator _soloFlowCoordinator = default!;
         
         public void Initialize() {
             LeaderboardState.IsVisibleChangedEvent += OnVisibilityChanged;

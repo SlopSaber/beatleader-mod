@@ -251,10 +251,10 @@ namespace BeatLeader.Components {
         private const float BackgroundThickness = 6.1f / 40.0f;
 
         [UIComponent("left-buttons-root"), UsedImplicitly]
-        private Transform _leftButtonsRoot;
+        private Transform _leftButtonsRoot = default!;
 
         [UIComponent("right-buttons-root"), UsedImplicitly]
-        private Transform _rightButtonsRoot;
+        private Transform _rightButtonsRoot = default!;
 
         private void UpdateLayout() {
             UpdateLayout(_leftButtonsRoot, OffsetRadians, StepRadians, out var leftA, out var leftB);
@@ -304,10 +304,10 @@ namespace BeatLeader.Components {
         private static readonly int ParamsPropertyId = Shader.PropertyToID("_Params");
 
         [UIComponent("left-buttons-root"), UsedImplicitly]
-        private ImageView _leftBackground;
+        private ImageView _leftBackground = default!;
 
         [UIComponent("right-buttons-root"), UsedImplicitly]
-        private ImageView _rightBackground;
+        private ImageView _rightBackground = default!;
 
         private Material _leftMaterial;
         private Material _rightMaterial;

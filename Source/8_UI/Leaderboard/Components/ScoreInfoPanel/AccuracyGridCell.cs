@@ -68,14 +68,14 @@ namespace BeatLeader.Components {
         #region Text
 
         [UIComponent("text-component"), UsedImplicitly]
-        private TextMeshProUGUI _textComponent;
+        private TextMeshProUGUI _textComponent = default!;
 
         #endregion
 
         #region Background
 
         [UIComponent("background"), UsedImplicitly]
-        private ImageView _backgroundImage;
+        private ImageView _backgroundImage = default!;
 
         private SmoothHoverController _hoverController;
 

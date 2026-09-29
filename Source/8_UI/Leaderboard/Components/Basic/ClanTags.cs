@@ -67,7 +67,7 @@ namespace BeatLeader.Components {
         #region Container
 
         [UIComponent("container"), UsedImplicitly]
-        private RectTransform _container;
+        private RectTransform _container = default!;
 
         #endregion
     }

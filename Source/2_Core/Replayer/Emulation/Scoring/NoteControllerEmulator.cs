@@ -4,11 +4,11 @@ using UnityEngine;
 
 namespace BeatLeader.Replayer.Emulation {
     public class NoteControllerEmulator : NoteController {
-        public override NoteData? noteData => _noteData;
+        public override NoteData? noteData => _emulatedNoteData;
         public NoteCutInfo CutInfo { get; private set; }
 
         private NoteController? _prefab;
-        private NoteData? _noteData;
+        private NoteData? _emulatedNoteData;
 
         public override void Awake() {
             _prefab = Resources.FindObjectsOfTypeAll<BeatmapObjectsInstaller>()
@@ -17,7 +17,7 @@ namespace BeatLeader.Replayer.Emulation {
             _noteTransform = transform;
         }
         public void Setup(NoteData noteData, NoteCutInfo cutInfo) {
-            _noteData = noteData;
+            _emulatedNoteData = noteData;
             CutInfo = cutInfo;
         }
 

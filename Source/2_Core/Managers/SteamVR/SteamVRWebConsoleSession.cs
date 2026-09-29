@@ -22,11 +22,11 @@ namespace BeatLeader.SteamVR {
         }
 
         public struct Message {
-            public long nTimestamp;
-            public string sLogLevel;
-            public string sLogName;
-            public string sMessage;
-            public string sType;
+            public long nTimestamp { get; set; }
+            public string sLogLevel { get; set; }
+            public string sLogName { get; set; }
+            public string sMessage { get; set; }
+            public string sType { get; set; }
         }
 
         #endregion

@@ -60,7 +60,7 @@ namespace BeatLeader.Components {
         #region TextComponent
 
         [UIComponent("text-component"), UsedImplicitly]
-        private TextMeshProUGUI _textComponent;
+        private TextMeshProUGUI _textComponent = default!;
 
         private void InitializeText() {
             _textComponent.enableAutoSizing = true;
@@ -73,17 +73,17 @@ namespace BeatLeader.Components {
         #region Container
 
         [UIComponent("container"), UsedImplicitly]
-        public RectTransform container;
+        public RectTransform container = default!;
 
         [UIComponent("container"), UsedImplicitly]
-        private LayoutElement _containerLayoutElement;
+        private LayoutElement _containerLayoutElement = default!;
 
         #endregion
 
         #region Background
 
         [UIComponent("background"), UsedImplicitly]
-        private Image _backgroundImage;
+        private Image _backgroundImage = default!;
 
         private float _alpha = 1.0f;
         private Color _color = Color.black;

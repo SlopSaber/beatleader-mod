@@ -21,7 +21,7 @@ namespace BeatLeader.Components {
         private const float Scale = 0.8f;
 
         [UIComponent("container"), UsedImplicitly]
-        private RectTransform _containerTransform;
+        private RectTransform _containerTransform = default!;
 
         private void ApplyScale() {
             _containerTransform.localScale = new Vector3(Scale, Scale, Scale);

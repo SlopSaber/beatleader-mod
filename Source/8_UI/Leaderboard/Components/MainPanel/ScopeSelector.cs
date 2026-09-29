@@ -53,13 +53,13 @@ namespace BeatLeader.Components {
         private static readonly Color FadedHoverColor = new(0.5f, 0.5f, 0.5f, 0.2f);
 
         [UIComponent("global-component"), UsedImplicitly]
-        private ClickableImage _globalComponent;
+        private ClickableImage _globalComponent = default!;
 
         [UIComponent("friends-component"), UsedImplicitly]
-        private ClickableImage _friendsComponent;
+        private ClickableImage _friendsComponent = default!;
 
         [UIComponent("country-component"), UsedImplicitly]
-        private ClickableImage _countryComponent;
+        private ClickableImage _countryComponent = default!;
 
         private void SetMaterials() {
             _globalComponent.material = BundleLoader.UIAdditiveGlowMaterial;

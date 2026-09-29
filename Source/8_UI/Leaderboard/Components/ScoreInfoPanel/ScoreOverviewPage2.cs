@@ -66,19 +66,19 @@ namespace BeatLeader.Components {
         #region Components
 
         [UIComponent("platform-text"), UsedImplicitly]
-        private TextMeshProUGUI _platformTextComponent;
+        private TextMeshProUGUI _platformTextComponent = default!;
 
         [UIComponent("details-text"), UsedImplicitly]
-        private TextMeshProUGUI _detailsTextComponent;
+        private TextMeshProUGUI _detailsTextComponent = default!;
 
         [UIComponent("x-text-component"), UsedImplicitly]
-        private TextMeshProUGUI _xTextComponent;
+        private TextMeshProUGUI _xTextComponent = default!;
 
         [UIComponent("y-text-component"), UsedImplicitly]
-        private TextMeshProUGUI _yTextComponent;
+        private TextMeshProUGUI _yTextComponent = default!;
 
         [UIComponent("z-text-component"), UsedImplicitly]
-        private TextMeshProUGUI _zTextComponent;
+        private TextMeshProUGUI _zTextComponent = default!;
 
         #endregion
 

@@ -1,5 +1,5 @@
 ﻿namespace BeatLeader.Models {
     internal struct ExMachinaBasicResponse {
-        public float balanced;
+        public float balanced { get; set; }
     }
 }

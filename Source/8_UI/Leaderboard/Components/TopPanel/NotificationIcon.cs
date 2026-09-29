@@ -67,7 +67,7 @@ namespace BeatLeader.Components {
         private static Color WarningColor => new Color(1.0f, 1.0f, 0.3f, 1.0f);
         private static Color CriticalColor => new Color(1.0f, 0.3f, 0.3f, 1.0f);
 
-        [UIComponent("image"), UsedImplicitly] private ImageView _image;
+        [UIComponent("image"), UsedImplicitly] private ImageView _image = default!;
 
         private void SetupImage() {
             _image.transform.localPosition = new Vector3(4f, 4f);

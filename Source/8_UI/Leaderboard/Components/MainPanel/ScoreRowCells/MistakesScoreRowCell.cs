@@ -33,7 +33,7 @@ namespace BeatLeader.Components {
         #region Components
 
         [UIComponent("text-component"), UsedImplicitly]
-        public TextMeshProUGUI textComponent;
+        public TextMeshProUGUI textComponent = default!;
 
         #endregion
     }

@@ -15,16 +15,16 @@ using BeatLeader.Components;
 namespace BeatLeader.Installers {
     [UsedImplicitly]
     public class OnMenuInstaller : Installer<OnMenuInstaller> {
-        internal new static DiContainer Container => _container ?? throw new InvalidOperationException();
+        internal new static DiContainer Container => _menuContainer ?? throw new InvalidOperationException();
 
-        private static DiContainer? _container;
+        private static DiContainer? _menuContainer;
 
         public override void InstallBindings() {
             Plugin.Log.Debug("OnMenuInstaller");
             
             Authentication.Login().RunCatching();
 
-            _container = base.Container;
+            _menuContainer = base.Container;
             BindLeaderboard();
             BindHub();
             Container.Bind<ReplayerLauncher>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();
