@@ -125,7 +125,22 @@ namespace BeatLeader.Replayer {
             if (shouldBeBroken)
                 _comboUIController.HandleComboBreakingEventHappened();
             else
-                _comboUIController.GetField<Animator, ComboUIController>("_animator")?.Rebind();
+                RebindComboAnimator();
+        }
+
+        private void RebindComboAnimator() {
+            var animator = _comboUIController.GetField<Animator, ComboUIController>("_animator");
+            if (animator == null || !animator.isActiveAndEnabled || !animator.isInitialized || animator.runtimeAnimatorController == null) return;
+
+            try {
+                animator.Rebind();
+            }
+            catch (System.NullReferenceException) {
+                // Unity can leave Animator's native object invalid during replay rewind queue adjustments.
+            }
+            catch (MissingReferenceException) {
+                // Unity fake-null can be missed by generic reflection helpers.
+            }
         }
 
         public void ModifyEnergyPanel(float energy, bool shouldBeLost = false) {
