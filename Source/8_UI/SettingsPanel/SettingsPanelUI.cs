@@ -10,7 +10,7 @@ using UnityEngine.UI;
 using Zenject;
 
 namespace BeatLeader {
-    internal partial class SettingsPanelUI : NotifiableSingleton<SettingsPanelUI> {
+    internal partial class SettingsPanelUI {
         [UIComponent("container"), UsedImplicitly]
         private Transform _container = null!;
 

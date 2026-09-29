@@ -107,7 +107,10 @@ namespace BeatLeader {
             OpponentScoreBackgroundMaterial = assetBundle.LoadAsset<Material>("UIOpponentScoreBackgroundMaterial");
             RoundTextureMaterial = assetBundle.LoadAsset<Material>("UIRoundTextureMaterial");
             SliderMaterials = assetBundle.LoadAsset<SliderMaterials>("SliderMaterials");
+            // Initialize the retained public field for plugins compiled against the legacy API.
+#pragma warning disable CS0612
             UIBlurMaterial = assetBundle.LoadAsset<Material>("UIBlurMaterial");
+#pragma warning restore CS0612
             Materials = assetBundle.LoadAsset<MaterialCollection>("MaterialCollection");
         }
 
@@ -320,7 +323,10 @@ namespace BeatLeader {
             BlackTransparentBG = assetBundle.LoadAsset<Sprite>("BL_BlackTransparentBG");
             AnchorBGDots = assetBundle.LoadAsset<Sprite>("BL_AnchorBGDots");
             BlackTransparentBGOutline = assetBundle.LoadAsset<Sprite>("BL_BlackTransparentBGOutline");
+            // Initialize the retained public field for plugins compiled against the legacy API.
+#pragma warning disable CS0612
             WhiteBG = assetBundle.LoadAsset<Sprite>("BL_WhiteBG");
+#pragma warning restore CS0612
             CyanBGOutline = assetBundle.LoadAsset<Sprite>("BL_CyanBGOutline");
             DefaultAvatar = assetBundle.LoadAsset<Sprite>("BL_DefaultAvatar");
             UnknownIcon = assetBundle.LoadAsset<Sprite>("BL_UnknownIcon");

@@ -1,4 +1,8 @@
 ﻿using System.Collections;
+using System.Linq;
+using System.Threading.Tasks;
+using BeatLeader.Replayer.Emulation;
+using BeatLeader.Utils;
 using System.Collections.Generic;
 using BeatLeader.Models;
 using IPA.Utilities;
@@ -11,6 +15,8 @@ namespace BeatLeader.UI.Hub {
 
         [Inject] private readonly BattleRoyaleAvatar.Pool _battleRoyaleAvatarPool = null!;
         [Inject] private readonly IBattleRoyaleHost _battleRoyaleHost = null!;
+        [Inject] private readonly BeatAvatarLoader _avatarLoader = null!;
+        private bool _hostVisible;
 
         #endregion
 
@@ -97,6 +103,7 @@ namespace BeatLeader.UI.Hub {
         #region Callbacks
 
         private void HandleHostStateChanged(bool state) {
+            _hostVisible = state;
             foreach (var (_, avatar) in _avatars) {
                 if (state) {
                     avatar.PresentAvatar();
@@ -107,13 +114,21 @@ namespace BeatLeader.UI.Hub {
         }
 
         private void HandleReplayAdded(BattleRoyaleReplay replay, object caller) {
-            if (_battleRoyaleAvatarPool.NumActive == maxAvatarsCount) {
+            _ = AddAvatarWhenReady(replay).RunCatching();
+        }
+
+        private async Task AddAvatarWhenReady(BattleRoyaleReplay replay) {
+            await _avatarLoader.CreateEditorFlowCoordinator();
+            if (this == null || !_battleRoyaleHost.PendingReplays.Contains(replay)
+                || _avatars.ContainsKey(replay.ReplayHeader)) return;
+            if (_battleRoyaleAvatarPool.NumActive >= maxAvatarsCount) {
                 return;
             }
             
             var avatar = _battleRoyaleAvatarPool.Spawn(replay);
             avatar.transform.SetParent(transform, false);
             _avatars[replay.ReplayHeader] = avatar;
+            if (!_hostVisible) avatar.HideAvatar();
             
             RecalculateAvatarPositions(avatar);
         }

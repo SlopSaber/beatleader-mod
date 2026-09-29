@@ -44,6 +44,7 @@ namespace BeatLeader {
             };
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public static List<BLLanguage> SupportedLanguagesSorted() {
             return new List<BLLanguage> {
                 BLLanguage.GameDefault,

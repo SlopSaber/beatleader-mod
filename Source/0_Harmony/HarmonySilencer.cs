@@ -26,7 +26,7 @@ namespace BeatLeader {
         public readonly MethodInfo method;
 
         public void Dispose() {
-            harmony.Unpatch(method, HarmonyPatchType.Prefix);
+            harmony.Unpatch(method, silencerPrefix.method);
             silencersRegistry.Remove(method);
         }
 

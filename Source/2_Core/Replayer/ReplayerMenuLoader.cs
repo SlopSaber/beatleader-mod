@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BeatLeader.DataManager;
+using BeatLeader.Replayer.Emulation;
 using BeatLeader.Interop;
 using BeatLeader.Models;
 using BeatLeader.Models.AbstractReplay;
@@ -23,6 +24,7 @@ namespace BeatLeader.Replayer {
         #region Injection
 
         [Inject] private readonly ReplayerLauncher _launcher = null!;
+        [Inject] private readonly BeatAvatarLoader _avatarLoader = null!;
         [Inject] private readonly GameScenesManager _scenesManager = null!;
         [Inject] private readonly IFPFCSettings _fpfcSettings = null!;
         [Inject] private readonly BeatmapLevelsModel _levelsModel = null!;
@@ -61,7 +63,7 @@ namespace BeatLeader.Replayer {
             }
             var optionalData = await LoadOptionalDataAsync(replay.info, player);
             //start the replay
-            StartReplayer(
+            await StartReplayer(
                 beatmap,
                 replay,
                 player,
@@ -110,7 +112,7 @@ namespace BeatLeader.Replayer {
                 optionalData = data;
             }
 
-            StartReplayer(
+            await StartReplayer(
                 beatmap,
                 replay,
                 player,
@@ -151,7 +153,7 @@ namespace BeatLeader.Replayer {
                 }
             }
 
-            StartReplayer(beatmap, replayDatas, settings, finishCallback, token);
+            await StartReplayer(beatmap, replayDatas, settings, finishCallback, token);
             return true;
         }
 
@@ -186,7 +188,7 @@ namespace BeatLeader.Replayer {
             public BattleRoyaleReplayData? optionalData;
         }
 
-        private void StartReplayer(
+        private async Task StartReplayer(
             BeatmapLevelWithKey beatmap,
             Replay replay,
             IPlayer? player,
@@ -195,7 +197,7 @@ namespace BeatLeader.Replayer {
             Action? finishCallback,
             CancellationToken token
         ) {
-            StartReplayer(
+            await StartReplayer(
                 beatmap,
                 new ReplayData {
                     replay = replay,
@@ -208,7 +210,7 @@ namespace BeatLeader.Replayer {
             );
         }
 
-        private void StartReplayer(
+        private async Task StartReplayer(
             BeatmapLevelWithKey beatmap,
             IReadOnlyCollection<ReplayData> replays,
             ReplayerSettings settings,
@@ -249,12 +251,23 @@ namespace BeatLeader.Replayer {
                 data.EnvironmentInfo
             );
             //starting
-            StartReplayer(data, finishCallback);
+            token.ThrowIfCancellationRequested();
+            await StartReplayerAsync(data, finishCallback, token);
         }
 
         public void StartReplayer(ReplayLaunchData data, Action? finishCallback) {
+            _ = StartReplayerAsync(data, finishCallback).RunCatching();
+        }
+
+        public async Task StartReplayerAsync(ReplayLaunchData data, Action? finishCallback, CancellationToken token = default) {
+            await _avatarLoader.CreateEditorFlowCoordinator();
+            token.ThrowIfCancellationRequested();
+            if (this == null) return;
             data.ReplayWasFinishedEvent += HandleReplayWasFinished;
-            if (!_launcher.StartReplay(data, finishCallback)) return;
+            if (!_launcher.StartReplay(data, finishCallback)) {
+                data.ReplayWasFinishedEvent -= HandleReplayWasFinished;
+                return;
+            }
             InputUtils.OverrideUsesFPFC = InputUtils.HasFpfcArg && _fpfcSettings.Ignore ? _fpfcSettings.Enabled : null;
         }
 

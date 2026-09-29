@@ -7,11 +7,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace BeatLeader {
-    //TODO: rework
     public static class ModifiersMapManager {
         static ModifiersMapManager() {
             _gameplayModifiersParams = Resources.FindObjectsOfTypeAll<GameplayModifierParamsSO>();
             _gameplayModifiersMap.LoadFromGameModifiersParams(_gameplayModifiersParams);
+            CurrentModifiersMap = _gameplayModifiersMap;
         }
 
         public static ModifiersMap CurrentModifiersMap { get; private set; }
@@ -44,13 +44,12 @@ namespace BeatLeader {
         public static string ParseModifierLocalizationKeyToServerName(string modifierLocalizationKey) {
             if (string.IsNullOrEmpty(modifierLocalizationKey)) return modifierLocalizationKey;
 
-            var idx1 = modifierLocalizationKey.IndexOf('_') + 1;
-            var char1 = modifierLocalizationKey[idx1];
-
-            var idx2 = modifierLocalizationKey.IndexOf('_', idx1) + 1;
-            var char2 = modifierLocalizationKey[idx2];
-
-            return $"{char.ToUpper(char1)}{char.ToUpper(char2)}";
+            var first = modifierLocalizationKey.IndexOf('_') + 1;
+            var second = modifierLocalizationKey.IndexOf('_', first) + 1;
+            if (first == 0 || second == 0 || first >= modifierLocalizationKey.Length || second >= modifierLocalizationKey.Length) {
+                return string.Empty;
+            }
+            return $"{char.ToUpperInvariant(modifierLocalizationKey[first])}{char.ToUpperInvariant(modifierLocalizationKey[second])}";
         }
     }
 }

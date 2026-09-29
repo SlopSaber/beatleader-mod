@@ -97,6 +97,7 @@ namespace BeatLeader.Utils {
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IDictionary<TKey, TValue> dictionary) {
             return dictionary as Dictionary<TKey, TValue> ?? new(dictionary);
         }
@@ -117,6 +118,7 @@ namespace BeatLeader.Utils {
             foreach (var item in range) list.Remove(item);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue value) {
             if (!dictionary.ContainsKey(key)) {
                 dictionary.Add(key, value);

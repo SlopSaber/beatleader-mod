@@ -11,19 +11,19 @@ namespace BeatLeader.UI.Hub {
     internal class BattleRoyaleFloatingMenuText : ReactiveComponent {
         #region Animation
 
-        private readonly ValueAnimator _animator = new() { LerpCoefficient = 15f };
+        private readonly AnimatedValue<float> _animator = new(0f, SingleValueInterpolator.Instance) { Duration = 15f.fact() };
 
         public void Present() {
-            _animator.Push();
+            _animator.Value = 1f;
         }
 
         public void Hide() {
-            _animator.Pull();
+            _animator.Value = 0f;
         }
 
         protected override void OnUpdate() {
-            _animator.Update();
-            _canvasGroup.alpha = _animator.Progress;
+            ((IReactiveModule)_animator).OnUpdate();
+            _canvasGroup.alpha = _animator.CurrentValue;
         }
 
         #endregion

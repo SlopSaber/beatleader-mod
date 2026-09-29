@@ -78,10 +78,10 @@ namespace BeatLeader.UI.Hub {
 
         #region Animation
 
-        private readonly ValueAnimator _valueAnimator = new() { LerpCoefficient = 15f };
+        private readonly AnimatedValue<float> _valueAnimator = new(0f, SingleValueInterpolator.Instance) { Duration = 15f.fact() };
 
         private void SetDetailsVisible(bool visible) {
-            _valueAnimator.SetTarget(visible ? 1f : 0f);
+            _valueAnimator.Value = visible ? 1f : 0f;
         }
 
         private void RefreshDetailsAnimation(float progress) {
@@ -90,8 +90,8 @@ namespace BeatLeader.UI.Hub {
         }
 
         protected override void OnUpdate() {
-            _valueAnimator.Update();
-            RefreshDetailsAnimation(_valueAnimator.Progress);
+            ((IReactiveModule)_valueAnimator).OnUpdate();
+            RefreshDetailsAnimation(_valueAnimator.CurrentValue);
         }
 
         #endregion

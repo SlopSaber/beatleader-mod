@@ -104,9 +104,21 @@ namespace BeatLeader.Models {
         public float pm;
         public float sc;
 
-        //TODO: rework
         public float GetModifierValueByModifierServerName(string name) {
-            return (float)(typeof(ModifiersMap).GetField(name.ToLower(), ReflectionUtils.DefaultFlags)?.GetValue(this) ?? -1f);
+            return name.ToLowerInvariant() switch {
+                "da" => da,
+                "fs" => fs,
+                "ss" => ss,
+                "sf" => sf,
+                "gn" => gn,
+                "na" => na,
+                "nb" => nb,
+                "nf" => nf,
+                "no" => no,
+                "pm" => pm,
+                "sc" => sc,
+                _ => -1f
+            };
         }
 
         public void LoadFromGameModifiersParams(IEnumerable<GameplayModifierParamsSO> modifiersParams) {

@@ -31,6 +31,7 @@ namespace BeatLeader {
         private Rect _viewRect = Rect.MinMaxRect(0, 0, 1, 1);
         private float _songDuration = 1.0f;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public void Setup(List<Vector2> positions, Rect viewRect, float canvasRadius, float songDuration) {
             _songDuration = songDuration;
             _viewRect = viewRect;

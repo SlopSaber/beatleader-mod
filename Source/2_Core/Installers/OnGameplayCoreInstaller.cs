@@ -204,7 +204,7 @@ namespace BeatLeader.Installers {
 
         #endregion
 
-        // TODO: remove this after verifying of an "allowed flows" strategy
+        // Retain the ScoreSaber replay guard; its playback flow does not identify itself through our launch data.
         private static readonly MethodBase ScoreSaber_playbackEnabled = AccessTools.Method("ScoreSaber.Core.ReplaySystem.HarmonyPatches.PatchHandleHMDUnmounted:Prefix");
     }
 }

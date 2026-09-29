@@ -5,10 +5,9 @@ using System.Linq;
 using System.Reflection;
 
 namespace BeatLeader {
-    //TODO: rework
     internal class HarmonyMultisilencer : IDisposable {
         public HarmonyMultisilencer(IEnumerable<MethodInfo>? methods = null, bool enable = true) {
-            silencedMethods = new(methods ?? Array.Empty<MethodInfo>());
+            silencedMethods = new((methods ?? Array.Empty<MethodInfo>()).Distinct());
             silencedMethods.CollectionChanged += HandleObservableCollectionChanged;
             Enabled = enable;
             HandleObservableCollectionChanged(null, null);
@@ -27,18 +26,21 @@ namespace BeatLeader {
         private bool _atLeastOneSilencerIsEnabled;
 
         public void Dispose() {
+            silencedMethods.CollectionChanged -= HandleObservableCollectionChanged;
             _silencers.ForEach(x => x.Dispose());
+            _silencers.Clear();
             silencedMethods.Clear();
         }
 
         private void HandleObservableCollectionChanged(object? sender, EventArgs? e) {
             _silencers.ToList().ForEach(x => {
                 if (!silencedMethods.Contains(x.method)) {
+                    x.Dispose();
                     _silencers.Remove(x);
                 }
             });
 
-            var silenceList = silencedMethods.ToList();
+            var silenceList = silencedMethods.Distinct().ToList();
             var selectedSilencers = _silencers.Select(x => x.method);
 
             foreach (var item in silencedMethods) {

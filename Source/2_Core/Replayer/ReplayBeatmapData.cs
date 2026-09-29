@@ -23,24 +23,27 @@ namespace BeatLeader.Replayer {
 
         public int FindNoteDataForEvent(NoteEvent noteEvent, IReplayNoteComparator noteComparator, int startIndex, out NoteData? noteData) {
             Initialize();
-            var index = 0;
-            var lastNoteTime = 0f;
-            for (var i = startIndex; i < _generatedNoteDatas.Count; i++) {
+            const float tolerance = 1e-3f;
+            var earliestTime = noteEvent.spawnTime - tolerance;
+            var low = 0;
+            var high = _generatedNoteDatas.Count;
+            if (startIndex >= 0 && startIndex < high && _generatedNoteDatas[startIndex].time < earliestTime) {
+                low = startIndex + 1;
+            }
+            while (low < high) {
+                var middle = low + (high - low) / 2;
+                if (_generatedNoteDatas[middle].time < earliestTime) low = middle + 1;
+                else high = middle;
+            }
+
+            // Keep the first candidate as the cursor so chords may arrive in either cut order.
+            // A backwards event starts a fresh search instead of skipping earlier notes.
+            var index = low;
+            for (var i = index; i < _generatedNoteDatas.Count; i++) {
                 var data = _generatedNoteDatas[i];
-
-                //TODO: current algorithm does not work properly. rework
-                var notesDoMatchInTime = Mathf.Abs(lastNoteTime - data.time) < 1e-3;
-                if (notesDoMatchInTime) {
-                    lastNoteTime = data.time;
-                    index = i;
-                }
-
-                var timeDoesMatch = Mathf.Abs(noteEvent.spawnTime - data.time) < 1e-3;
-                if (!timeDoesMatch) continue;
-
-                var idDoesMatch = noteComparator.Compare(noteEvent, data);
-                if (!idDoesMatch) continue;
-
+                if (data.time > noteEvent.spawnTime + tolerance) break;
+                if (Mathf.Abs(noteEvent.spawnTime - data.time) >= tolerance) continue;
+                if (!noteComparator.Compare(noteEvent, data)) continue;
                 noteData = data;
                 return index;
             }

@@ -9,7 +9,7 @@ namespace BeatLeader {
             BeatSaberMarkupLanguage.Settings.BSMLSettings.Instance.AddSettingsMenu(
                 TabName,
                 ResourcePath,
-                instance
+                new SettingsPanelUI()
             );
         }
     }

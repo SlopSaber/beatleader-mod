@@ -14,13 +14,19 @@ namespace BeatLeader.Models.Replay {
     {
         public ReplayInfo info = new ReplayInfo();
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public List<Frame> frames = new List<Frame>();
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public List<NoteEvent> notes = new List<NoteEvent>();
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public List<WallEvent> walls = new List<WallEvent>();
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public List<AutomaticHeight> heights = new List<AutomaticHeight>();
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public List<Pause> pauses = new List<Pause>();
         public SaberOffsets saberOffsets = new SaberOffsets();
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public Dictionary<string, byte[]> customData = new Dictionary<string, byte[]>();
     }
     public class ReplayInfo : IReplayInfo {

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BeatLeader.Utils;
@@ -18,21 +19,26 @@ namespace BeatLeader.Replayer.Emulation {
         private GameObject AvatarPrefab {
             get {
                 if (!_avatarPrefab) {
-                    _avatarPrefab = Resources
-                        .FindObjectsOfTypeAll<AvatarTweenController>()
-                        .First(static x => x && x.name == "AnimatedAvatar")
-                        .gameObject;
+                    _avatarPrefab = FindAvatarPrefab();
                 }
                 return _avatarPrefab;
             }
         }
 
+        private static GameObject FindAvatarPrefab() {
+            var controller = Resources.FindObjectsOfTypeAll<AvatarTweenController>()
+                .FirstOrDefault(static x => x && x.name == "AnimatedAvatar");
+            return controller != null ? controller.gameObject
+                : throw new InvalidOperationException("Avatar assets are not ready. Await CreateEditorFlowCoordinator before creating avatars.");
+        }
+
         private IAvatarSystem _avatarSystem = null!;
+        private Task<BeatAvatarEditorFlowCoordinator>? _editorTask;
         private GameObject _avatarPrefab = null!;
 
         private void Awake() {
-            var meta = _avatarSystemCollection.availableAvatarSystems[0];
-            _avatarSystem = _avatarSystemCollection.GetAvatarSystem(meta);
+            _avatarSystem = _avatarSystemCollection.availableAvatarSystems
+                .Select(_avatarSystemCollection.GetAvatarSystem).OfType<BeatAvatarSystem>().First();
         }
 
         #endregion
@@ -47,7 +53,6 @@ namespace BeatLeader.Replayer.Emulation {
             return avatar.AddComponent<BeatAvatarController>();
         }
 
-        //TODO: Potential bug: at least one BeatAvatarEditorFlowCoordinator must be instantiated first
         public MenuBeatAvatarController CreateMenuAvatar(Transform? parent = null, float size = 1.2f) {
             var avatar = CreateAvatar(parent, size);
             return avatar.AddComponent<MenuBeatAvatarController>();
@@ -90,8 +95,22 @@ namespace BeatLeader.Replayer.Emulation {
 
         #region CreateEditor
 
-        public async Task<BeatAvatarEditorFlowCoordinator> CreateEditorFlowCoordinator() {
-            return (BeatAvatarEditorFlowCoordinator)await _avatarSystem.InstantiateAvatarEditorUI(_container);
+        public Task<BeatAvatarEditorFlowCoordinator> CreateEditorFlowCoordinator() {
+            if (_editorTask == null || _editorTask.IsFaulted || _editorTask.IsCanceled) {
+                _editorTask = LoadEditorAndAvatarPrefab();
+            }
+            return _editorTask;
+        }
+
+        private async Task<BeatAvatarEditorFlowCoordinator> LoadEditorAndAvatarPrefab() {
+            var editor = (BeatAvatarEditorFlowCoordinator)await _avatarSystem.InstantiateAvatarEditorUI(_container);
+            try {
+                _avatarPrefab = FindAvatarPrefab();
+                return editor;
+            } catch {
+                Destroy(editor.gameObject);
+                throw;
+            }
         }
 
         #endregion

@@ -42,6 +42,7 @@ namespace BeatLeader {
         private float _canvasRadius;
         private Rect _viewRect = Rect.MinMaxRect(0, 0, 1, 1);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public void Setup(List<Vector2> points, Rect viewRect, float canvasRadius) {
             _points = points;
             _viewRect = viewRect;

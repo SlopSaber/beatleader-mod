@@ -62,12 +62,12 @@ namespace BeatLeader.UI.Hub {
 
         #region Animation
 
-        private readonly ValueAnimator _valueAnimator = new();
+        private readonly AnimatedValue<float> _valueAnimator = new(0f, SingleValueInterpolator.Instance) { Duration = 10f.fact() };
 
         public void Present() {
             Enabled = true;
-            _valueAnimator.SetProgress(0f);
-            _valueAnimator.SetTarget(1f);
+            _valueAnimator.SetValueImmediate(0f);
+            _valueAnimator.Value = 1f;
             OnUpdate();
         }
 
@@ -76,8 +76,8 @@ namespace BeatLeader.UI.Hub {
         }
 
         protected override void OnUpdate() {
-            _valueAnimator.Update();
-            _canvasGroup.alpha = _valueAnimator.Progress;
+            ((IReactiveModule)_valueAnimator).OnUpdate();
+            _canvasGroup.alpha = _valueAnimator.CurrentValue;
         }
 
         #endregion

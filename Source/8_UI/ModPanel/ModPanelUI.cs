@@ -4,7 +4,7 @@ using BeatSaberMarkupLanguage.Util;
 using JetBrains.Annotations;
 
 namespace BeatLeader {
-    internal partial class ModPanelUI : NotifiableSingleton<ModPanelUI> {
+    internal partial class ModPanelUI {
         #region Template button
 
         [UIValue("template-button-text")] [UsedImplicitly]

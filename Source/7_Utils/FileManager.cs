@@ -65,7 +65,7 @@ namespace BeatLeader.Utils {
 
         public static IEnumerable<string> GetAllReplayPaths() {
             return Directory.EnumerateFiles(replaysFolderPath, "*.bsor")
-                .Concat(Directory.EnumerateFiles(ReplayerCache.CacheDirectory, "*.bsor"));
+                .Concat(Directory.EnumerateFiles(ReplayManager.LegacyCacheDirectory, "*.bsor"));
         }
 
         public static string GetAbsoluteReplayPath(string fileName) {
@@ -136,7 +136,7 @@ namespace BeatLeader.Utils {
         static FileManager() {
             EnsureDirectoryExists(replaysFolderPath);
             EnsureDirectoryExists(playlistsFolderPath);
-            EnsureDirectoryExists(ReplayerCache.CacheDirectory);
+            EnsureDirectoryExists(ReplayManager.LegacyCacheDirectory);
         }
 
         public static void EnsureDirectoryExists(string directory) {

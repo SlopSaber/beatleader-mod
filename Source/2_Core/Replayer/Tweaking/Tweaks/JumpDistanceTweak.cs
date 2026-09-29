@@ -20,7 +20,8 @@ namespace BeatLeader.Replayer.Tweaking {
         private HarmonyAutoPatch _movementDataInitPatch = null!;
 
         public override void Initialize() {
-            //TODO: add br (player switch) support
+            // Battle royale shares one movement provider and one set of spawned notes.
+            // Keep the main replay's jump distance when changing the viewed player.
             JDFixerInterop.Enabled = false;
             _desiredJumpDistance = _launchData.MainReplay.ReplayData.JumpDistance;
             _movementDataInitPatch = _movementDataInitPatchDescriptor;

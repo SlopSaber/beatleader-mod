@@ -121,7 +121,7 @@ namespace BeatLeader.UI.Hub {
 
             #region Animation
 
-            private readonly ValueAnimator _valueAnimator = new();
+            private readonly AnimatedValue<float> _valueAnimator = new(0f, SingleValueInterpolator.Instance) { Duration = 10f.fact() };
             private Color _targetColor;
             private bool _colorShouldBeSet;
             private bool _colorSet;
@@ -129,12 +129,12 @@ namespace BeatLeader.UI.Hub {
             protected override void OnUpdate() {
                 if (_colorSet) return;
                 //
-                _valueAnimator.Update();
+                ((IReactiveModule)_valueAnimator).OnUpdate();
                 if (!_colorShouldBeSet) {
-                    if (_valueAnimator.Progress > 0.8f) {
-                        _valueAnimator.SetTarget(0f);
-                    } else if (_valueAnimator.Progress < 0.2f) {
-                        _valueAnimator.SetTarget(1f);
+                    if (_valueAnimator.CurrentValue > 0.8f) {
+                        _valueAnimator.Value = 0f;
+                    } else if (_valueAnimator.CurrentValue < 0.2f) {
+                        _valueAnimator.Value = 1f;
                     }
                 }
 
@@ -142,7 +142,7 @@ namespace BeatLeader.UI.Hub {
                 var color = Color.Lerp(
                     Color.white.ColorWithAlpha(0.1f),
                     targetColor,
-                    _valueAnimator.Progress
+                    _valueAnimator.CurrentValue
                 );
                 _backgroundImage.Color = color;
                 if (_colorShouldBeSet && color == _targetColor) {
@@ -159,7 +159,7 @@ namespace BeatLeader.UI.Hub {
             private void SetColor(Color color) {
                 _targetColor = color.ColorWithAlpha(0.2f);
                 _colorShouldBeSet = true;
-                _valueAnimator.SetTarget(1f);
+                _valueAnimator.Value = 1f;
             }
 
             #endregion

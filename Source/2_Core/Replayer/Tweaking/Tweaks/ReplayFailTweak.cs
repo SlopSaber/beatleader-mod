@@ -1,4 +1,6 @@
 ﻿using BeatLeader.Models;
+using BeatLeader.Models.AbstractReplay;
+using System.Linq;
 using Zenject;
 
 namespace BeatLeader.Replayer.Tweaking {
@@ -16,8 +18,9 @@ namespace BeatLeader.Replayer.Tweaking {
         }
 
         private void HandleReplayFinished() {
-            //TODO: add br support
-            if (_launchData.MainReplay.ReplayData.FinishTime <= _timeController.SongTime) return;
+            // The shared timeline ends after the longest replay. A battle fails only
+            // when every replay failed; a cleared or incomplete replay is not a failure.
+            if (!_launchData.Replays.All(replay => replay.ReplayData.FinishType == ReplayFinishType.Failed)) return;
             _energyCounter.ProcessEnergyChange(-1f);
         }
     }

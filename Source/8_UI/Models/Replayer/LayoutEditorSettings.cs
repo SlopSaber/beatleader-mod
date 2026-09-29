@@ -10,6 +10,7 @@ namespace BeatLeader.Models {
     public class LayoutEditorSettings {
         public SerializableVector2 ReferenceResolution { get; set; }
         public float ReferenceScaleFactor { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public Dictionary<string, LayoutData> ComponentData { get; set; } = new();
 
         public void Migrate(Vector2 resolution, float scaleFactor) {

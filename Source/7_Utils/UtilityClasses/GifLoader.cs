@@ -182,6 +182,7 @@ namespace B83.Image.GIF
         public EImageDescriptorFlags flags;
         public Color32[]? colorTable;
         public Color32[] usedColorTable;
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public List<byte> data;
         public int packedSize;
         internal int _Interlaced81 = 0; // count of lines of stage 1
@@ -390,7 +391,9 @@ namespace B83.Image.GIF
         public bool BackgroundTransparent = false;
         public GIFHeader header;
         public GIFScreenDescriptor screen;
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public List<IGIFBlock> data = new List<IGIFBlock>();
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0016", Justification = "Retain the concrete collection type in this published API for binary compatibility.")]
         public List<IGIFRenderingBlock> imageData = new List<IGIFRenderingBlock>();
         public void DrawPartialFrameTo(int aFrame, Color32[] aData, int aWidth, int aHeight, int aXOffset = 0, int aYOffset = 0)
         {

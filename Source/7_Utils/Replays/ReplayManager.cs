@@ -19,6 +19,7 @@ namespace BeatLeader.Utils {
     [PublicAPI]
     public static class ReplayManager {
         public const string ReplayFileExtension = ".bsor";
+        internal static readonly string LegacyCacheDirectory = Path.Combine(IPA.Utilities.UnityGame.UserDataPath, "BeatLeader", "ReplayerCache\\");
         private const string ReplayFilePattern = "*.bsor";
 
         #region Events
@@ -462,7 +463,7 @@ namespace BeatLeader.Utils {
             return new PhysicalReplayHeader(path, replayInfo, meta);
         }
 
-        //TODO: remove after BSOR V2
+        // BSOR v1 does not encode the completion type; retain the gameplay result before saving.
         private static void SaturateReplay(Replay replay, PlayEndData data) {
             replay.info.levelEndType = data.EndType;
         }

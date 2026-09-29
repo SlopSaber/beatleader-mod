@@ -89,12 +89,7 @@ namespace BeatLeader.UI.MainMenu {
 
         #region Events
 
-        private string _websiteUrl = string.Empty;
         private bool _mapDownloaded;
-
-        protected override void OnContextChanged() {
-            _websiteUrl = BeatSaverUtils.CreateMapPageUrl(Context.id); //TODO: Not used
-        }
 
         protected override void OnResume() {
             _loadingContainer.SetActive(true);

@@ -1,4 +1,5 @@
 ﻿using System;
+using BeatLeader.Utils;
 using System.Collections;
 using BeatLeader.Models;
 using Reactive;
@@ -93,7 +94,7 @@ namespace BeatLeader.UI.MainMenu {
         private void UpdateBottomText(PlatformEvent item) {
             StopAllCoroutines();
 
-            var timeSpan = FormatUtils.GetRelativeTime(item.endDate);
+            var timeSpan = DateTime.UtcNow - item.endDate.AsUnixTime();
             var remainingTime = timeSpan;
 
             if (timeSpan < TimeSpan.Zero) {

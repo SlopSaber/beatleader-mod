@@ -9,7 +9,8 @@ using UnityEngine.SceneManagement;
 using Screen = HMUI.Screen;
 
 namespace BeatLeader {
-    [Obsolete("Use ModalSystem instead")]
+    // BSML dialogs require their own host: Reactive ModalSystem accepts IReactiveComponent
+    // modals and cannot preserve this host's BSML sizing, interruption, and leaderboard fading.
     internal class ReeModalSystem : ReeUIComponentV2 {
         #region ActiveModals
 

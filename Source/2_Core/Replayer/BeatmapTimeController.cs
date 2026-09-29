@@ -220,15 +220,18 @@ namespace BeatLeader.Replayer {
         protected void DespawnAllBeatmapObjects() {
             var param = new object[1];
             foreach (var item in _spawnedBeatmapObjectControllers.ToList()) {
-                param[0] = item;
-                //TODO: potential bug
-                item.Pause(false);
-                (item switch {
+                var despawn = item switch {
                     NoteController => despawnNoteMethod,
                     SliderController => despawnSliderMethod,
                     ObstacleController => despawnObstacleMethod,
                     _ => null
-                })?.Invoke(_beatmapObjectManager, param);
+                };
+                if (despawn == null) continue;
+                // Reset the pooled controller's enabled state before returning it to its pool.
+                // In 1.45.2 GameNoteController.Pause directly changes enabled.
+                item.Pause(false);
+                param[0] = item;
+                despawn.Invoke(_beatmapObjectManager, param);
             }
         }
 

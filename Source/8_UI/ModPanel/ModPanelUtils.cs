@@ -12,7 +12,7 @@ namespace BeatLeader {
             BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.Instance.AddTab(
                 TabName,
                 ResourcePath,
-                instance
+                new ModPanelUI()
             );
             _tabActive = true;
         }

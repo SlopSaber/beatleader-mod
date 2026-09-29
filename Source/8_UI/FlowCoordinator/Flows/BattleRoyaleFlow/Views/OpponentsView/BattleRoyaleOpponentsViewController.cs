@@ -37,8 +37,8 @@ namespace BeatLeader.UI.Hub {
             _battleRoyaleHost.ReplayRemovedEvent += HandleReplayRemoved;
             _opponentsList.Setup(_battleRoyaleHost);
 
-            _alphaAnimator.SetProgress(0f);
-            _alphaAnimator.SetTarget(0f);
+            _alphaAnimator.SetValueImmediate(0f);
+            _alphaAnimator.Value = 0f;
         }
 
         public override void OnDestroy() {
@@ -52,7 +52,7 @@ namespace BeatLeader.UI.Hub {
 
         #region Animation
 
-        private readonly ValueAnimator _alphaAnimator = new() { LerpCoefficient = 20f };
+        private readonly AnimatedValue<float> _alphaAnimator = new(0f, SingleValueInterpolator.Instance) { Duration = 20f.fact() };
         private int _replaysCount;
         private bool _isViewPresented;
 
@@ -65,18 +65,18 @@ namespace BeatLeader.UI.Hub {
         }
 
         private void PresentView() {
-            _alphaAnimator.Push();
+            _alphaAnimator.Value = 1f;
             _isViewPresented = true;
         }
 
         private void DismissView() {
-            _alphaAnimator.Pull();
+            _alphaAnimator.Value = 0f;
             _isViewPresented = false;
         }
 
         private void Update() {
-            _alphaAnimator.Update();
-            _localCanvasGroup.alpha = _alphaAnimator.Progress;
+            ((IReactiveModule)_alphaAnimator).OnUpdate();
+            _localCanvasGroup.alpha = _alphaAnimator.CurrentValue;
         }
 
         #endregion

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BeatLeader.UI.Reactive;
 using Reactive;
 using Reactive.BeatSaber.Components;
@@ -18,12 +18,12 @@ namespace BeatLeader.UI.Replayer {
 
         #region Animation
 
-        private readonly ValueAnimator _alphaAnimator = new();
-        private readonly ValueAnimator _fillAnimator = new() { LerpCoefficient = 5f };
+        private readonly AnimatedValue<float> _alphaAnimator = new(0f, SingleValueInterpolator.Instance) { Duration = 10f.fact() };
+        private readonly AnimatedValue<float> _fillAnimator = new(0f, SingleValueInterpolator.Instance) { Duration = 5f.fact() };
 
         private void RefreshAnimation() {
-            _image.FillAmount = _fillAnimator.Progress;
-            _image.Color = Color.white.ColorWithAlpha(_alphaAnimator.Progress);
+            _image.FillAmount = _fillAnimator.CurrentValue;
+            _image.Color = Color.white.ColorWithAlpha(_alphaAnimator.CurrentValue);
         }
 
         #endregion
@@ -43,25 +43,26 @@ namespace BeatLeader.UI.Replayer {
         protected override void OnUpdate() {
             if (!_inputDevice.TryGetFeatureValue(_buttonFeature, out var pressed)) return;
             //updating animators
-            _alphaAnimator.Update();
-            if (!pressed) _fillAnimator.Update();
+            ((IReactiveModule)_alphaAnimator).OnUpdate();
+            if (!pressed) ((IReactiveModule)_fillAnimator).OnUpdate();
             //checking did state change or not
             if (pressed != _lastPressState) {
                 _lastPressTime = Time.time;
                 _lastPressState = pressed;
                 _resetFinished = false;
                 if (pressed) {
-                    _alphaAnimator.Push();
-                    _fillAnimator.SetProgress(0f);
+                    _alphaAnimator.Value = 1f;
+                    _fillAnimator.SetValueImmediate(0f);
                 } else {
-                    _alphaAnimator.Pull();
+                    _alphaAnimator.Value = 0f;
+                    _fillAnimator.Value = 0f;
                 }
             }
             //checking is finished
             if (!_resetFinished && pressed) {
-                _fillAnimator.SetProgress((Time.time - _lastPressTime) / _holdTime);
+                _fillAnimator.SetValueImmediate(Mathf.Clamp01((Time.time - _lastPressTime) / _holdTime));
                 if (Time.time - _lastPressTime >= _holdTime) {
-                    _alphaAnimator.Pull();
+                    _alphaAnimator.Value = 0f;
                     _resetFinished = true;
                     ResetRequestedEvent?.Invoke();
                 }
