@@ -510,7 +510,7 @@ namespace BeatLeader.Utils {
             var filename = $"{info.playerID}{practice}{fail}{exit}-{info.songName}-{info.difficulty}-{info.mode}-{info.hash}-{info.timestamp}{ReplayFileExtension}";
 
             var regexSearch = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
-            var r = new Regex($"[{Regex.Escape(regexSearch)}]");
+            var r = new Regex($"[{Regex.Escape(regexSearch)}]", RegexOptions.None, TimeSpan.FromSeconds(1));
 
             return r.Replace(filename, "_");
         }

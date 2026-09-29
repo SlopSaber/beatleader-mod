@@ -75,7 +75,7 @@ namespace BeatLeader.DataManager {
                 case State.Overriden:
                     ApplyOverridenState(toggles);
                     break;
-                default: throw new ArgumentOutOfRangeException();
+                default: throw new InvalidOperationException($"Unknown modifier state: {_targetState}");
             }
         }
 

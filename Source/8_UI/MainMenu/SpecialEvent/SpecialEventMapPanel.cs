@@ -119,7 +119,7 @@ internal class SpecialEventMapPanel : ReactiveComponent {
                                 }
                             } else if (y.IsHappening()) {
                                 x.Color = Color.white * 0.7f;
-                                x.Text = FormatUtils.GetRemainingTime(-FormatUtils.GetRelativeTime(y.endTime));
+                                x.Text = FormatUtils.GetRemainingTime(y.endTime.AsUnixTime() - DateTime.UtcNow);
                             } else {
                                 x.Enabled = false;
                             }

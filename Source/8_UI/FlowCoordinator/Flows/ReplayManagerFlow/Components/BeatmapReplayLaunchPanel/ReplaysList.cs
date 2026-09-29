@@ -361,7 +361,7 @@ namespace BeatLeader.UI.Hub {
                     ReplaysListSorter.Player => string.CompareOrdinal(xi.PlayerName, yi.PlayerName),
                     ReplaysListSorter.Completion => CompareLong((int)xi.LevelEndType, (int)yi.LevelEndType),
                     ReplaysListSorter.Date => -CompareLong(xi.Timestamp, yi.Timestamp),
-                    _ => throw new ArgumentOutOfRangeException()
+                    _ => throw new InvalidOperationException($"Unknown replay sorter: {sorter}")
                 };
             }
 

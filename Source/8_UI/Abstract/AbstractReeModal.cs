@@ -5,15 +5,18 @@ namespace BeatLeader {
     internal abstract class AbstractReeModal<TC> : ReeUIComponentV2, IReeModal {
         #region Context
 
-        protected TC Context;
+        private TC? _context;
+        protected TC Context => _context is { } context
+            ? context
+            : throw new InvalidOperationException("The modal has no active context.");
 
         public void ClearContext() {
-            Context = default;
+            _context = default;
         }
 
         public void SetContext(TC context) {
-            if (Equals(Context, context)) return;
-            Context = context;
+            if (Equals(_context, context)) return;
+            _context = context;
             OnContextChanged();
         }
 

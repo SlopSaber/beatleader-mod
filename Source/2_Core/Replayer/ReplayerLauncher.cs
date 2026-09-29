@@ -80,6 +80,7 @@ namespace BeatLeader.Replayer {
 
         private StandardLevelScenesTransitionSetupDataSO? CreateTransitionData(ReplayLaunchData launchData) {
             var transitionData = _standardLevelScenesTransitionSetupDataSo;
+            if (_settingsManager is not { } settingsManager) return null;
             var playerData = _playerDataModel.playerData;
 
             var overrideEnv = launchData.EnvironmentInfo != null;
@@ -111,7 +112,7 @@ namespace BeatLeader.Replayer {
                     practiceSettings: practiceSettings,
                     environmentsListModel: _environmentsListModel,
                     audioClipAsyncLoader: _audioClipAsyncLoader,
-                    settingsManager: _settingsManager,
+                    settingsManager: settingsManager,
                     beatmapDataLoader: _beatmapDataLoader,
                     beatmapLevelsEntitlementModel: _beatmapLevelsEntitlementModel,
                     gameplayAdditionalInformation: new GameplayAdditionalInformation(

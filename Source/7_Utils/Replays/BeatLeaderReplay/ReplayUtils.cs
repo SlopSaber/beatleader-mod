@@ -323,7 +323,7 @@ namespace BeatLeader.Utils {
         #region Extensions
 
         private static IDictionary<string, T> ToDictionary<T>(this object? source) {
-            if (source == null) ThrowExceptionWhenSourceArgumentIsNull();
+            if (source == null) throw new ArgumentNullException(nameof(source), "Unable to convert a null object to a dictionary.");
             var dictionary = new Dictionary<string, T>();
             foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(source)) {
                 AddPropertyToDictionary<T>(property, source!, dictionary);
@@ -334,10 +334,6 @@ namespace BeatLeader.Utils {
         private static void AddPropertyToDictionary<T>(PropertyDescriptor property, object source, Dictionary<string, T> dictionary) {
             var value = property.GetValue(source);
             if (value is T value1) dictionary.Add(property.Name, value1);
-        }
-
-        private static void ThrowExceptionWhenSourceArgumentIsNull() {
-            throw new ArgumentNullException("source", "Unable to convert object to a dictionary. The source object is null.");
         }
 
         #endregion

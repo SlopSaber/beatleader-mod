@@ -19,7 +19,7 @@ namespace BeatLeader.Models {
                 return idx switch {
                     0 => x,
                     1 => y,
-                    _ => throw new IndexOutOfRangeException()
+                    _ => throw new ArgumentOutOfRangeException(nameof(idx), idx, "Invalid vector component index.")
                 };
             }
         }

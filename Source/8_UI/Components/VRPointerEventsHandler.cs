@@ -25,7 +25,7 @@ namespace BeatLeader.UI {
         private VRPointer _pointer = null!;
 
         private void Awake() {
-            _pointer = FindObjectOfType<VRPointer>();
+            _pointer = FindFirstObjectByType<VRPointer>();
         }
 
         #endregion

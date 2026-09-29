@@ -47,7 +47,7 @@ namespace BeatLeader.Components {
         private bool _cursorInitialized;
 
         private void OnEnable() {
-            _vrPointer = FindObjectOfType<VRPointer>();
+            _vrPointer = FindFirstObjectByType<VRPointer>();
             _cursorInitialized = _vrPointer != null;
             _lastPosition3D = default;
         }
@@ -166,7 +166,7 @@ namespace BeatLeader.Components {
         private ImageView _graphBackground = default!;
 
         [UIComponent("cursor-hint"), UsedImplicitly]
-        private RectTransform _hintTransform;
+        private RectTransform _hintTransform { get; set; } = null!;
 
         #endregion
 

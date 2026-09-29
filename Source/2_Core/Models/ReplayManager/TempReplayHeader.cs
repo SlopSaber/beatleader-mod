@@ -13,7 +13,8 @@ namespace BeatLeader.Models {
         public FileStatus FileStatus => FileStatus.Loaded;
         public string FilePath => "Temporary";
 
-        public event Action<FileStatus>? StatusChangedEvent;
+        // Temporary replays stay loaded for their entire lifetime.
+        public event Action<FileStatus>? StatusChangedEvent { add { } remove { } }
 
         private readonly Replay.Replay _replay;
 

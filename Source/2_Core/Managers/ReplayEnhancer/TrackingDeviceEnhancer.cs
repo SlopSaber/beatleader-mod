@@ -11,8 +11,6 @@ namespace BeatLeader.Core.Managers.ReplayEnhancer {
     internal class TrackingDeviceEnhancer {
         #region Enhance
 
-        [Inject, UsedImplicitly]
-        private IVRPlatformHelper _vrPlatformHelper;
 
         public void Enhance(Replay replay) {
             replay.info.trackingSytem = "OpenXR";

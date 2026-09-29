@@ -133,7 +133,7 @@ namespace BeatLeader.UI.MainMenu {
                 map
             );
 
-            FindObjectOfType<SoloFreePlayFlowCoordinator>().Setup(x);
+            FindFirstObjectByType<SoloFreePlayFlowCoordinator>().Setup(x);
 
             if (dialog != null) {
                 dialog.Close();

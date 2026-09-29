@@ -16,7 +16,6 @@ namespace BeatLeader.Replayer {
         [Inject] private readonly SaberManager _saberManager = null!;
         [Inject] private readonly IGamePause _gamePause = null!;
 
-        [Inject] private readonly IVRPlatformHelper _vrPlatformHelper = null!;
         [Inject] private readonly IMenuButtonTrigger _pauseButtonTrigger = null!;
         [Inject] private readonly ILevelStartController _levelStartController = null!;
 

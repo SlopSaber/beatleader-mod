@@ -59,7 +59,7 @@ namespace BeatLeader.Components {
         #region Retry logic
 
         private int _failsCount;
-        private Replay _lastReplay;
+        private Replay? _lastReplay;
         private PlayEndData _lastPlayEndData;
 
         private int FailsCount {

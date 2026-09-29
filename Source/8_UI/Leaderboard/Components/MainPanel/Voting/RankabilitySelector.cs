@@ -14,7 +14,7 @@ namespace BeatLeader.Components {
             State.Undecided => 0,
             State.ForRank => 1,
             State.NotForRank => -1,
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new InvalidOperationException($"Unknown rankability state: {_state}")
         };
 
         public State CurrentState {

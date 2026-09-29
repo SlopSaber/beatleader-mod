@@ -111,9 +111,8 @@ namespace BeatLeader {
         #region Stack
 
         private readonly Stack<(IReeModal, object)> _stack = new Stack<(IReeModal, object)>();
-        private IReeModal _activeModal;
-        private object _activeModalState;
-        private bool _hasActiveModal;
+        private IReeModal? _activeModal;
+        private object? _activeModalState;
 
         private void OpenModal<T>(object context) where T : IReeModal {
             var editor = GetOrInstantiateModal<T>();
@@ -131,7 +130,7 @@ namespace BeatLeader {
         }
 
         private void PopOpen(IReeModal modal, object state) {
-            if (!_hasActiveModal) {
+            if (_activeModal == null || _activeModalState == null) {
                 _stack.Push((modal, state));
                 OpenImmediately();
             } else {
@@ -146,7 +145,6 @@ namespace BeatLeader {
             var (modal, state) = _stack.Pop();
             _activeModal = modal;
             _activeModalState = state;
-            _hasActiveModal = true;
             _activeModal.Resume(state, CloseOrPop);
             ShowModal();
         }
@@ -161,7 +159,6 @@ namespace BeatLeader {
 
             _activeModal = null;
             _activeModalState = null;
-            _hasActiveModal = false;
             HideModal();
         }
 
@@ -170,7 +167,7 @@ namespace BeatLeader {
         #region ForceUpdate / InterruptAll
 
         private void InterruptAll() {
-            if (!_hasActiveModal) return;
+            if (_activeModal == null) return;
 
             _activeModal.Interrupt();
 
@@ -181,12 +178,11 @@ namespace BeatLeader {
 
             _activeModal = null;
             _activeModalState = null;
-            _hasActiveModal = false;
             HideModal(false);
         }
 
         private void ForceUpdate() {
-            if (!_hasActiveModal) return;
+            if (_activeModal == null) return;
             StartCoroutine(ForceUpdateCoroutine());
         }
 
@@ -236,7 +232,7 @@ namespace BeatLeader {
         }
 
         private void OnBlockerClicked() {
-            if (!_hasActiveModal) return;
+            if (_activeModal == null) return;
             _activeModal.HandleOffClick();
         }
 

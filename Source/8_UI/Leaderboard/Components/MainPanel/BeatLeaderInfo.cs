@@ -122,7 +122,7 @@ namespace BeatLeader.Components {
         [UIComponent("ranked-playlist-button"), UsedImplicitly]
         private Button _rankedPlaylistButton = default!;
 
-        private bool TryGetPlaylistButtonForType(PlaylistsManager.PlaylistType playlistType, out Button button) {
+        private bool TryGetPlaylistButtonForType(PlaylistsManager.PlaylistType playlistType, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Button? button) {
             switch (playlistType) {
                 case PlaylistsManager.PlaylistType.Nominated:
                     button = _nominatedPlaylistButton;

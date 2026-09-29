@@ -117,7 +117,7 @@ namespace BeatLeader {
         private static readonly Range ScoreLifetimeDaysRange = new(0, 30 * 8);
 
         public static string FormatTimeset(string timeSet, bool compact) {
-            var timeSpan = GetRelativeTime(timeSet);
+            var timeSpan = DateTime.UtcNow - long.Parse(timeSet).AsUnixTime();
             var timeString = GetRelativeTimeString(timeSpan, compact);
             return $"<color=#{GetTimesetColorString(timeSpan)}>{timeString}</color>";
         }
@@ -156,11 +156,11 @@ namespace BeatLeader {
         }
 
         public static string GetRelativeTimeString(long timeSet, bool compact) {
-            return GetRelativeTimeString(GetRelativeTime(timeSet), compact);
+            return GetRelativeTimeString(DateTime.UtcNow - timeSet.AsUnixTime(), compact);
         }
 
         public static string GetRelativeTimeString(string timeSet, bool compact) {
-            return GetRelativeTimeString(GetRelativeTime(timeSet), compact);
+            return GetRelativeTimeString(DateTime.UtcNow - long.Parse(timeSet).AsUnixTime(), compact);
         }
 
         public static string GetDateTimeString(long timestamp) {

@@ -37,7 +37,7 @@ namespace BeatLeader.API {
                 "oculus" => UserInfo.Platform.Oculus,
                 "oculus-mock" => UserInfo.Platform.Oculus,
                 "mock" => UserInfo.Platform.Test,
-                _ => throw new NotImplementedException(),
+                _ => throw new NotSupportedException($"Unsupported platform: {platformUserModel.key}"),
             }, platformUserModel.user.userId.ToString(), platformUserModel.user.displayName);
 
             var tokenProvider = new PlatformAuthenticationTokenProvider(platformUserModel, userInfo);
@@ -45,7 +45,7 @@ namespace BeatLeader.API {
             return Platform switch {
                 AuthPlatform.Steam    => (await tokenProvider.GetXPlatformAccessToken(CancellationToken.None)).token,
                 AuthPlatform.OculusPC => (await tokenProvider.GetXPlatformAccessToken(CancellationToken.None)).token,
-                _                     => throw new ArgumentOutOfRangeException()
+                _                     => throw new InvalidOperationException($"Unsupported authentication platform: {Platform}")
             };
         }
 

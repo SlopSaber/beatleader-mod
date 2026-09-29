@@ -44,11 +44,11 @@ namespace BeatLeader.Components {
             _accText = Instantiate<HoverText>(transform);
             _accText.TextObject.alignment = TextAlignmentOptions.Center;
             _accText.TextObject.fontSize = FontSize;
-            _accText.TextObject.enableWordWrapping = false;
+            _accText.TextObject.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
             _ppText = Instantiate<HoverText>(transform);
             _ppText.TextObject.alignment = TextAlignmentOptions.Center;
             _ppText.TextObject.fontSize = FontSize;
-            _ppText.TextObject.enableWordWrapping = false;
+            _ppText.TextObject.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
         }
 
         #endregion

@@ -74,7 +74,7 @@ namespace BeatLeader.Components {
                         ? $"This will reset your level and you will reach <b>Prestige {player.prestige + 1}</b>. <color=#ffffff>Are you ready?</color>"
                         : "To get more points, pass maps always with 95+% accuracy. But even playing with 90% accuracy will give you almost the full xp for the time played.\n<color=#ffffff>Just play more!</color>");
 
-            _PrestigeYesButton.gameObject.active = canPrestige;
+            _PrestigeYesButton.gameObject.SetActive(canPrestige);
             _PrestigeYesButton.interactable = canPrestige;
 
             _PrestigeNoButton.GetComponentInChildren<TextMeshProUGUI>().SetText(canPrestige ? "No" : "Close");

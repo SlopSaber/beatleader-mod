@@ -10,8 +10,6 @@ namespace BeatLeader.Installers {
     [UsedImplicitly]
     public class OnAppInitInstaller : Installer<OnAppInitInstaller> {
         [Inject, UsedImplicitly]
-        private IVRPlatformHelper _vrPlatformHelper = null!;
-        [Inject, UsedImplicitly]
         private IPlatform _platform = null!;
 
         public override void InstallBindings() {

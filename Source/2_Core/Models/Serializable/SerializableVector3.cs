@@ -22,7 +22,7 @@ namespace BeatLeader.Models {
                     0 => x,
                     1 => y,
                     2 => z,
-                    _ => throw new IndexOutOfRangeException()
+                    _ => throw new ArgumentOutOfRangeException(nameof(idx), idx, "Invalid vector component index.")
                 };
             }
         }

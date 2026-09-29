@@ -153,7 +153,7 @@ namespace BeatLeader.Components {
                 case ScoreInfoPanelTab.Replay:
                     _replayPanel.SetActive(true);
                     break;
-                default: throw new ArgumentOutOfRangeException();
+                default: throw new InvalidOperationException($"Unknown score information tab: {LeaderboardState.ScoreInfoPanelTab}");
             }
         }
 

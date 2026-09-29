@@ -8,7 +8,7 @@ namespace BeatLeader {
         #region Template button
 
         [UIValue("template-button-text")] [UsedImplicitly]
-        private string _templateButtonText = "Hello world!";
+        private string TemplateButtonText => "Hello world!";
 
         #endregion
     }

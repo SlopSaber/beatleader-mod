@@ -9,7 +9,6 @@ namespace BeatLeader.UI.Hub {
     internal class BattleRoyaleBattleSetupViewController : ViewController {
         #region Injection
 
-        [Inject] private readonly IBattleRoyaleHost _battleRoyaleHost = null!;
 
         #endregion
 

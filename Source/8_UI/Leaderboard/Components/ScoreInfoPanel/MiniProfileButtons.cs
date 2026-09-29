@@ -232,7 +232,7 @@ namespace BeatLeader.Components {
         }
 
         private class SocialsButtonInfo {
-            public ServiceIntegration Integration;
+            public ServiceIntegration? Integration;
             public MiniProfileButton Button;
 
             public void OpenLink() {

@@ -8,8 +8,6 @@ using BeatLeader.Replayer;
 namespace BeatLeader.Interop {
     [PluginInterop("BeatSaviorData")]
     internal static class BeatSaviorInterop {
-        [PluginAssembly]
-        private static readonly Assembly assembly = null!;
 
         [PluginType("BeatSaviorData.SettingsMenu")]
         private static readonly Type settingsMenuType = null!;

@@ -158,7 +158,7 @@ namespace BeatLeader.Utils {
                             break;
                         case NoteEventType.good:
                             break;
-                        default: throw new ArgumentOutOfRangeException();
+                        default: throw new ArgumentException($"Replay contains an unknown note event type: {item.eventType}", nameof(replay));
                     }
                 }
 

@@ -11,8 +11,6 @@ namespace BeatLeader.Interop {
     internal static class Cam2Interop {
         #region Setup
 
-        [PluginAssembly]
-        private static readonly Assembly pluginAssembly = null!;
 
         [PluginType("Camera2.SDK.ReplaySources")]
         private static readonly Type replaySourcesType = null!;
