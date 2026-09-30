@@ -47,7 +47,8 @@ namespace BeatLeader.Components {
         private bool _cursorInitialized;
 
         private void OnEnable() {
-            _vrPointer = FindFirstObjectByType<VRPointer>();
+            // Tab switches reuse the same pointer. Search again only after its scene object is destroyed.
+            if (_vrPointer == null) _vrPointer = FindFirstObjectByType<VRPointer>();
             _cursorInitialized = _vrPointer != null;
             _lastPosition3D = default;
         }
