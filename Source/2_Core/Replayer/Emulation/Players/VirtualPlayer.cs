@@ -69,7 +69,10 @@ namespace BeatLeader.Replayer.Emulation {
             _beatmapEventsProcessor = _eventProcessorsPool.Spawn();
             _beatmapEventsProcessor.Init(Replay);
             //playback
-            _frames = new(replay.PlayerMovementFrames);
+            var preparedFrames = replay.GetType() == typeof(GenericReplay)
+                ? ((GenericReplay)replay).TakePreparedMovementFrames()
+                : null;
+            _frames = preparedFrames ?? new(replay.PlayerMovementFrames);
             _lastProcessedNode = _frames.First;
             _allowPlayback = true;
         }

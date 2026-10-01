@@ -42,7 +42,7 @@ namespace BeatLeader.Utils {
 
         public static IReplay ConvertToAbstractReplay(Replay replay, IPlayer? player, BattleRoyaleReplayData? optionalData, bool mirrorX) {
             var replayData = CreateReplayData(replay, player, mirrorX);
-            return CreateAbstractReplay(replay, optionalData, mirrorX, replayData, RNoteCutInfo.BombNoteCutInfo, CancellationToken.None);
+            return CreateAbstractReplay(replay, optionalData, mirrorX, replayData, RNoteCutInfo.BombNoteCutInfo, false, CancellationToken.None);
         }
 
         internal static Task<IReplay> ConvertToAbstractReplayAsync(
@@ -51,7 +51,7 @@ namespace BeatLeader.Utils {
             token.ThrowIfCancellationRequested();
             var replayData = CreateReplayData(replay, player, mirrorX);
             var bombNoteCutInfo = RNoteCutInfo.BombNoteCutInfo;
-            return Task.Run(() => CreateAbstractReplay(replay, optionalData, mirrorX, replayData, bombNoteCutInfo, token), token);
+            return Task.Run(() => CreateAbstractReplay(replay, optionalData, mirrorX, replayData, bombNoteCutInfo, true, token), token);
         }
 
         private static GenericReplayData CreateReplayData(Replay replay, IPlayer? player, bool mirrorX) {
@@ -75,7 +75,7 @@ namespace BeatLeader.Utils {
 
         private static IReplay CreateAbstractReplay(
             Replay replay, BattleRoyaleReplayData? optionalData, bool mirrorX, GenericReplayData replayData,
-            global::NoteCutInfo bombNoteCutInfo, CancellationToken token
+            global::NoteCutInfo bombNoteCutInfo, bool prepareMovementFrames, CancellationToken token
         ) {
             var frames = replay.frames.Select(x => {
                     var frame = new PlayerMovementFrame(
@@ -133,7 +133,7 @@ namespace BeatLeader.Utils {
             var heightEvents = heights?.ToArray();
             token.ThrowIfCancellationRequested();
 
-            return new GenericReplay(
+            var result = new GenericReplay(
                 replayData,
                 comparator,
                 optionalData,
@@ -144,6 +144,9 @@ namespace BeatLeader.Utils {
                 heightEvents,
                 replay.customData
             );
+            if (prepareMovementFrames) result.PrepareMovementFrames(token);
+            token.ThrowIfCancellationRequested();
+            return result;
         }
 
         #endregion
