@@ -95,31 +95,46 @@ namespace BeatLeader.UI.Hub {
 
         #region SetScore
 
+        private int _requestRevision;
+
         public async Task SetDataByHeaderAsync(IReplayHeader header, CancellationToken token = default) {
+            var revision = ++_requestRevision;
+            if (!IsCurrentRequest(revision, token)) return;
+
             if (!StatsStorage.TryGetStats(header, out var score, out var stats)) {
                 //loading if wasn't represented in the cache
                 var replay = await header.LoadReplayAsync(token);
 
-                if (token.IsCancellationRequested) {
+                if (!IsCurrentRequest(revision, token)) {
                     return;
                 }
 
                 if (replay != null) {
-                    stats = await Task.Run(() => ReplayStatisticUtils.ComputeScoreStats(replay), token);
-                    score = ReplayUtils.ComputeScore(replay);
-                    score.fcAccuracy = stats?.accuracyTracker.fcAcc ?? 0;
-                    score.accuracy = stats?.scoreGraphTracker.graph.LastOrDefault() ?? 0;
+                    (score, stats) = await Task.Run(() => {
+                        var scoreStats = ReplayStatisticUtils.ComputeScoreStats(replay);
+                        token.ThrowIfCancellationRequested();
+                        var replayScore = ReplayUtils.ComputeScore(replay);
+                        replayScore.fcAccuracy = scoreStats?.accuracyTracker.fcAcc ?? 0;
+                        replayScore.accuracy = scoreStats?.scoreGraphTracker.graph.LastOrDefault() ?? 0;
+                        return (replayScore, scoreStats);
+                    }, token);
                 }
 
+                if (!IsCurrentRequest(revision, token)) return;
                 StatsStorage.AddStats(header, score, stats);
             }
 
+            if (!IsCurrentRequest(revision, token)) return;
             if (score == null || stats == null) {
                 SetFailed();
                 return;
             }
 
             SetData(score, stats);
+        }
+
+        private bool IsCurrentRequest(int revision, CancellationToken token) {
+            return revision == _requestRevision && !token.IsCancellationRequested && !IsDestroyed;
         }
 
         public void SetLoading() {
