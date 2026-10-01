@@ -137,6 +137,9 @@ namespace BeatLeader.Components {
                             Text = "Proceed",
                             ShowUnderline = false,
                             OnClick = () => {
+                                if (_destroyed || !IsInitialized || IsDestroyed || !Content) return;
+                                _downloadBeatmap = new BeatmapLevelWithKey(
+                                    LeaderboardState.SelectedBeatmapLevel, LeaderboardState.SelectedBeatmapKey);
                                 _downloadModal.SetData(_selectedScores);
                                 ModalSystem.PresentModal(_downloadModal, Canvas!.transform);
                             }
@@ -173,6 +176,11 @@ namespace BeatLeader.Components {
         }
 
         protected override void OnDestroy() {
+            _destroyed = true;
+            _downloadModal.DownloadingFinishedCallback = null;
+            if (_downloadModal.IsInitialized && !_downloadModal.IsDestroyed && _downloadModal.Content) {
+                _downloadModal.Destroy();
+            }
             LeaderboardsCache.CacheWasChangedEvent -= OnCacheWasChanged;
             EnvironmentManagerPatch.EnvironmentTypeChangedEvent -= OnMenuEnvironmentChanged;
             PluginConfig.LeaderboardDisplaySettingsChangedEvent -= OnLeaderboardDisplaySettingsChanged;
@@ -187,6 +195,8 @@ namespace BeatLeader.Components {
 
         private readonly HashSet<Score> _selectedScores = new();
         private bool _battleRoyaleEnabled;
+        private bool _destroyed;
+        private BeatmapLevelWithKey _downloadBeatmap;
 
         private void SetBattleRoyaleEnabled(bool enabled) {
             _battleRoyaleEnabled = enabled;
@@ -219,12 +229,8 @@ namespace BeatLeader.Components {
         }
 
         private void OnScoreDownloadingFinished() {
-            var level = new BeatmapLevelWithKey(
-                LeaderboardState.SelectedBeatmapLevel,
-                LeaderboardState.SelectedBeatmapKey
-            );
-
-            _replayerNavigator?.NavigateToBattleRoyale(level, _downloadModal.Headers, false, true);
+            if (_destroyed || !IsInitialized || IsDestroyed || !Content || !_downloadBeatmap.HasValue) return;
+            _replayerNavigator?.NavigateToBattleRoyale(_downloadBeatmap, _downloadModal.Headers, false, true);
         }
 
         #endregion

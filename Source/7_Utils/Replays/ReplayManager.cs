@@ -161,6 +161,63 @@ namespace BeatLeader.Utils {
             return _loadHeadersTask ?? Task.CompletedTask;
         }
 
+        internal static async Task WaitForLoadingAsync(CancellationToken token) {
+            token.ThrowIfCancellationRequested();
+            var loading = WaitForLoadingAsync();
+            if (loading.IsCompleted) {
+                await loading;
+                token.ThrowIfCancellationRequested();
+                return;
+            }
+            var cancelled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using (token.Register(static state => ((TaskCompletionSource<bool>)state!).TrySetCanceled(), cancelled)) {
+                await await Task.WhenAny(loading, cancelled.Task);
+                token.ThrowIfCancellationRequested();
+            }
+        }
+
+        private readonly struct ReplayHashSnapshot : IReplayHashProvider {
+            public long Timestamp { get; }
+            public string PlayerID { get; }
+
+            public ReplayHashSnapshot(long timestamp, string playerId) {
+                Timestamp = timestamp;
+                PlayerID = playerId;
+            }
+        }
+
+        internal static async Task<(IReplayHeader?[] Headers, IReadOnlyCollection<IReplayHeader> Present, bool Complete)> FindReplaysByHashAsync(
+            IReadOnlyList<IReplayHashProvider> providers, CancellationToken token) {
+            var keys = new ReplayHashSnapshot[providers.Count];
+            for (var i = 0; i < keys.Length; i++) {
+                token.ThrowIfCancellationRequested();
+                var provider = providers[i];
+                keys[i] = new ReplayHashSnapshot(provider.Timestamp, provider.PlayerID);
+            }
+            while (true) {
+                await WaitForLoadingAsync(token);
+                await replayOperations.WaitAsync(token);
+                try {
+                    if (IsLoading) continue;
+                    var version = Volatile.Read(ref _loadHeadersVersion);
+                    var results = await Task.Run(() => {
+                        var found = new IReplayHeader?[keys.Length];
+                        var present = new List<IReplayHeader>();
+                        for (var i = 0; i < keys.Length; i++) {
+                            token.ThrowIfCancellationRequested();
+                            hashedHeaders.TryGetValue(keys[i].CalculateReplayHash(), out found[i]);
+                            if (found[i] is { } header) present.Add(header);
+                        }
+                        return (Headers: found, Present: (IReadOnlyCollection<IReplayHeader>)Array.AsReadOnly(present.ToArray()), Complete: present.Count == keys.Length);
+                    }, token);
+                    token.ThrowIfCancellationRequested();
+                    if (version == Volatile.Read(ref _loadHeadersVersion)) return results;
+                } finally {
+                    replayOperations.Release();
+                }
+            }
+        }
+
         /// <summary>
         /// Finds a header by the specified info if the header is present in the local storage.
         /// </summary>
