@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using BeatLeader.Models;
 using BeatSaberMarkupLanguage.Attributes;
@@ -56,6 +57,15 @@ namespace BeatLeader.Components {
                 var quality = range.GetRatioClamped(score);
                 _accuracyGridCells[i].SetScore(score, quality);
             }
+        }
+
+        internal bool SetPreparedScoreStats(ScoreStatsPresentation values, Func<bool> canApply) {
+            for (var i = 0; i < TotalCellsCount; i++) {
+                if (!CanPublish() || !_accuracyGridCells[i].SetPreparedScore(values.Grid[i], CanPublish)) return false;
+            }
+            return CanPublish();
+
+            bool CanPublish() => canApply() && this && IsHierarchySet && Content;
         }
 
         private static Range GetScoresRange(float[] scores) {

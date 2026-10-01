@@ -1,3 +1,4 @@
+using System;
 using BeatSaberMarkupLanguage.Attributes;
 using HMUI;
 using JetBrains.Annotations;
@@ -22,11 +23,22 @@ namespace BeatLeader.Components {
 
         private float _score;
         private float _quality;
+        private ScoreStatsPresentation.ScoreText? _preparedText;
 
         public void SetScore(float score, float quality) {
             _score = score;
             _quality = quality;
+            _preparedText = null;
             UpdateVisuals();
+        }
+
+        internal bool SetPreparedScore(ScoreStatsPresentation.GridCell value, Func<bool> canApply) {
+            if (!canApply() || !this || !IsHierarchySet || !Content) return false;
+            _score = value.Text.Score;
+            _quality = value.Quality;
+            _preparedText = value.Text;
+            UpdateVisuals();
+            return canApply() && this && IsHierarchySet && Content;
         }
 
         private void UpdateVisuals() {
@@ -37,7 +49,9 @@ namespace BeatLeader.Components {
             }
 
             _backgroundImage.color = GetColor(_quality, _hoverController.Progress);
-            _textComponent.text = FormatScore(_score, _hoverController.IsHovered);
+            _textComponent.text = _preparedText is { } text
+                ? (_hoverController.IsHovered ? text.Hovered : text.Plain)
+                : FormatScore(_score, _hoverController.IsHovered);
         }
 
         #endregion

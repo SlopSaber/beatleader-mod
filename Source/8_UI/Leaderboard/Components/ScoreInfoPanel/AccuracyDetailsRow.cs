@@ -32,6 +32,18 @@ namespace BeatLeader.Components {
             RightValue = Format(type, rightValue);
         }
 
+        internal bool SetPreparedValues(ScoreStatsPresentation.DetailRow row, Func<bool> canApply) {
+            if (!CanPublish()) return false;
+            Label = row.Label;
+            if (!CanPublish()) return false;
+            LeftValue = row.Left;
+            if (!CanPublish()) return false;
+            RightValue = row.Right;
+            return CanPublish();
+
+            bool CanPublish() => canApply() && this && IsHierarchySet && Content;
+        }
+
         #endregion
 
         #region Formatting

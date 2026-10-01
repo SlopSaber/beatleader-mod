@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using BeatLeader.API;
 using BeatLeader.DataManager;
@@ -69,6 +70,7 @@ namespace BeatLeader.Components {
         #region Init / Dispose
 
         protected override void OnInitialize() {
+            _disposed = false;
             base.OnInitialize();
             _middlePanel.raycastTarget = true;
             _bottomPanel.raycastTarget = true;
@@ -80,6 +82,7 @@ namespace BeatLeader.Components {
         }
 
         protected override void OnDispose() {
+            _disposed = true;
             InvalidateScoreStats();
             ScoreStatsRequest.Request.StateChangedEvent -= OnScoreStatsRequestStateChanged;
             HiddenPlayersCache.HiddenPlayersUpdatedEvent -= RefreshPlayer;
@@ -98,6 +101,16 @@ namespace BeatLeader.Components {
         protected override void OnClose() {
             InvalidateScoreStats();
             base.OnClose();
+        }
+
+        protected override void OnPause() {
+            InvalidateScoreStats();
+            base.OnPause();
+        }
+
+        protected override void OnInterrupt() {
+            InvalidateScoreStats();
+            base.OnInterrupt();
         }
 
         private void OnReplayDownloadStateChangedEvent(bool state) {
@@ -172,33 +185,62 @@ namespace BeatLeader.Components {
         private bool _scoreStatsUpdateRequired;
         private Score? _score;
         private int _scoreStatsRevision;
+        private bool _disposed;
+        private CancellationTokenSource? _scoreStatsCancellation;
 
         private void OnScoreStatsRequestStateChanged(WebRequests.IWebRequest<ScoreStats> instance, WebRequests.RequestState state, string? failReason) {
             if (_score == null || state is not WebRequests.RequestState.Finished) return;
             if (instance.Result is not { } result) return;
-            var revision = ++_scoreStatsRevision;
-            if (!IsCurrentScoreStats(revision, _score)) return;
-            _ = ApplyScoreStatsAsync(_score, result, revision).RunCatching();
+            InvalidateScoreStats();
+            var score = _score;
+            var revision = _scoreStatsRevision;
+            if (!IsCurrentScoreStats(revision, score)) return;
+            var source = new CancellationTokenSource();
+            _scoreStatsCancellation = source;
+            _ = ApplyScoreStatsAsync(score, result, revision, source).RunCatching();
         }
 
-        private async Task ApplyScoreStatsAsync(Score score, ScoreStats result, int revision) {
-            var prepared = await _accuracyGraphPanel.PrepareScoreStatsAsync(result);
-            if (prepared == null || !IsCurrentScoreStats(revision, score) || !_accuracyGraphPanel.CanApplyPrepared(prepared)) return;
-            _scoreOverviewPage2.SetScoreAndStats(score, result);
-            _accuracyDetails.SetScoreStats(result);
-            _accuracyGrid.SetScoreStats(result);
-            if (!_accuracyGraphPanel.SetPreparedScoreStats(prepared) || !IsCurrentScoreStats(revision, score)) return;
-            _scoreStatsUpdateRequired = false;
-            UpdateVisibility();
+        private async Task ApplyScoreStatsAsync(Score score, ScoreStats result, int revision, CancellationTokenSource source) {
+            var token = source.Token;
+            try {
+                var displayTask = ScoreStatsPresentation.PrepareAsync(score.platform, result, token);
+                var graphTask = _accuracyGraphPanel.PrepareScoreStatsAsync(result, token);
+                await Task.WhenAll(displayTask, graphTask);
+                var display = await displayTask;
+                var prepared = await graphTask;
+                if (prepared == null || !CanApply() || !_accuracyGraphPanel.CanApplyPrepared(prepared)) return;
+                if (!_scoreOverviewPage2.SetPreparedScoreStats(display, CanApply)
+                    || !_accuracyDetails.SetPreparedScoreStats(display, CanApply)
+                    || !_accuracyGrid.SetPreparedScoreStats(display, CanApply)
+                    || !CanApply() || !_accuracyGraphPanel.SetPreparedScoreStats(prepared) || !CanApply()) return;
+                _scoreStatsUpdateRequired = false;
+                UpdateVisibility();
+
+                bool CanApply() => !token.IsCancellationRequested && IsCurrentScoreStats(revision, score);
+            } catch (OperationCanceledException) when (token.IsCancellationRequested) {
+            } catch (Exception ex) {
+                Plugin.Log.Error($"Failed to prepare score statistics: {ex}");
+                if (!token.IsCancellationRequested && IsCurrentScoreStats(revision, score)) {
+                    _scoreStatsUpdateRequired = true;
+                    _scoreStatsLoadingScreen.SetFailed(true);
+                    if (IsCurrentScoreStats(revision, score)) UpdateVisibility();
+                }
+            } finally {
+                if (ReferenceEquals(_scoreStatsCancellation, source)) _scoreStatsCancellation = null;
+                source.Dispose();
+            }
         }
 
         private bool IsCurrentScoreStats(int revision, Score score) {
             return revision == _scoreStatsRevision && ReferenceEquals(_score, score)
-                && this && IsHierarchySet && Content && gameObject.activeInHierarchy;
+                && !_disposed && this && IsHierarchySet && Content && gameObject.activeInHierarchy;
         }
 
         private void InvalidateScoreStats() {
             _scoreStatsRevision++;
+            var previous = _scoreStatsCancellation;
+            _scoreStatsCancellation = null;
+            previous?.Cancel();
             _accuracyGraphPanel?.InvalidatePreparation();
         }
 

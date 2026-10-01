@@ -1,3 +1,4 @@
+using System;
 using BeatSaberMarkupLanguage.Attributes;
 using JetBrains.Annotations;
 
@@ -19,6 +20,18 @@ namespace BeatLeader.Components {
             PreScore = FormatScore(preScore);
             AccScore = FormatScore(accScore);
             PostScore = FormatScore(postScore);
+        }
+
+        internal bool SetPreparedValues(string pre, string accuracy, string post, Func<bool> canApply) {
+            if (!CanPublish()) return false;
+            PreScore = pre;
+            if (!CanPublish()) return false;
+            AccScore = accuracy;
+            if (!CanPublish()) return false;
+            PostScore = post;
+            return CanPublish();
+
+            bool CanPublish() => canApply() && this && IsHierarchySet && Content;
         }
 
         #endregion

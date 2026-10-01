@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using BeatLeader.Models;
 using BeatSaberMarkupLanguage.Attributes;
@@ -20,6 +21,22 @@ namespace BeatLeader.Components {
             _xTextComponent.text = FormatPositionString(scoreStats.winTracker.averageHeadPosition.x, "X", XColor);
             _yTextComponent.text = FormatPositionString(scoreStats.winTracker.averageHeadPosition.y, "Y",  YColor);
             _zTextComponent.text = FormatPositionString(scoreStats.winTracker.averageHeadPosition.z, "Z", ZColor);
+        }
+
+        internal bool SetPreparedScoreStats(ScoreStatsPresentation values, Func<bool> canApply) {
+            if (!CanPublish()) return false;
+            _platformTextComponent.text = values.PlatformText;
+            if (!CanPublish()) return false;
+            _detailsTextComponent.text = values.DetailsText;
+            if (!CanPublish()) return false;
+            _xTextComponent.text = values.XText;
+            if (!CanPublish()) return false;
+            _yTextComponent.text = values.YText;
+            if (!CanPublish()) return false;
+            _zTextComponent.text = values.ZText;
+            return CanPublish();
+
+            bool CanPublish() => canApply() && this && IsHierarchySet && Content;
         }
 
         #endregion

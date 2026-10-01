@@ -32,17 +32,34 @@ namespace BeatLeader.Components {
 
         private Type _type;
         private float _score;
+        private ScoreStatsPresentation.ScoreText? _preparedText;
 
         public void SetValues(Type type, float score) {
             _type = type;
             _score = score;
+            _preparedText = null;
             UpdateVisuals(_hoverController.IsHovered, _hoverController.Progress);
             SetFillValue(CalculateFillValue(score));
         }
 
+        internal bool SetPreparedValues(Type type, ScoreStatsPresentation.Hand value, Func<bool> canApply) {
+            if (!CanPublish()) return false;
+            _type = type;
+            _score = value.Text.Score;
+            _preparedText = value.Text;
+            UpdateVisuals(_hoverController.IsHovered, _hoverController.Progress);
+            if (!CanPublish()) return false;
+            SetFillValue(value.Fill);
+            return CanPublish();
+
+            bool CanPublish() => canApply() && this && IsHierarchySet && Content;
+        }
+
         private void UpdateVisuals(bool isHovered, float progress) {
             _backgroundImage.color = GetColor(_type, progress);
-            _textComponent.text = FormatScore(_score, isHovered);
+            _textComponent.text = _preparedText is { } text
+                ? (isHovered ? text.Hovered : text.Plain)
+                : FormatScore(_score, isHovered);
         }
 
         #endregion
