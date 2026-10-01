@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using BGLib.Polyglot;
 using Newtonsoft.Json.Linq;
 using TMPro;
@@ -13,6 +14,7 @@ namespace BeatLeader {
         internal static void Initialize(SettingsManager settingsmanager) {
             _baseGameLanguage = Localization.Instance.supportedLanguages.FirstOrDefault(l => l.ToSerializedName() == settingsmanager.settings.misc.language);
             OnBaseGameLanguageDidChange();
+            Prewarm();
         }
 
         #endregion
@@ -89,13 +91,32 @@ namespace BeatLeader {
         #region Translations
 
         private const string LocalizationResourcePath = Plugin.ResourcesPath + ".Localization.json";
-        private static readonly Dictionary<string, string> translations = new();
-        private static BLLanguage _lastUsedLanguage = BLLanguage.GameDefault;
+        private static readonly object TranslationGate = new();
+        private static readonly Dictionary<BLLanguage, Task<Dictionary<string, string>>> TranslationPreparations = new();
 
-        private static void UpdateTranslationsIfNeeded(BLLanguage language) {
-            if (_lastUsedLanguage == language) return;
+        internal static void Prewarm() {
+            _ = GetTranslationPreparation(GetCurrentLanguage());
+        }
 
-            translations.Clear();
+        private static Task<Dictionary<string, string>> GetTranslationPreparation(BLLanguage language) {
+            lock (TranslationGate) {
+                if (TranslationPreparations.TryGetValue(language, out var preparation)) {
+                    if (!preparation.IsFaulted && !preparation.IsCanceled) return preparation;
+                    _ = preparation.Exception;
+                }
+
+                preparation = Task.Run(() => LoadTranslations(language));
+                TranslationPreparations[language] = preparation;
+                return preparation;
+            }
+        }
+
+        private static Dictionary<string, string> GetTranslations(BLLanguage language) {
+            return GetTranslationPreparation(language).GetAwaiter().GetResult();
+        }
+
+        private static Dictionary<string, string> LoadTranslations(BLLanguage language) {
+            var translations = new Dictionary<string, string>();
 
             if (JObject.Parse(ResourcesUtils.GetEmbeddedResourceText(LocalizationResourcePath))["Tokens"] is JArray tokensArray) {
                 foreach (var tokenObject in tokensArray) {
@@ -107,21 +128,21 @@ namespace BeatLeader {
                 }
             }
 
-            _lastUsedLanguage = language;
+            return translations;
         }
 
         public static bool IsValidToken(string? token) {
-            UpdateTranslationsIfNeeded(GetCurrentLanguage());
+            var translations = GetTranslations(GetCurrentLanguage());
             return token != null && translations.ContainsKey(token);
         }
 
         public static string GetTranslation(string token) {
-            UpdateTranslationsIfNeeded(GetCurrentLanguage());
+            var translations = GetTranslations(GetCurrentLanguage());
             return translations.ContainsKey(token) ? translations[token] : token;
         }
 
         public static string GetTranslationWithFont(string token) {
-            UpdateTranslationsIfNeeded(GetCurrentLanguage());
+            var translations = GetTranslations(GetCurrentLanguage());
             if (!translations.ContainsKey(token)) return token;
             var fontAsset = GetLanguageFont();
             return fontAsset != null ? $"<font={fontAsset.name}>{translations[token]}</font>" : translations[token];

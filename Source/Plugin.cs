@@ -38,6 +38,7 @@ namespace BeatLeader {
             HiddenPlayersCache.Prewarm();
             InteropLoader.Prewarm();
             ConfigFileData.Initialize();
+            BLLocalization.Prewarm();
             BundleLoader.Initialize();
         }
 

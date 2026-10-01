@@ -113,7 +113,10 @@ namespace BeatLeader {
 
         public static BLLanguage SelectedLanguage {
             get => ConfigFileData.Instance.SelectedLanguage;
-            set => ConfigFileData.Instance.SelectedLanguage = value;
+            set {
+                ConfigFileData.Instance.SelectedLanguage = value;
+                BLLocalization.Prewarm();
+            }
         }
 
         #endregion
