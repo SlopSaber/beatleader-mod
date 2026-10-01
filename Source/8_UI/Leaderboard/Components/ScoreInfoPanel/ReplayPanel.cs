@@ -221,6 +221,7 @@ namespace BeatLeader.Components {
             RetireJob();
             _score = score;
             _replayHeader = null;
+            _downloadText.gameObject.SetActive(false);
             ResetButtons();
             BeginChecking();
         }
@@ -328,10 +329,12 @@ namespace BeatLeader.Components {
             try {
                 await Task.Yield();
                 if (!IsCurrent(job)) return;
-                var player = job.Score.Player;
+                var player = startReplay ? job.Score.Player : null;
                 var scoreId = job.Score.id;
                 var replayUrl = job.Score.replay;
-                var navigator = _replayerNavigator ?? throw new InvalidOperationException("Replay navigator is unavailable");
+                var navigator = startReplay
+                    ? _replayerNavigator ?? throw new InvalidOperationException("Replay navigator is unavailable")
+                    : null;
                 var request = DownloadReplayRequest.SendRequest(replayUrl, job.Token);
                 job.Request = request;
                 SubscribeProgress(job, request);
@@ -345,7 +348,7 @@ namespace BeatLeader.Components {
                 RefreshPlayButton(PlayButtonState.Unavailable);
                 if (startReplay) {
                     _downloadText.text = "<alpha=#66>Finished!";
-                    await StartReplayAsync(job, replay, player, scoreId, navigator);
+                    await StartReplayAsync(job, replay, player!, scoreId, navigator!);
                 } else {
                     _downloadText.text = "<alpha=#66>Saving...";
                     var result = await ReplayManager.SaveAnyReplayAsync(replay, null, job.Token);
@@ -497,10 +500,11 @@ namespace BeatLeader.Components {
 
         public void SetActive(bool value) {
             var changed = _active != value;
-            if (changed && !value) RetireJob();
+            if (!changed) return;
+            if (!value) RetireJob();
             Active = value;
             _downloadText.gameObject.SetActive(false);
-            if (changed && value) BeginChecking();
+            if (value) BeginChecking();
         }
 
         #endregion

@@ -149,7 +149,7 @@ namespace BeatLeader.Components {
             _accuracyDetails.SetActive(false);
             _accuracyGrid.SetActive(false);
             _accuracyGraphContainer.SetActive(false);
-            _replayPanel.SetActive(false);
+            _replayPanel.SetActive(LeaderboardState.ScoreInfoPanelTab == ScoreInfoPanelTab.Replay);
 
             switch (LeaderboardState.ScoreInfoPanelTab) {
                 case ScoreInfoPanelTab.OverviewPage1:
@@ -172,7 +172,6 @@ namespace BeatLeader.Components {
                     _scoreStatsLoadingScreen.SetActive(_scoreStatsUpdateRequired);
                     break;
                 case ScoreInfoPanelTab.Replay:
-                    _replayPanel.SetActive(true);
                     break;
                 default: throw new InvalidOperationException($"Unknown score information tab: {LeaderboardState.ScoreInfoPanelTab}");
             }
