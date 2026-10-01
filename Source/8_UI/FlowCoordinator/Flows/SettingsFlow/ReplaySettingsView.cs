@@ -102,7 +102,9 @@ namespace BeatLeader.UI.Hub {
                                 //cancel button
                                 new BsButton {
                                         Text = "Cancel",
-                                        OnClick = () => CloseInternal(),
+                                        OnClick = () => {
+                                            if (_deletionTask == null) CloseInternal();
+                                        },
                                         Skew = 0f
                                     }
                                     .AsFlexItem(flexGrow: 1f)
