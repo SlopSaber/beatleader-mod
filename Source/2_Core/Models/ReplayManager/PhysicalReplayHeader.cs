@@ -40,34 +40,35 @@ namespace BeatLeader.Models {
         public async Task<Replay.Replay?> LoadReplayAsync(CancellationToken token) {
             await _loadReplaySemaphore.WaitAsync(token);
 
-            if (_status is FileStatus.Corrupted) {
-                return null;
-            }
-
-            if (_cachedReplay?.TryGetTarget(out var replayHolder) ?? false) {
-                _loadReplaySemaphore.Release();
-                return replayHolder.Object;
-            }
-            
-            FileStatus = FileStatus.Loading;
-            var replay = await ReplayManager.LoadReplayAsync(this, token);
-            
-            FileStatus = replay == null ? FileStatus.Corrupted : FileStatus.Loaded;
-
-            if (replay != null) {
-                var wrapper = new WeakRefWrapper<Replay.Replay>(replay);
-                wrapper.ObjectDestroyedEvent += HandleReplayUnloaded;
-
-                if (_cachedReplay == null) {
-                    _cachedReplay = new(wrapper);
-                } else {
-                    _cachedReplay.SetTarget(wrapper);
+            try {
+                if (_status is FileStatus.Corrupted) {
+                    return null;
                 }
+
+                if (_cachedReplay?.TryGetTarget(out var replayHolder) ?? false) {
+                    return replayHolder.Object;
+                }
+
+                FileStatus = FileStatus.Loading;
+                var replay = await ReplayManager.LoadReplayAsync(this, token);
+
+                FileStatus = replay == null ? FileStatus.Corrupted : FileStatus.Loaded;
+
+                if (replay != null) {
+                    var wrapper = new WeakRefWrapper<Replay.Replay>(replay);
+                    wrapper.ObjectDestroyedEvent += HandleReplayUnloaded;
+
+                    if (_cachedReplay == null) {
+                        _cachedReplay = new(wrapper);
+                    } else {
+                        _cachedReplay.SetTarget(wrapper);
+                    }
+                }
+
+                return replay;
+            } finally {
+                _loadReplaySemaphore.Release();
             }
-
-            _loadReplaySemaphore.Release();
-
-            return replay;
         }
 
         public void NotifyReplayDeleted() {

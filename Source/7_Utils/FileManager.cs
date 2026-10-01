@@ -19,10 +19,7 @@ namespace BeatLeader.Utils {
         public static async Task<bool> InstallBeatmap(byte[] bytes, string folderName) {
             try {
                 var path = Path.Combine(BeatmapsDirectory, folderName);
-                using var memoryStream = new MemoryStream(bytes);
-                using var archive = new ZipArchive(memoryStream);
-                Directory.CreateDirectory(path);
-                await ExtractFiles(archive, path);
+                await ExtractFiles(bytes, path);
                 SongCore.Loader.Instance?.RefreshSongs(false);
                 return true;
             } catch (Exception ex) {
@@ -31,8 +28,11 @@ namespace BeatLeader.Utils {
             }
         }
 
-        private static Task ExtractFiles(ZipArchive archive, string path) {
+        private static Task ExtractFiles(byte[] bytes, string path) {
             return Task.Run(() => {
+                using var memoryStream = new MemoryStream(bytes);
+                using var archive = new ZipArchive(memoryStream);
+                Directory.CreateDirectory(path);
                 var rootPath = Path.GetFullPath(path);
                 if (!rootPath.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal)) {
                     rootPath += Path.DirectorySeparatorChar;
@@ -75,11 +75,10 @@ namespace BeatLeader.Utils {
         public static async Task<bool> WriteReplayAsync(string fileName, Replay replay, CancellationToken token) {
             try {
                 var path = GetAbsoluteReplayPath(fileName);
-                var file = File.Open(path, FileMode.OpenOrCreate);
-
-                using (var stream = new BinaryWriter(file, Encoding.UTF8)) {
-                    await Task.Run(() => ReplayEncoder.Encode(replay, stream), token);
-                }
+                await Task.Run(() => {
+                    using var stream = new BinaryWriter(File.Open(path, FileMode.OpenOrCreate), Encoding.UTF8);
+                    ReplayEncoder.Encode(replay, stream);
+                }, token);
 
                 Plugin.Log.Debug("[FileManager] Replay saved");
 
@@ -92,11 +91,10 @@ namespace BeatLeader.Utils {
         }
 
         public static async Task<Replay?> ReadReplayAsync(string path, CancellationToken token) {
-            if (!File.Exists(path)) {
+            var bytes = await Task.Run(() => File.Exists(path) ? File.ReadAllBytes(path) : null, token);
+            if (bytes == null) {
                 return null;
             }
-
-            var bytes = await Task.Run(() => File.ReadAllBytes(path), token);
 
             // Unlike for replay info, we create a separate task as it takes 
             // more time to decode the whole replay

@@ -178,8 +178,11 @@ namespace BeatLeader.Utils {
 
             await ReplayHeadersCache.WaitForLoading();
 
-            var paths = FileManager.GetAllReplayPaths();
-            var queue = new ConcurrentQueue<string>(paths);
+            var queue = await Task.Run(
+                () => new ConcurrentQueue<string>(FileManager.GetAllReplayPaths()),
+                token
+            );
+            token.ThrowIfCancellationRequested();
             
             // NOTE: Pay close attention to how replays are read from the disk. Filesystems typically cache data
             // using an LRU buffer, so the very first read (cold cache) can be up to 50x slower than subsequent reads,
