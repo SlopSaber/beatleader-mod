@@ -39,8 +39,9 @@ namespace BeatLeader.UI.Hub {
             base.OnOkButtonClicked();
 
             if (_header != null) {
-                ReplayManager.DeleteReplay(_header);
+                var header = _header;
                 _header = null;
+                _ = ReplayManager.DeleteReplayAsync(header).RunCatching();
             }
         }
 

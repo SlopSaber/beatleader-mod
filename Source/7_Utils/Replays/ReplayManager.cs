@@ -36,30 +36,48 @@ namespace BeatLeader.Utils {
         public static event Action<bool>? LoadingFinishedEvent;
 
         private static int _lastBatchIndex;
+        private static long _loadHeadersVersion;
         private static SynchronizationContext? _mainThreadSynchronizationContext;
 
         /// <summary>
         /// Ensures that invocations always happen on the main thread and do not overlap.
         /// </summary>
-        private static void SyncNotifyReplaysAdded() {
+        private static void SyncNotifyReplaysAdded(CancellationToken token, long version) {
             if (_mainThreadSynchronizationContext == null) {
                 Plugin.Log.Error("Failed to invoke ReplayAddedEvent because SynchronizationContext was null");
                 return;
             }
 
             _mainThreadSynchronizationContext.Post(
-                static _ => {
+                static state => {
+                    var (notificationToken, notificationVersion) = ((CancellationToken, long))state;
+                    IReplayHeader[] batch;
+                    int count;
                     lock (headersLocker) {
-                        var count = headers.Count;
-
-                        for (var i = _lastBatchIndex; i < count; i++) {
-                            ReplayAddedEvent?.Invoke(headers[i]);
+                        if (notificationToken.IsCancellationRequested || notificationVersion != Volatile.Read(ref _loadHeadersVersion)) {
+                            return;
                         }
-
-                        _lastBatchIndex = count;
+                        count = headers.Count;
+                        if (_lastBatchIndex >= count) {
+                            _lastBatchIndex = count;
+                            return;
+                        }
+                        batch = new IReplayHeader[count - _lastBatchIndex];
+                        headers.CopyTo(_lastBatchIndex, batch, 0, batch.Length);
+                    }
+                    foreach (var header in batch) {
+                        if (notificationToken.IsCancellationRequested || notificationVersion != Volatile.Read(ref _loadHeadersVersion)) {
+                            return;
+                        }
+                        ReplayAddedEvent?.Invoke(header);
+                    }
+                    lock (headersLocker) {
+                        if (!notificationToken.IsCancellationRequested && notificationVersion == Volatile.Read(ref _loadHeadersVersion)) {
+                            _lastBatchIndex = count;
+                        }
                     }
                 },
-                null
+                (token, version)
             );
         }
 
@@ -108,10 +126,10 @@ namespace BeatLeader.Utils {
                 _loadHeadersCancellationSource = new CancellationTokenSource();
             }
 
-            LoadingStartedEvent?.Invoke();
             _mainThreadSynchronizationContext = SynchronizationContext.Current;
-
-            _loadHeadersTask = LoadReplayHeadersAsync(_loadHeadersCancellationSource.Token).RunCatching();
+            var version = Interlocked.Increment(ref _loadHeadersVersion);
+            _loadHeadersTask = LoadReplayHeadersAsync(_loadHeadersCancellationSource.Token, version).RunCatching();
+            LoadingStartedEvent?.Invoke();
         }
 
         /// <summary>
@@ -121,12 +139,16 @@ namespace BeatLeader.Utils {
         public static void CancelLoading(bool resetLoadedHeaders = true) {
             _loadHeadersCancellationSource.Cancel();
             _loadHeadersCancellationSource = new CancellationTokenSource();
+            Interlocked.Increment(ref _loadHeadersVersion);
 
             _loadHeadersTask = null;
 
             if (resetLoadedHeaders) {
-                headers.Clear();
-                hashedHeaders.Clear();
+                lock (headersLocker) {
+                    headers.Clear();
+                    hashedHeaders.Clear();
+                    _lastBatchIndex = 0;
+                }
             }
 
             LoadingFinishedEvent?.Invoke(false);
@@ -159,64 +181,69 @@ namespace BeatLeader.Utils {
         private static readonly ConcurrentDictionary<int, IReplayHeader> hashedHeaders = new();
         private static readonly List<IReplayHeader> headers = new();
         private static readonly object headersLocker = new();
+        // Replay reads, saves, scans and deletes await admission; callbacks can enqueue without blocking the owner.
+        private static readonly SemaphoreSlim replayOperations = new(1, 1);
 
-        private static async Task LoadReplayHeadersAsync(CancellationToken token) {
-            lock (headersLocker) {
-                if (headers.Count != 0) {
-                    // This event is invoked before the async call so we can safely invoke it without wrappers
-                    AllReplaysDeletedEvent?.Invoke();
-                }
-
-                headers.Clear();
-            }
-
+        private static async Task LoadReplayHeadersAsync(CancellationToken token, long version) {
+            await Task.Yield();
             var stopwatch = new Stopwatch();
-            stopwatch.Start();
+            try {
+                await replayOperations.WaitAsync(token);
+                try {
+                    token.ThrowIfCancellationRequested();
+                    if (version != Volatile.Read(ref _loadHeadersVersion)) return;
 
-            hashedHeaders.Clear();
-            _lastBatchIndex = 0;
-
-            await ReplayHeadersCache.WaitForLoading();
-
-            var queue = await Task.Run(
-                () => new ConcurrentQueue<string>(FileManager.GetAllReplayPaths()),
-                token
-            );
-            token.ThrowIfCancellationRequested();
-            
-            // NOTE: Pay close attention to how replays are read from the disk. Filesystems typically cache data
-            // using an LRU buffer, so the very first read (cold cache) can be up to 50x slower than subsequent reads,
-            // averaging ~86s vs. ~2s on a 20k dataset.
-            // This is something we cannot and should not optimize.
-            var worker = () => {
-                while (queue.TryDequeue(out var path)) {
-                    try {
-                        LoadReplayHeader(path);
-                    } catch (Exception ex) {
-                        Plugin.Log.Error($"Failed to load {path}: {ex}");
+                    if (headers.Count != 0) {
+                        AllReplaysDeletedEvent?.Invoke();
                     }
+                    token.ThrowIfCancellationRequested();
+                    lock (headersLocker) {
+                        headers.Clear();
+                        hashedHeaders.Clear();
+                        _lastBatchIndex = 0;
+                    }
+                    stopwatch.Start();
+
+                    await ReplayHeadersCache.WaitForLoading();
+                    token.ThrowIfCancellationRequested();
+                    var queue = await Task.Run(
+                        () => new ConcurrentQueue<string>(FileManager.GetAllReplayPaths()),
+                        token
+                    );
+                    token.ThrowIfCancellationRequested();
+
+                    var worker = () => {
+                        while (queue.TryDequeue(out var path)) {
+                            token.ThrowIfCancellationRequested();
+                            try {
+                                LoadReplayHeader(path, token, version);
+                            } catch (Exception ex) {
+                                Plugin.Log.Error($"Failed to load {path}: {ex}");
+                            }
+                        }
+                    };
+
+                    var workerTasks = Enumerable.Range(0, 8).Select(_ => Task.Run(worker, token)).ToArray();
+                    await Task.WhenAll(workerTasks);
+                    token.ThrowIfCancellationRequested();
+                    ReplayHeadersCache.SaveCache();
+                } finally {
+                    replayOperations.Release();
                 }
-            };
-
-            var workerCount = 8;
-            var workerTasks = Enumerable
-                .Range(0, workerCount)
-                .Select(_ => Task.Run(worker, token))
-                .ToArray();
-
-            await Task.WhenAll(workerTasks);
-
-            ReplayHeadersCache.SaveCache();
-
-            // Safely invoke the event on main thread
-            await TaskExtensions.RunOnMainThread(() => LoadingFinishedEvent?.Invoke(true));
-
-            Plugin.Log.Info($"[ReplayManager] Loading took {stopwatch.Elapsed}");
-            
-            _loadHeadersTask = null;
+                await TaskExtensions.RunOnMainThread(() => {
+                    if (!token.IsCancellationRequested && version == Volatile.Read(ref _loadHeadersVersion)) {
+                        LoadingFinishedEvent?.Invoke(true);
+                    }
+                });
+                Plugin.Log.Info($"[ReplayManager] Loading took {stopwatch.Elapsed}");
+            } finally {
+                if (version == Volatile.Read(ref _loadHeadersVersion)) {
+                    _loadHeadersTask = null;
+                }
+            }
         }
 
-        private static void LoadReplayHeader(string path) {
+        private static void LoadReplayHeader(string path, CancellationToken token, long version) {
             if (LoadReplayInfo(path) is not { } replayInfo) {
                 return;
             }
@@ -230,11 +257,12 @@ namespace BeatLeader.Utils {
             var header = CreateReplayHeader(path, replayInfo);
 
             lock (headersLocker) {
+                if (token.IsCancellationRequested || version != Volatile.Read(ref _loadHeadersVersion)) return;
                 headers.Add(header);
+                hashedHeaders.TryAdd(hash, header);
             }
-            hashedHeaders.TryAdd(hash, header);
 
-            SyncNotifyReplaysAdded();
+            SyncNotifyReplaysAdded(token, version);
         }
 
         private static IReplayInfo? LoadReplayInfo(string path) {
@@ -254,14 +282,18 @@ namespace BeatLeader.Utils {
         }
 
         internal static async Task<Replay?> LoadReplayAsync(IReplayHeader header, CancellationToken token) {
-            var replay = await FileManager.ReadReplayAsync(header.FilePath, token);
-
-            if (replay != null) {
-                SaturateReplayInfo(replay.info, header.FilePath);
-                ReplayHeadersCache.AddInfoByPath(header.FilePath, replay.info);
+            var path = header.FilePath;
+            await replayOperations.WaitAsync(token);
+            try {
+                var replay = await FileManager.ReadReplayAsync(path, token);
+                if (replay != null) {
+                    SaturateReplayInfo(replay.info, path);
+                    ReplayHeadersCache.AddInfoByPath(path, replay.info);
+                }
+                return replay;
+            } finally {
+                replayOperations.Release();
             }
-
-            return replay;
         }
 
         #endregion
@@ -283,13 +315,21 @@ namespace BeatLeader.Utils {
                 return new(ReplaySavingError.ValidationFailed);
             }
 
-            if (ConfigFileData.Instance.OverrideOldReplays) {
-                Plugin.Log.Warn("[ReplayManager] OverrideOldReplays is enabled, old replays will be deleted");
-                await DeleteSimilarReplaysAsync(replay, token);
+            var overrideOldReplays = ConfigFileData.Instance.OverrideOldReplays;
+            ReplaySavingResult result;
+            await replayOperations.WaitAsync(token);
+            try {
+                if (overrideOldReplays) {
+                    Plugin.Log.Warn("[ReplayManager] OverrideOldReplays is enabled, old replays will be deleted");
+                    await DeleteSimilarReplaysAsync(replay, token);
+                }
+                SaturateReplay(replay, playEndData);
+                result = await SaveAnyReplayInternalAsync(replay, playEndData, token);
+            } finally {
+                replayOperations.Release();
             }
-
-            SaturateReplay(replay, playEndData);
-            return await SaveAnyReplayAsync(replay, playEndData, token);
+            if (result.Header != null) ReplayAddedEvent?.Invoke(result.Header);
+            return result;
         }
 
         /// <summary>
@@ -297,6 +337,18 @@ namespace BeatLeader.Utils {
         /// </summary>
         /// <param name="playEndData">Used for name formatting, not too important.</param>
         public static async Task<ReplaySavingResult> SaveAnyReplayAsync(Replay replay, PlayEndData? playEndData, CancellationToken token) {
+            ReplaySavingResult result;
+            await replayOperations.WaitAsync(token);
+            try {
+                result = await SaveAnyReplayInternalAsync(replay, playEndData, token);
+            } finally {
+                replayOperations.Release();
+            }
+            if (result.Header != null) ReplayAddedEvent?.Invoke(result.Header);
+            return result;
+        }
+
+        private static async Task<ReplaySavingResult> SaveAnyReplayInternalAsync(Replay replay, PlayEndData? playEndData, CancellationToken token) {
             var hash = replay.info.CalculateReplayHash();
 
             if (hashedHeaders.TryGetValue(hash, out _)) {
@@ -322,7 +374,6 @@ namespace BeatLeader.Utils {
             hashedHeaders.TryAdd(hash, header);
 
             ReplayHeadersCache.AddInfoByPath(header.FilePath, header.ReplayInfo);
-            ReplayAddedEvent?.Invoke(header);
 
             return new(header);
         }
@@ -345,26 +396,42 @@ namespace BeatLeader.Utils {
         /// Deletes all replays.
         /// </summary>
         /// <returns>A count of successfully deleted items.</returns>
-        internal static int DeleteAllReplays() {
-            ReplayHeadersCache.ClearInfo();
-            ReplayHeadersCache.SaveCache();
-            ReplayMetadataManager.ClearMetadata();
+        internal static async Task<int> DeleteAllReplaysAsync() {
+            await Task.Yield();
+            if (IsLoading) CancelLoading(false);
+            await replayOperations.WaitAsync();
+            int deletedReplays;
+            try {
+                if (IsLoading) CancelLoading(false);
+                else Interlocked.Increment(ref _loadHeadersVersion);
+                var directories = FileManager.GetReplayDirectories();
+                ReplayHeadersCache.ClearInfo();
+                ReplayHeadersCache.SaveCache();
+                ReplayMetadataManager.ClearMetadata();
 
-            var deletedReplays = 0;
-            foreach (var path in FileManager.GetAllReplayPaths()) {
-                try {
-                    File.Delete(path);
-                } catch (Exception ex) {
-                    Plugin.Log.Error($"Failed to delete a replay:\n{ex}");
-                    continue;
+                deletedReplays = await Task.Run(() => {
+                    var count = 0;
+                    var paths = Directory.EnumerateFiles(directories[0], ReplayFilePattern)
+                        .Concat(Directory.EnumerateFiles(directories[1], ReplayFilePattern));
+                    foreach (var path in paths) {
+                        try {
+                            File.Delete(path);
+                        } catch (Exception ex) {
+                            Plugin.Log.Error($"Failed to delete a replay:\n{ex}");
+                            continue;
+                        }
+                        count++;
+                    }
+                    return count;
+                });
+                lock (headersLocker) {
+                    headers.Clear();
+                    hashedHeaders.Clear();
+                    _lastBatchIndex = 0;
                 }
-                deletedReplays++;
+            } finally {
+                replayOperations.Release();
             }
-
-            lock (headersLocker) {
-                headers.Clear();
-            }
-            hashedHeaders.Clear();
             AllReplaysDeletedEvent?.Invoke();
 
             return deletedReplays;
@@ -373,8 +440,28 @@ namespace BeatLeader.Utils {
         /// <summary>
         /// Deletes a single replay.
         /// </summary>
-        internal static void DeleteReplay(IReplayHeader header) {
-            DeleteReplayInternal(header.FilePath, header);
+        internal static async Task DeleteReplayAsync(IReplayHeader header) {
+            var path = header.FilePath;
+            await replayOperations.WaitAsync();
+            try {
+                ReplayHeadersCache.RemoveInfoByPath(path);
+                ReplayHeadersCache.SaveCache();
+                ReplayMetadataManager.DeleteMetadata(path);
+                await Task.Run(() => File.Delete(path));
+                lock (headersLocker) {
+                    for (var i = 0; i < headers.Count; i++) {
+                        var current = headers[i];
+                        if (!ReferenceEquals(current, header) && current.FilePath != path) continue;
+                        // A completed scan may have replaced the selected header during admission.
+                        header = current;
+                        headers.RemoveAt(i);
+                        break;
+                    }
+                }
+            } finally {
+                replayOperations.Release();
+            }
+            NotifyReplayDeleted(header);
         }
 
         #endregion
@@ -386,29 +473,33 @@ namespace BeatLeader.Utils {
                 headers.Remove(header);
             }
 
+            NotifyReplayDeleted(header);
+        }
+
+        private static void NotifyReplayDeleted(IReplayHeader header) {
             (header as PhysicalReplayHeader)?.NotifyReplayDeleted();
             ReplayDeletedEvent?.Invoke(header);
         }
 
-        private static void DeleteReplayInternal(string filePath, IReplayHeader? header = null) {
+        private static void DeleteReplayInternal(string filePath) {
             ReplayHeadersCache.RemoveInfoByPath(filePath);
             ReplayHeadersCache.SaveCache();
 
             ReplayMetadataManager.DeleteMetadata(filePath);
             File.Delete(filePath);
-
-            if (header != null) {
-                FinalizeReplayDeletion(header);
-            }
         }
 
         private static async Task DeleteSimilarReplaysAsync(Replay replay, CancellationToken token) {
             var info = replay.info;
             var buffer = new List<IReplayHeader>();
+            IReplayHeader[] snapshot;
+            lock (headersLocker) {
+                snapshot = headers.ToArray();
+            }
 
             await Task.Run(
                 () => {
-                    foreach (var header in Headers) {
+                    foreach (var header in snapshot) {
                         if (!CompareReplayInfoForRemoval(header.ReplayInfo, info)) {
                             continue;
                         }

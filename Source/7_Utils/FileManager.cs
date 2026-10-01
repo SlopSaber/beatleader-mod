@@ -72,6 +72,10 @@ namespace BeatLeader.Utils {
             return Path.Combine(replaysFolderPath, fileName);
         }
 
+        public static string[] GetReplayDirectories() {
+            return new[] { replaysFolderPath, ReplayManager.LegacyCacheDirectory };
+        }
+
         public static async Task<bool> WriteReplayAsync(string fileName, Replay replay, CancellationToken token) {
             try {
                 var path = GetAbsoluteReplayPath(fileName);

@@ -1,4 +1,6 @@
-﻿using BeatLeader.Components;
+﻿using System;
+using System.Threading.Tasks;
+using BeatLeader.Components;
 using BeatLeader.Models;
 using BeatLeader.UI.Reactive.Components;
 using BeatLeader.Utils;
@@ -19,17 +21,23 @@ namespace BeatLeader.UI.Hub {
             private enum DeletionStage {
                 Warning1,
                 Warning2,
-                Finish
+                Deleting,
+                Finish,
+                Failed
             }
 
             private DeletionStage _deletionStage;
             private int _deletedReplaysCount;
+            private long _presentationVersion;
+            private Task<int>? _deletionTask;
 
             private void RefreshVisuals(DeletionStage stage) {
                 _messageLabel.Text = stage switch {
                     DeletionStage.Warning1 => "This action will delete ALL of your local replays!",
                     DeletionStage.Warning2 => "<color=red>YOU WON'T BE ABLE TO RECOVER THE DATA! Do you REALLY want to proceed?",
+                    DeletionStage.Deleting => "Deleting local replays...",
                     DeletionStage.Finish   => $"Successfully deleted {_deletedReplaysCount} replays.",
+                    DeletionStage.Failed   => "Replay deletion failed. Check the log for details.",
                     _                      => _messageLabel.Text
                 };
                 if (stage is DeletionStage.Warning2) {
@@ -37,12 +45,28 @@ namespace BeatLeader.UI.Hub {
                 } else {
                     _okButton.Color = BeatSaberStyle.PrimaryButtonColor;
                 }
-                _cancelButton.Enabled = stage is not DeletionStage.Finish;
+                _okButton.Interactable = stage is not DeletionStage.Deleting;
+                _cancelButton.Enabled = stage is DeletionStage.Warning1 or DeletionStage.Warning2;
+                _cancelButton.Interactable = _cancelButton.Enabled;
             }
 
             protected override void OnOpen(bool finished) {
-                _deletionStage = DeletionStage.Warning1;
-                RefreshVisuals(DeletionStage.Warning1);
+                if (finished) return;
+                _presentationVersion++;
+                _deletionStage = _deletionTask == null ? DeletionStage.Warning1 : DeletionStage.Deleting;
+                if (_deletionTask != null) {
+                    _ = CompleteDeletionAsync(_deletionTask, _presentationVersion).RunCatching();
+                }
+                RefreshVisuals(_deletionStage);
+            }
+
+            protected override void OnClose(bool finished) {
+                if (!finished) _presentationVersion++;
+            }
+
+            protected override void OnDestroy() {
+                _presentationVersion++;
+                base.OnDestroy();
             }
 
             #endregion
@@ -107,14 +131,36 @@ namespace BeatLeader.UI.Hub {
                         _deletionStage++;
                         break;
                     case DeletionStage.Warning2:
-                        _deletionStage++;
-                        _deletedReplaysCount = ReplayManager.DeleteAllReplays();
+                        _deletionStage = DeletionStage.Deleting;
+                        _deletionTask = ReplayManager.DeleteAllReplaysAsync();
+                        _ = CompleteDeletionAsync(_deletionTask, _presentationVersion).RunCatching();
                         break;
                     case DeletionStage.Finish:
+                    case DeletionStage.Failed:
                         CloseInternal();
                         break;
                 }
                 RefreshVisuals(_deletionStage);
+            }
+
+            private async Task CompleteDeletionAsync(Task<int> task, long version) {
+                try {
+                    var count = await task;
+                    if (ReferenceEquals(_deletionTask, task)) {
+                        _deletionTask = null;
+                        _deletedReplaysCount = count;
+                        _deletionStage = DeletionStage.Finish;
+                    }
+                } catch (Exception ex) {
+                    if (ReferenceEquals(_deletionTask, task)) {
+                        _deletionTask = null;
+                        _deletionStage = DeletionStage.Failed;
+                        Plugin.Log.Error($"Failed to delete replays:\n{ex}");
+                    }
+                }
+                if (version == _presentationVersion && IsOpened && IsInitialized && !IsDestroyed && Content) {
+                    RefreshVisuals(_deletionStage);
+                }
             }
 
             #endregion
