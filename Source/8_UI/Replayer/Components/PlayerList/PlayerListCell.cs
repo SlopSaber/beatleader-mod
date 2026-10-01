@@ -138,20 +138,39 @@ namespace BeatLeader.UI.Replayer {
         }
 
         protected override void OnDestroy() {
-            if (_scoreEventsProcessor is not null) {
-                _scoreEventsProcessor.ScoreEventDequeuedEvent -= HandleScoreEventDequeued;
-            }
+            ReleasePlayer();
             Object.Destroy(_backgroundFillMaterial);
             Object.Destroy(_scoreBackgroundMaterial);
         }
 
         protected override void OnUpdate() {
+            if (_player == null) return;
             UpdateMoveAnimation();
             UpdateFillAnimation();
         }
 
         protected override void OnLateUpdate() {
+            if (_player == null) return;
             RefreshScoreFullComboLines();
+        }
+
+        public void ReleasePlayer() {
+            var scoreProcessor = _scoreEventsProcessor;
+            var beatmapProcessor = _beatmapEventsProcessor;
+            _scoreEventsProcessor = null;
+            _beatmapEventsProcessor = null;
+            _player = null;
+            _replay = null;
+            _playerList = null;
+            _timeController = null!;
+            if (scoreProcessor != null) {
+                scoreProcessor.ScoreEventDequeuedEvent -= HandleScoreEventDequeued;
+                scoreProcessor.EventQueueAdjustFinishedEvent -= HandleScoreEventQueueAdjustFinished;
+            }
+            if (beatmapProcessor != null) {
+                beatmapProcessor.NoteEventDequeuedEvent -= HandleNoteEventDequeued;
+                beatmapProcessor.EventQueueAdjustStartedEvent -= HandleNoteEventQueueAdjustStarted;
+            }
         }
 
         #endregion
@@ -208,14 +227,18 @@ namespace BeatLeader.UI.Replayer {
         private static readonly int displayLinesProperty = Shader.PropertyToID("_DisplayLines");
 
         private Material _scoreBackgroundMaterial = null!;
+        private bool _fullComboUpdateRequired = true;
 
         private void RefreshScoreFullComboLines() {
+            if (!_fullComboUpdateRequired) return;
             _scoreBackgroundMaterial.SetInt(displayLinesProperty, _fullCombo ? 1 : 0);
+            _fullComboUpdateRequired = false;
         }
 
         private void LoadScoreBackgroundMaterial() {
             _scoreBackgroundMaterial = Object.Instantiate(BundleLoader.OpponentScoreBackgroundMaterial);
             _scoreBackground.Material = _scoreBackgroundMaterial;
+            _fullComboUpdateRequired = true;
         }
 
         #endregion
@@ -225,12 +248,12 @@ namespace BeatLeader.UI.Replayer {
         private bool _fullCombo = true;
 
         private void RefreshScore(LinkedListNode<ScoreEvent>? node = null) {
-            if (_scoreEventsProcessor!.QueueIsBeingAdjusted) {
+            if (_scoreEventsProcessor == null || _scoreEventsProcessor.QueueIsBeingAdjusted) {
                 return;
             }
             
             RefreshScoreWithoutNotice(node);
-            _playerList!.NotifyCellUpdateRequired();
+            _playerList?.NotifyCellUpdateRequired();
         }
 
         private void RefreshScoreWithoutNotice(LinkedListNode<ScoreEvent>? node = null) {
@@ -245,21 +268,27 @@ namespace BeatLeader.UI.Replayer {
         private IVirtualPlayer? _player;
 
         private void HandleScoreEventDequeued(LinkedListNode<ScoreEvent> node) {
+            if (_scoreEventsProcessor == null) return;
             RefreshScore(node);
         }
 
         private void HandleScoreEventQueueAdjustFinished() {
+            if (_scoreEventsProcessor == null) return;
             RefreshScore(_scoreEventsProcessor!.CurrentScoreEvent);
         }
 
         private void HandleNoteEventDequeued(LinkedListNode<NoteEvent> node, IReplayNoteComparator noteComparator) {
-            if (node.Value.eventType is NoteEvent.NoteEventType.Miss) {
+            if (_beatmapEventsProcessor == null) return;
+            if (_fullCombo && node.Value.eventType is NoteEvent.NoteEventType.Miss) {
                 _fullCombo = false;
+                _fullComboUpdateRequired = true;
             }
         }
 
         private void HandleNoteEventQueueAdjustStarted() {
+            if (_beatmapEventsProcessor == null || _fullCombo) return;
             _fullCombo = true;
+            _fullComboUpdateRequired = true;
         }
 
         #endregion
