@@ -2,10 +2,38 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace BeatLeader.Interop {
     internal static class PlaylistsLibInterop {
         #region TryRefreshSongs
+
+        public static async Task<bool> TryRefreshPlaylistsAsync(bool fullRefresh, CancellationToken token) {
+            try {
+                token.ThrowIfCancellationRequested();
+                var assembly = AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assembly => assembly.GetName().Name == "BeatSaberPlaylistsLib");
+                var managerType = assembly!.GetType("BeatSaberPlaylistsLib.PlaylistManager");
+                var method = managerType.GetMethod("RefreshPlaylistsAsync", BindingFlags.Instance | BindingFlags.Public,
+                    null, new[] { typeof(bool), typeof(CancellationToken) }, null);
+                if (method == null) return TryRefreshPlaylists(fullRefresh);
+
+                var manager = managerType.GetProperty("DefaultManager", BindingFlags.Static | BindingFlags.Public)!.GetValue(null);
+                var task = (Task)method.Invoke(manager, new object[] { fullRefresh, token });
+                await task;
+                token.ThrowIfCancellationRequested();
+                var result = task.GetType().GetProperty("Result")!.GetValue(task);
+                if (result!.GetType().GetProperty("Exception")!.GetValue(result) is Exception error) {
+                    Plugin.Log.Debug($"RefreshPlaylists completed with file failures: {error}");
+                }
+                return true;
+            } catch (OperationCanceledException) when (token.IsCancellationRequested) {
+                throw;
+            } catch (Exception e) {
+                Plugin.Log.Debug($"RefreshPlaylists failed: {e}");
+                return false;
+            }
+        }
 
         public static bool TryRefreshPlaylists(bool fullRefresh) {
             try {
@@ -26,6 +54,35 @@ namespace BeatLeader.Interop {
         #endregion
 
         #region TryRefreshSongs
+
+        public static async Task<BeatmapLevelPack?> TryFindPlaylistAsync(string filename, CancellationToken token) {
+            try {
+                token.ThrowIfCancellationRequested();
+                var assembly = AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assembly => assembly.GetName().Name == "BeatSaberPlaylistsLib");
+                var managerType = assembly!.GetType("BeatSaberPlaylistsLib.PlaylistManager");
+                var method = managerType.GetMethod("GetAllPlaylistsAsync", BindingFlags.Instance | BindingFlags.Public,
+                    null, new[] { typeof(bool), typeof(CancellationToken) }, null);
+                if (method == null) return TryFindPlaylist(filename);
+
+                var manager = managerType.GetProperty("DefaultManager", BindingFlags.Static | BindingFlags.Public)!.GetValue(null);
+                var task = (Task)method.Invoke(manager, new object[] { false, token });
+                await task;
+                token.ThrowIfCancellationRequested();
+                var result = task.GetType().GetProperty("Result")!.GetValue(task);
+                var playlists = (object[])result!.GetType().GetProperty("Playlists")!.GetValue(result);
+                var playlistType = assembly.GetType("BeatSaberPlaylistsLib.Types.Playlist");
+                var filenameProperty = playlistType.GetProperty("Filename", BindingFlags.Instance | BindingFlags.Public);
+                var playlist = playlists.FirstOrDefault(p => (string)filenameProperty!.GetValue(p) == filename);
+                if (playlist == null) return null;
+
+                return (BeatmapLevelPack)playlistType.GetProperty("PlaylistLevelPack", BindingFlags.Instance | BindingFlags.Public)!.GetValue(playlist);
+            } catch (OperationCanceledException) when (token.IsCancellationRequested) {
+                throw;
+            } catch (Exception e) {
+                Plugin.Log.Debug($"TryFindPlaylist failed: {e}");
+                return null;
+            }
+        }
 
         public static BeatmapLevelPack? TryFindPlaylist(string filename) {
             try {

@@ -1,5 +1,6 @@
 ﻿using System.Net.Http;
 using BeatLeader.Models;
+using System.Threading;
 using BeatLeader.Utils;
 using BeatLeader.WebRequests;
 
@@ -12,8 +13,12 @@ namespace BeatLeader.API {
         };
 
         public static IWebRequest<byte[]> Send(string playlistId) {
+            return Send(playlistId, CancellationToken.None);
+        }
+
+        public static IWebRequest<byte[]> Send(string playlistId, CancellationToken token) {
             var url = string.Format(Endpoint, playlistId);
-            return SendRet(url, HttpMethod.Get, requestParams: RequestParams);
+            return SendRet(url, HttpMethod.Get, requestParams: RequestParams, token: token);
         }
     }
 }

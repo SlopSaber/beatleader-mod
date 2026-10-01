@@ -6,6 +6,7 @@ namespace BeatLeader {
         #region Context
 
         private TC? _context;
+        protected bool HasContext => _context is not null;
         protected TC Context => _context is { } context
             ? context
             : throw new InvalidOperationException("The modal has no active context.");

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using BeatLeader.Models.Replay;
 using UnityEngine;
 using BeatLeader.Replayer;
+using BeatLeader.Interop;
 
 namespace BeatLeader.Utils {
     internal static class FileManager {
@@ -151,14 +152,14 @@ namespace BeatLeader.Utils {
 
         #region Playlists
 
+        private static readonly SemaphoreSlim playlistOperations = new(1, 1);
+
         private static string GetPlaylistFileName(string name, bool json = false) {
             return $"{playlistsFolderPath}{name}.{(json ? "json" : "bplist")}";
         }
 
-        public static void DeletePlaylist(string fileName) {
+        private static void DeletePlaylist(string bplist, string json) {
             try {
-                var bplist = GetPlaylistFileName(fileName);
-                var json = GetPlaylistFileName(fileName, true);
                 if (File.Exists(bplist)) File.Delete(bplist);
                 if (File.Exists(json)) File.Delete(json);
             } catch (Exception) {
@@ -166,25 +167,56 @@ namespace BeatLeader.Utils {
             }
         }
 
-        public static bool TryReadPlaylist(string fileName, out byte[] bytes) {
+        public static async Task<byte[]?> ReadPlaylistAsync(string fileName, CancellationToken token) {
+            var path = GetPlaylistFileName(fileName);
+            await playlistOperations.WaitAsync(token);
             try {
-                bytes = File.ReadAllBytes(GetPlaylistFileName(fileName));
-                return true;
-            } catch (Exception ex) {
-                Plugin.Log.Debug($"Unable read playlist. Reason: {ex.Message}");
-                bytes = Array.Empty<byte>();
-                return false;
+                return await Task.Run(() => {
+                    try {
+                        return File.ReadAllBytes(path);
+                    } catch (Exception ex) {
+                        Plugin.Log.Debug($"Unable read playlist. Reason: {ex.Message}");
+                        return null;
+                    }
+                }, token);
+            } finally {
+                playlistOperations.Release();
             }
         }
 
-        public static bool TrySaveRankedPlaylist(string fileName, byte[] bytes) {
+        public static async Task<bool> SavePlaylistAsync(string fileName, byte[] bytes, CancellationToken token) {
+            var bplist = GetPlaylistFileName(fileName);
+            var json = GetPlaylistFileName(fileName, true);
+            var ownedBytes = (byte[])bytes.Clone();
+            await playlistOperations.WaitAsync(token);
             try {
-                using var writer = new BinaryWriter(File.Open(GetPlaylistFileName(fileName), FileMode.OpenOrCreate, FileAccess.Write));
-                writer.Write(bytes);
-                return true;
-            } catch (Exception ex) {
-                Plugin.Log.Debug($"Unable to write playlist. Reason: {ex.Message}");
-                return false;
+                var saved = await Task.Run(() => {
+                    DeletePlaylist(bplist, json);
+                    try {
+                        using var writer = new BinaryWriter(File.Open(bplist, FileMode.OpenOrCreate, FileAccess.Write));
+                        writer.Write(ownedBytes);
+                        return true;
+                    } catch (Exception ex) {
+                        Plugin.Log.Debug($"Unable to write playlist. Reason: {ex.Message}");
+                        return false;
+                    }
+                }, token);
+                if (saved) {
+                    // Once file replacement starts, finish library publication before admitting another operation.
+                    await PlaylistsLibInterop.TryRefreshPlaylistsAsync(true, CancellationToken.None);
+                }
+                return saved;
+            } finally {
+                playlistOperations.Release();
+            }
+        }
+
+        public static async Task<BeatmapLevelPack?> FindPlaylistAsync(string fileName, CancellationToken token) {
+            await playlistOperations.WaitAsync(token);
+            try {
+                return await PlaylistsLibInterop.TryFindPlaylistAsync(fileName, token);
+            } finally {
+                playlistOperations.Release();
             }
         }
 
