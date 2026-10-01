@@ -11,13 +11,16 @@ namespace BeatLeader {
 
         #endregion
 
-        #region Start
+        #region Mesh settings
 
-        private GraphMeshHelper _graphMeshHelper;
+        private GraphMeshHelper? _graphMeshHelper;
+
+        internal (int Resolution, float Thickness) CaptureMeshSettings() {
+            return (resolution, thickness);
+        }
 
         protected override void Start() {
             base.Start();
-            _graphMeshHelper = new GraphMeshHelper(resolution, 1, thickness);
         }
 
         #endregion
@@ -25,9 +28,14 @@ namespace BeatLeader {
         #region OnPopulateMesh
 
         protected override void OnPopulateMesh(VertexHelper vh) {
+            if (_graphMeshHelper == null && _points == null) {
+                vh.Clear();
+                return;
+            }
             var screenRect = RectTransformUtility.PixelAdjustRect(rectTransform, canvas);
             var screenViewTransform = new ScreenViewTransform(screenRect, _viewRect);
 
+            _graphMeshHelper ??= new GraphMeshHelper(resolution, 1, thickness);
             if (_points != null) {
                 _graphMeshHelper.SetPoints(_points);
             }
@@ -48,6 +56,14 @@ namespace BeatLeader {
             _viewRect = viewRect;
             _canvasRadius = canvasRadius;
 
+            SetVerticesDirty();
+        }
+
+        internal void SetupPrepared(GraphMeshHelper mesh, Rect viewRect, float canvasRadius) {
+            _points = null;
+            _graphMeshHelper = mesh;
+            _viewRect = viewRect;
+            _canvasRadius = canvasRadius;
             SetVerticesDirty();
         }
 

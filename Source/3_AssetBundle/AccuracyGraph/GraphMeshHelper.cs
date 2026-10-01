@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -40,8 +41,14 @@ namespace BeatLeader {
         #region SetPoints
 
         private GraphSpline? _spline;
+        private bool _pointsPrepared;
 
         public void SetPoints(List<Vector2> points) {
+            SetPoints(points, CancellationToken.None);
+        }
+
+        internal void SetPoints(List<Vector2> points, CancellationToken token) {
+            _pointsPrepared = false;
             if (points.Count <= 1) {
                 _spline = null;
                 return;
@@ -51,9 +58,16 @@ namespace BeatLeader {
             _spline.Add(points.First());
             _spline.Add(points.First());
             foreach (var t in points) {
+                token.ThrowIfCancellationRequested();
                 _spline.Add(t);
             }
             _spline.Add(points.Last());
+        }
+
+        internal void PreparePoints(CancellationToken token) {
+            token.ThrowIfCancellationRequested();
+            _spline?.FillArray(_pointsArray, token);
+            _pointsPrepared = true;
         }
 
         #endregion
@@ -64,7 +78,7 @@ namespace BeatLeader {
             vh.Clear();
             
             if (_spline == null) return;
-            _spline.FillArray(_pointsArray);
+            if (!_pointsPrepared) _spline.FillArray(_pointsArray);
 
             for (var columnIndex = 0; columnIndex < _columnsCount; columnIndex++) {
                 var node = _pointsArray[columnIndex];

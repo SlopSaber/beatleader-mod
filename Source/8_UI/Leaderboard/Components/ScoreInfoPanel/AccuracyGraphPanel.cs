@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using BeatLeader.Models;
 using BeatSaberMarkupLanguage.Attributes;
 using HMUI;
@@ -16,9 +18,14 @@ namespace BeatLeader.Components {
         private AccuracyGraph _accuracyGraph;
 
         protected override void OnInitialize() {
+            InvalidatePreparation();
             var go = Object.Instantiate(BundleLoader.AccuracyGraphPrefab, _graphContainer, false);
             _accuracyGraph = go.GetComponent<AccuracyGraph>();
             _accuracyGraph.Construct(_graphBackground);
+        }
+
+        protected override void OnDispose() {
+            InvalidatePreparation();
         }
 
         #endregion
@@ -28,13 +35,60 @@ namespace BeatLeader.Components {
         private float[] _points = Array.Empty<float>();
         private float _songDuration = 1.0f;
         private Rect _viewRect = Rect.zero;
+        private float[]? _sampleBounds;
+        private float _sampleStep;
+        private int _preparationRevision;
+        private CancellationTokenSource? _preparationCancellation;
 
         public void SetScoreStats(ScoreStats scoreStats) {
+            InvalidatePreparation();
+            _sampleBounds = null;
             _songDuration = scoreStats.winTracker.endTime;
             _points = scoreStats.scoreGraphTracker.graph;
 
             AccuracyGraphUtils.PostProcessPoints(_points, out var positions, out _viewRect);
             _accuracyGraph.Setup(positions, _viewRect, GetCanvasRadius(), _songDuration);
+        }
+
+        internal void InvalidatePreparation() {
+            _preparationRevision++;
+            var previous = _preparationCancellation;
+            _preparationCancellation = null;
+            previous?.Cancel();
+        }
+
+        internal async Task<PreparedAccuracyGraph?> PrepareScoreStatsAsync(ScoreStats scoreStats, CancellationToken token = default) {
+            if (!this || !IsHierarchySet || !Content || !_accuracyGraph) return null;
+            InvalidatePreparation();
+            var revision = _preparationRevision;
+            var source = CancellationTokenSource.CreateLinkedTokenSource(token);
+            _preparationCancellation = source;
+            var preparationToken = source.Token;
+            try {
+                var settings = _accuracyGraph.CaptureMeshSettings();
+                return await AccuracyGraphUtils.PrepareGraphAsync(scoreStats.scoreGraphTracker.graph,
+                    scoreStats.winTracker.endTime, settings.Resolution, settings.Thickness, revision, preparationToken);
+            } catch (OperationCanceledException) when (preparationToken.IsCancellationRequested) {
+                return null;
+            } finally {
+                if (ReferenceEquals(_preparationCancellation, source)) _preparationCancellation = null;
+                source.Dispose();
+            }
+        }
+
+        internal bool CanApplyPrepared(PreparedAccuracyGraph prepared) {
+            return prepared.Revision == _preparationRevision && this && IsHierarchySet && Content && _accuracyGraph;
+        }
+
+        internal bool SetPreparedScoreStats(PreparedAccuracyGraph prepared) {
+            if (!CanApplyPrepared(prepared)) return false;
+            _songDuration = prepared.SongDuration;
+            _points = prepared.Points;
+            _viewRect = prepared.ViewRect;
+            _sampleBounds = prepared.SampleBounds;
+            _sampleStep = prepared.SampleStep;
+            _accuracyGraph.SetupPrepared(prepared, GetCanvasRadius());
+            return true;
         }
 
         #endregion
@@ -106,6 +160,22 @@ namespace BeatLeader.Components {
 
         private float GetAccuracy(float viewTime) {
             if (_points.Length == 0) return 1.0f;
+
+            if (_sampleBounds is { } bounds) {
+                var low = 0;
+                var high = bounds.Length;
+                while (low < high) {
+                    var middle = low + (high - low) / 2;
+                    if (bounds[middle] < viewTime) low = middle + 1;
+                    else high = middle;
+                }
+                if (low == bounds.Length) return _points[_points.Length - 1];
+                // These bounds use the legacy incremental float step, including its rounding.
+                var upper = bounds[low];
+                var lower = upper - _sampleStep;
+                var ratio = (viewTime - lower) / (upper - lower);
+                return _points[low] + (_points[low + 1] - _points[low]) * ratio;
+            }
 
             var xStep = 1.0f / _points.Length;
             var x = xStep;

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Threading.Tasks;
 using BeatLeader.API;
 using BeatLeader.DataManager;
 using BeatLeader.Manager;
 using BeatLeader.Models;
+using BeatLeader.Utils;
 using BeatSaberMarkupLanguage.Attributes;
 using HMUI;
 using JetBrains.Annotations;
@@ -78,6 +80,7 @@ namespace BeatLeader.Components {
         }
 
         protected override void OnDispose() {
+            InvalidateScoreStats();
             ScoreStatsRequest.Request.StateChangedEvent -= OnScoreStatsRequestStateChanged;
             HiddenPlayersCache.HiddenPlayersUpdatedEvent -= RefreshPlayer;
             LeaderboardState.ScoreInfoPanelTabChangedEvent -= OnTabWasSelected;
@@ -90,6 +93,11 @@ namespace BeatLeader.Components {
         protected override void OnResume() {
             SetScore(Context.Item1);
             _replayPanel.Setup(Context.Item2);
+        }
+
+        protected override void OnClose() {
+            InvalidateScoreStats();
+            base.OnClose();
         }
 
         private void OnReplayDownloadStateChangedEvent(bool state) {
@@ -163,19 +171,39 @@ namespace BeatLeader.Components {
 
         private bool _scoreStatsUpdateRequired;
         private Score? _score;
+        private int _scoreStatsRevision;
 
         private void OnScoreStatsRequestStateChanged(WebRequests.IWebRequest<ScoreStats> instance, WebRequests.RequestState state, string? failReason) {
             if (_score == null || state is not WebRequests.RequestState.Finished) return;
             if (instance.Result is not { } result) return;
-            _scoreOverviewPage2.SetScoreAndStats(_score, result);
+            var revision = ++_scoreStatsRevision;
+            if (!IsCurrentScoreStats(revision, _score)) return;
+            _ = ApplyScoreStatsAsync(_score, result, revision).RunCatching();
+        }
+
+        private async Task ApplyScoreStatsAsync(Score score, ScoreStats result, int revision) {
+            var prepared = await _accuracyGraphPanel.PrepareScoreStatsAsync(result);
+            if (prepared == null || !IsCurrentScoreStats(revision, score) || !_accuracyGraphPanel.CanApplyPrepared(prepared)) return;
+            _scoreOverviewPage2.SetScoreAndStats(score, result);
             _accuracyDetails.SetScoreStats(result);
             _accuracyGrid.SetScoreStats(result);
-            _accuracyGraphPanel.SetScoreStats(result);
+            if (!_accuracyGraphPanel.SetPreparedScoreStats(prepared) || !IsCurrentScoreStats(revision, score)) return;
             _scoreStatsUpdateRequired = false;
             UpdateVisibility();
         }
 
+        private bool IsCurrentScoreStats(int revision, Score score) {
+            return revision == _scoreStatsRevision && ReferenceEquals(_score, score)
+                && this && IsHierarchySet && Content && gameObject.activeInHierarchy;
+        }
+
+        private void InvalidateScoreStats() {
+            _scoreStatsRevision++;
+            _accuracyGraphPanel?.InvalidatePreparation();
+        }
+
         public void SetScore(Score score) {
+            InvalidateScoreStats();
             _score = score;
             _scoreStatsUpdateRequired = true;
             _miniProfile.SetPlayer(score.Player);

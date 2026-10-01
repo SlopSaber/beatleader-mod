@@ -40,6 +40,17 @@ namespace BeatLeader {
             UpdateBackground();
         }
 
+        internal (int Resolution, float Thickness) CaptureMeshSettings() {
+            return graphLine.CaptureMeshSettings();
+        }
+
+        internal void SetupPrepared(PreparedAccuracyGraph prepared, float canvasRadius) {
+            _songDuration = prepared.SongDuration;
+            _viewRect = prepared.ViewRect;
+            graphLine.SetupPrepared(prepared.Mesh, _viewRect, canvasRadius);
+            UpdateBackground();
+        }
+
         #endregion
 
         #region Shader

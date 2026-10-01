@@ -1,3 +1,4 @@
+using System.Threading;
 using UnityEngine;
 
 namespace BeatLeader {
@@ -32,9 +33,14 @@ namespace BeatLeader {
         #region FillArray
 
         public void FillArray(GraphPoint[] destination) {
+            FillArray(destination, CancellationToken.None);
+        }
+
+        internal void FillArray(GraphPoint[] destination, CancellationToken token) {
             var splinesBuffer = _segments.GetBuffer();
 
             for (var i = 0; i < destination.Length; i++) {
+                token.ThrowIfCancellationRequested();
                 var t = (float) i / (destination.Length - 1);
                 destination[i] = Evaluate(splinesBuffer, t);
             }

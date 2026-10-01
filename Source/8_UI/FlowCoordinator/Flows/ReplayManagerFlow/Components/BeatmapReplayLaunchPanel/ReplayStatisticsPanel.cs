@@ -100,6 +100,7 @@ namespace BeatLeader.UI.Hub {
         public async Task SetDataByHeaderAsync(IReplayHeader header, CancellationToken token = default) {
             var revision = ++_requestRevision;
             if (!IsCurrentRequest(revision, token)) return;
+            _accuracyGraphPanel.InvalidatePreparation();
 
             if (!StatsStorage.TryGetStats(header, out var score, out var stats)) {
                 //loading if wasn't represented in the cache
@@ -130,7 +131,9 @@ namespace BeatLeader.UI.Hub {
                 return;
             }
 
-            SetData(score, stats);
+            var prepared = await _accuracyGraphPanel.PrepareScoreStatsAsync(stats, token);
+            if (prepared == null || !IsCurrentRequest(revision, token) || !_accuracyGraphPanel.CanApplyPrepared(prepared)) return;
+            SetData(score, stats, prepared);
         }
 
         private bool IsCurrentRequest(int revision, CancellationToken token) {
@@ -146,13 +149,13 @@ namespace BeatLeader.UI.Hub {
             _scoreStatsLoadingScreen.SetFailed(false);
         }
 
-        private void SetData(Score score, ScoreStats stats) {
+        private void SetData(Score score, ScoreStats stats, PreparedAccuracyGraph prepared) {
             _scoreStatsUpdateRequired = false;
             _scoreOverviewPage1.SetScore(score);
             _scoreOverviewPage2.SetScoreAndStats(score, stats);
             _accuracyDetails.SetScoreStats(stats);
             _accuracyGrid.SetScoreStats(stats);
-            _accuracyGraphPanel.SetScoreStats(stats);
+            if (!_accuracyGraphPanel.SetPreparedScoreStats(prepared)) return;
 
             UpdateVisibility(_openedTab);
         }
