@@ -134,7 +134,8 @@ namespace BeatLeader.UI.Hub {
         }
 
         private bool IsCurrentRequest(int revision, CancellationToken token) {
-            return revision == _requestRevision && !token.IsCancellationRequested && !IsDestroyed;
+            return revision == _requestRevision && !token.IsCancellationRequested
+                && !IsDestroyed && IsInitialized && Content;
         }
 
         public void SetLoading() {
