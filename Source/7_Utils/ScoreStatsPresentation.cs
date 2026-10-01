@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using BeatLeader.Models;
@@ -24,6 +25,7 @@ namespace BeatLeader {
             }
         }
 
+        [StructLayout(LayoutKind.Auto)]
         internal readonly struct Hand {
             internal readonly ScoreText Text;
             internal readonly float Fill;
@@ -37,6 +39,7 @@ namespace BeatLeader {
             }
         }
 
+        [StructLayout(LayoutKind.Auto)]
         internal readonly struct GridCell {
             internal readonly ScoreText Text;
             internal readonly float Quality;
