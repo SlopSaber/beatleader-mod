@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Globalization;
 using BeatLeader.Models;
 using Reactive;
 using Reactive.BeatSaber.Components;
@@ -42,22 +43,80 @@ namespace BeatLeader.UI.Hub {
             }
         }
 
+        private CancellationTokenSource? _previewCancellation;
+        private long _previewRevision;
+        private bool _destroyed;
+
         public async Task SetBeatmap(BeatmapLevelWithKey beatmap) {
-            await SetBeatmapLevel(beatmap.Level);
-            _songDifficultyLabel.Text = beatmap.Key.difficulty.ToString();
-            _songDifficultyImage.Sprite = Resources.FindObjectsOfTypeAll<BeatmapCharacteristicSO>()
-                .FirstOrDefault(x => x.serializedName == beatmap.Key.characteristic.SerializedName())?.icon;
+            await SetPreviewAsync(beatmap.Level, beatmap.Key.difficulty, beatmap.Key.characteristic.SerializedName());
         }
 
-        public async Task SetBeatmapLevel(BeatmapLevel level) {
-            _songNameLabel.Text = FormatSongNameText(level.songName, level.songSubName);
+        public Task SetBeatmapLevel(BeatmapLevel level) {
+            return SetPreviewAsync(level, null, null);
+        }
 
-            var mappers = string.Join(", ", level.allMappers);
-            _songAuthorLabel.Text = FormatAuthorText(level.songAuthorName, mappers);
-            
-            _songTimeLabel.Text = FormatUtils.FormatTime(level.songDuration);
-            _songBpmLabel.Text = Mathf.FloorToInt(level.beatsPerMinute).ToString();
-            _songImage.Sprite = await level.previewMediaData.GetCoverSpriteAsync();
+        private bool IsCurrent(CancellationTokenSource source, long revision) {
+            return !_destroyed && ReferenceEquals(_previewCancellation, source) && _previewRevision == revision &&
+                !source.IsCancellationRequested && IsInitialized && !IsDestroyed && Content;
+        }
+
+        private async Task SetPreviewAsync(BeatmapLevel level, BeatmapDifficulty? difficulty, string? characteristic) {
+            if (_destroyed || IsDestroyed) return;
+            var previous = _previewCancellation;
+            var source = new CancellationTokenSource();
+            _previewCancellation = source;
+            var revision = ++_previewRevision;
+            previous?.Cancel();
+            var token = source.Token;
+            try {
+                var name = level.songName;
+                var subName = level.songSubName;
+                var author = level.songAuthorName;
+                var mappers = level.allMappers.ToArray();
+                var duration = level.songDuration;
+                var bpm = level.beatsPerMinute;
+                var media = level.previewMediaData;
+                var format = NumberFormatInfo.ReadOnly((NumberFormatInfo)CultureInfo.CurrentCulture.NumberFormat.Clone());
+                var text = await Task.Run(() => (
+                    name: FormatSongNameText(name, subName),
+                    author: FormatAuthorText(author, string.Join(", ", mappers)),
+                    duration: FormatUtils.FormatTime(Mathf.FloorToInt(duration), format),
+                    bpm: Mathf.FloorToInt(bpm).ToString(format),
+                    difficulty: difficulty?.ToString()
+                ), token);
+                if (!IsCurrent(source, revision)) return;
+                _songNameLabel.Text = text.name;
+                if (!IsCurrent(source, revision)) return;
+                _songAuthorLabel.Text = text.author;
+                if (!IsCurrent(source, revision)) return;
+                _songTimeLabel.Text = text.duration;
+                if (!IsCurrent(source, revision)) return;
+                _songBpmLabel.Text = text.bpm;
+                if (!IsCurrent(source, revision)) return;
+                var sprite = await media.GetCoverSpriteAsync();
+                if (!IsCurrent(source, revision)) return;
+                _songImage.Sprite = sprite;
+                if (difficulty.HasValue && IsCurrent(source, revision)) {
+                    _songDifficultyLabel.Text = text.difficulty!;
+                    if (!IsCurrent(source, revision)) return;
+                    var icon = Resources.FindObjectsOfTypeAll<BeatmapCharacteristicSO>()
+                        .FirstOrDefault(x => x.serializedName == characteristic)?.icon;
+                    if (IsCurrent(source, revision)) _songDifficultyImage.Sprite = icon;
+                }
+            } catch (System.OperationCanceledException) when (token.IsCancellationRequested) {
+            } finally {
+                if (ReferenceEquals(_previewCancellation, source)) _previewCancellation = null;
+                source.Dispose();
+            }
+        }
+
+        protected override void OnDestroy() {
+            _destroyed = true;
+            _previewRevision++;
+            var source = _previewCancellation;
+            _previewCancellation = null;
+            source?.Cancel();
+            base.OnDestroy();
         }
 
         private static string FormatSongNameText(string name, string subName) {

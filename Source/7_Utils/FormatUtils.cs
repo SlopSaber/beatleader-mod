@@ -233,11 +233,15 @@ namespace BeatLeader {
         }
         
         public static string FormatTime(int seconds) {
+            return FormatTime(seconds, CultureInfo.CurrentCulture);
+        }
+
+        public static string FormatTime(int seconds, IFormatProvider formatProvider) {
             var minutes = seconds / 60;
             var hours = minutes / 60;
             var secDiv = seconds % 60;
             var minDiv = minutes % 60;
-            return $"{(hours is not 0 ? $"{Zero(hours)}{hours}:" : "")}{Zero(minDiv)}{minDiv}:{Zero(secDiv)}{secDiv}";
+            return $"{(hours is not 0 ? $"{Zero(hours)}{hours.ToString(formatProvider)}:" : "")}{Zero(minDiv)}{minDiv.ToString(formatProvider)}:{Zero(secDiv)}{secDiv.ToString(formatProvider)}";
             static string Zero(int number) => number > 9 ? "" : "0";
         }
 
