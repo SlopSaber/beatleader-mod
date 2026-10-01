@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,30 +9,34 @@ namespace BeatLeader.SteamVR {
     internal static class SteamVRSettings {
         #region Settings
 
-        private static readonly Dictionary<string, string> settings = new Dictionary<string, string>();
+        private static readonly ConcurrentDictionary<string, SettingValue> settings = new();
 
         private static readonly NumberFormatInfo nf = new NumberFormatInfo() {
             NumberDecimalSeparator = "."
         };
 
+        private readonly struct SettingValue {
+            public SettingValue(string text) {
+                Text = text;
+                FloatValue = float.TryParse(text, NumberStyles.Float | NumberStyles.AllowThousands, nf, out var value)
+                    ? value
+                    : (float?)null;
+            }
+
+            public readonly string Text;
+            public readonly float? FloatValue;
+        }
+
         public static bool IsAvailable() {
-            return settings.Count > 0; 
+            return !settings.IsEmpty;
         }
 
         public static float GetFloatOrDefault(string key, float defaultValue = default) {
-            if (!settings.ContainsKey(key)) return defaultValue;
-
-            try {
-                return float.Parse(settings[key], nf);
-            } catch (Exception) {
-                return defaultValue;
-            }
+            return settings.TryGetValue(key, out var setting) ? setting.FloatValue ?? defaultValue : defaultValue;
         }
 
         public static string? GetString(string key) {
-            if (!settings.ContainsKey(key)) return null;
-
-            return settings[key];
+            return settings.TryGetValue(key, out var setting) ? setting.Text : null;
         }
 
         #endregion
@@ -50,7 +54,7 @@ namespace BeatLeader.SteamVR {
 
         private static async Task UpdateTask(CancellationToken cancellationToken) {
             //<- Connect --------------------------------------------------
-            var session = new SteamVRWebConsoleSession();
+            using var session = new SteamVRWebConsoleSession();
             var (state, failReason) = await session.ConnectTask(cancellationToken);
 
             if (state is not SteamVRWebConsoleSession.State.Opened) {
@@ -65,7 +69,8 @@ namespace BeatLeader.SteamVR {
             }
 
             //<- Process response messages until timeout ------------------
-            await session.ListenTask(ProcessMessage, cancellationToken);
+            var parseState = ParseState.SearchForSettingsBlock;
+            await session.ListenTask(message => ProcessMessage(message, ref parseState), cancellationToken);
             Plugin.Log.Debug($"SteamVR settings received: {settings.Count}");
         }
 
@@ -79,27 +84,25 @@ namespace BeatLeader.SteamVR {
             ParseSettings
         }
 
-        private static ParseState _state = ParseState.SearchForSettingsBlock;
-
-        private static void ProcessMessage(SteamVRWebConsoleSession.Message message) {
+        private static void ProcessMessage(SteamVRWebConsoleSession.Message message, ref ParseState state) {
             var line = message.sMessage;
 
             var contentStart = line.IndexOf("[Console]", StringComparison.Ordinal);
             if (contentStart < 0) return;
             var content = line.Substring(contentStart + 10).TrimEnd();
 
-            switch (_state) {
+            switch (state) {
                 case ParseState.SearchForSettingsBlock:
-                    if (content.StartsWith("Settings:")) _state = ParseState.SkipFirstDashes;
+                    if (content.StartsWith("Settings:")) state = ParseState.SkipFirstDashes;
                     break;
 
                 case ParseState.SkipFirstDashes:
-                    if (content.StartsWith("--")) _state = ParseState.ParseSettings;
+                    if (content.StartsWith("--")) state = ParseState.ParseSettings;
                     break;
 
                 case ParseState.ParseSettings:
                     if (content.StartsWith("--")) {
-                        _state = ParseState.SearchForSettingsBlock;
+                        state = ParseState.SearchForSettingsBlock;
                         break;
                     }
 
@@ -108,7 +111,7 @@ namespace BeatLeader.SteamVR {
 
                     var key = content.Substring(0, separatorIndex);
                     var value = content.Substring(separatorIndex + 2);
-                    settings[key] = value;
+                    settings[key] = new SettingValue(value);
                     break;
             }
         }
