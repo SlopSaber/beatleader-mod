@@ -220,7 +220,10 @@ namespace BeatLeader.Replayer {
             var data = new ReplayLaunchData();
             var list = new List<IReplay>();
 
+            token.ThrowIfCancellationRequested();
+            if (this == null) return;
             var shouldMirror = !replays.All(r => r.replay.info.leftHanded);
+            var loadPlayerEnvironment = settings.LoadPlayerEnvironment;
 
             //loading replays
             foreach (var replayData in replays) {
@@ -230,17 +233,20 @@ namespace BeatLeader.Replayer {
                 ReplayManager.SaturateReplayInfo(info, null);
                 
                 //loading environment
-                if (settings.LoadPlayerEnvironment) {
+                if (loadPlayerEnvironment) {
                     LoadEnvironment(data, info.environment);
                 }
 
                 //converting
-                var creplay = ReplayDataUtils.ConvertToAbstractReplay(
+                var creplay = await ReplayDataUtils.ConvertToAbstractReplayAsync(
                     replayData.replay,
                     replayData.player,
                     replayData.optionalData,
-                    shouldMirror && info.leftHanded
+                    shouldMirror && info.leftHanded,
+                    token
                 );
+                token.ThrowIfCancellationRequested();
+                if (this == null) return;
                 list.Add(creplay);
             }
             //initializing data

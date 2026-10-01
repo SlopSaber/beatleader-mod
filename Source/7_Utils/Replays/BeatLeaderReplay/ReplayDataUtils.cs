@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using BeatLeader.Models;
 using BeatLeader.Models.AbstractReplay;
 using JetBrains.Annotations;
@@ -39,12 +41,26 @@ namespace BeatLeader.Utils {
         public static readonly IReplayNoteComparator MirroringReplayNoteComparator = new MirroredReplayNoteComparator();
 
         public static IReplay ConvertToAbstractReplay(Replay replay, IPlayer? player, BattleRoyaleReplayData? optionalData, bool mirrorX) {
+            var replayData = CreateReplayData(replay, player, mirrorX);
+            return CreateAbstractReplay(replay, optionalData, mirrorX, replayData, RNoteCutInfo.BombNoteCutInfo, CancellationToken.None);
+        }
+
+        internal static Task<IReplay> ConvertToAbstractReplayAsync(
+            Replay replay, IPlayer? player, BattleRoyaleReplayData? optionalData, bool mirrorX, CancellationToken token
+        ) {
+            token.ThrowIfCancellationRequested();
+            var replayData = CreateReplayData(replay, player, mirrorX);
+            var bombNoteCutInfo = RNoteCutInfo.BombNoteCutInfo;
+            return Task.Run(() => CreateAbstractReplay(replay, optionalData, mirrorX, replayData, bombNoteCutInfo, token), token);
+        }
+
+        private static GenericReplayData CreateReplayData(Replay replay, IPlayer? player, bool mirrorX) {
             var replayData = replay.info;
             var failed = replayData.failTime is not 0;
             if (mirrorX) {
                 replay.info.leftHanded = false;
             }
-            var creplayData = new GenericReplayData(
+            return new GenericReplayData(
                 failed ? replayData.failTime : replay.frames.LastOrDefault()?.time ?? 0,
                 failed ? ReplayFinishType.Failed : ReplayFinishType.Cleared,
                 int.Parse(replayData.timestamp),
@@ -55,7 +71,12 @@ namespace BeatLeader.Utils {
                 player,
                 replay.info.GetPracticeSettingsFromInfo()
             ) { RecorderVersion = replayData.version };
+        }
 
+        private static IReplay CreateAbstractReplay(
+            Replay replay, BattleRoyaleReplayData? optionalData, bool mirrorX, GenericReplayData replayData,
+            global::NoteCutInfo bombNoteCutInfo, CancellationToken token
+        ) {
             var frames = replay.frames.Select(x => {
                     var frame = new PlayerMovementFrame(
                         x.time,
@@ -85,7 +106,7 @@ namespace BeatLeader.Utils {
                         (NoteEvent.NoteEventType)x.eventType,
                         x.noteCutInfo?.beforeCutRating ?? 0,
                         x.noteCutInfo?.afterCutRating ?? 0,
-                        x.eventType == RNoteEventType.bomb ? RNoteCutInfo.BombNoteCutInfo :
+                        x.eventType == RNoteEventType.bomb ? bombNoteCutInfo :
                         x.noteCutInfo != null ? RNoteCutInfo.Convert(x.noteCutInfo) : default
                     );
 
@@ -101,15 +122,26 @@ namespace BeatLeader.Utils {
 
             var comparator = mirrorX ? MirroringReplayNoteComparator : BasicReplayNoteComparator;
 
+            var movementFrames = frames.ToArray();
+            token.ThrowIfCancellationRequested();
+            var noteEvents = notes.ToArray();
+            token.ThrowIfCancellationRequested();
+            var wallEvents = walls.ToArray();
+            token.ThrowIfCancellationRequested();
+            var pauseEvents = pauses.ToArray();
+            token.ThrowIfCancellationRequested();
+            var heightEvents = heights?.ToArray();
+            token.ThrowIfCancellationRequested();
+
             return new GenericReplay(
-                creplayData,
+                replayData,
                 comparator,
                 optionalData,
-                frames.ToArray(),
-                notes.ToArray(),
-                walls.ToArray(),
-                pauses.ToArray(),
-                heights?.ToArray(),
+                movementFrames,
+                noteEvents,
+                wallEvents,
+                pauseEvents,
+                heightEvents,
                 replay.customData
             );
         }
