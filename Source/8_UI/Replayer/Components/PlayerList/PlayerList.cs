@@ -178,11 +178,13 @@ namespace BeatLeader.UI.Replayer {
                 var pos = -i * PlayerListCell.CELL_SIZE;
                
                 trans.SetSiblingIndex(i);
+                if (job != null && !IsCurrentRanking(job)) return;
                 if (animated) {
                     cell.MoveTo(pos);
                 } else {
                     trans.localPosition = new(0f, pos);
                 }
+                if (job != null && !IsCurrentRanking(job)) return;
                 
                 var isPrimary = cell.Player == _playersManager!.PrimaryPlayer;
                 if (job != null && !IsCurrentRanking(job)) return;
