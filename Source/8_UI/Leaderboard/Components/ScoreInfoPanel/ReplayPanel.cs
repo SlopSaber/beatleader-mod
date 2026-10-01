@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BeatLeader.Interop;
@@ -16,6 +15,8 @@ using UnityEngine.UI;
 using Image = Reactive.BeatSaber.Components.Image;
 using BeatLeader.API;
 using HMUI;
+using BeatLeader.WebRequests;
+using IPA.Utilities.Async;
 using Reactive.BeatSaber.Components;
 
 namespace BeatLeader.Components {
@@ -59,7 +60,10 @@ namespace BeatLeader.Components {
         #region Initialize/Dispose
 
         private ReplayerViewNavigatorWrapper? _replayerNavigator;
-        private bool _blockedUntilLoaded;
+        private bool _disposed;
+        private bool _isChecking;
+        private long _revision;
+        private ReplayJob? _job;
 
         public void Setup(ReplayerViewNavigatorWrapper starter) {
             _replayerNavigator = starter;
@@ -70,6 +74,7 @@ namespace BeatLeader.Components {
         }
 
         protected override void OnInitialize() {
+            _disposed = false;
             _playButton.onClick.AddListener(OnPlayButtonClicked);
             _downloadButton.onClick.AddListener(OnDownloadButtonClicked);
 
@@ -103,41 +108,105 @@ namespace BeatLeader.Components {
             _downloadButtonImage.Use(textParent);
             _downloadButtonSpinner.Use(textParent);
 
-            StaticReplayRequest.Request.ProgressChangedEvent += OnDownloadProgressChanged;
-            StaticReplayRequest.Request.StateChangedEvent += OnDownloadRequestStateChanged;
-
             LeaderboardState.AddSelectedBeatmapListener(OnSelectedBeatmapChanged);
         }
 
         protected override void OnDispose() {
-            StaticReplayRequest.Request.ProgressChangedEvent -= OnDownloadProgressChanged;
-            StaticReplayRequest.Request.StateChangedEvent -= OnDownloadRequestStateChanged;
-
+            _disposed = true;
+            RetireJob();
+            _playButton.onClick.RemoveListener(OnPlayButtonClicked);
+            _downloadButton.onClick.RemoveListener(OnDownloadButtonClicked);
             LeaderboardState.RemoveSelectedBeatmapListener(OnSelectedBeatmapChanged);
         }
 
         protected override void OnRootStateChange(bool active) {
-            if (active && !_blockedUntilLoaded) {
-                var neverLoaded = ReplayManager.StartLoadingIfNeverLoaded();
+            if (active) BeginChecking();
+            else RetireJob();
+        }
 
-                if (neverLoaded) {
-                    _blockedUntilLoaded = true;
-                    _ = BlockUntilLoaded().RunCatching();
-                }
+        #endregion
+
+        #region Jobs
+
+        private sealed class ReplayJob {
+            public readonly Score Score;
+            public readonly LeaderboardKey Leaderboard;
+            public readonly long Revision;
+            public readonly CancellationTokenSource Cancellation = new();
+            public readonly CancellationToken Token;
+            public IWebRequest<Replay>? Request;
+            public WebRequestProgressChangedDelegate<IWebRequest<Replay>>? ProgressListener;
+            public bool Finished;
+
+            public ReplayJob(Score score, long revision) {
+                Score = score;
+                Leaderboard = LeaderboardState.SelectedLeaderboardKey;
+                Revision = revision;
+                Token = Cancellation.Token;
             }
         }
 
-        private async Task BlockUntilLoaded() {
-            RefreshDownloadButton(DownloadButtonState.Unavailable);
+        private bool CanPresent() {
+            return !_disposed && this && IsHierarchySet && Content && Content.gameObject.activeInHierarchy && _active;
+        }
 
-            _blockIncomingEvents = true;
-            await ReplayManager.WaitForLoadingAsync();
+        private bool IsCurrent(ReplayJob job) {
+            return ReferenceEquals(_job, job) && _revision == job.Revision
+                && ReferenceEquals(_score, job.Score) && !job.Token.IsCancellationRequested
+                && job.Leaderboard.Equals(LeaderboardState.SelectedLeaderboardKey) && CanPresent();
+        }
 
-            _blockIncomingEvents = false;
-            _blockedUntilLoaded = false;
+        private ReplayJob? BeginJob() {
+            RetireJob();
+            if (_score == null || !CanPresent()) return null;
+            var job = new ReplayJob(_score, _revision);
+            _job = job;
+            return job;
+        }
 
-            if (_score != null) {
-                SetScore(_score);
+        private void RetireJob() {
+            var job = _job;
+            _job = null;
+            _revision++;
+            var wasDownloading = _isDownloading;
+            _isDownloading = false;
+            _isChecking = false;
+            if (job != null) {
+                DetachProgress(job);
+                if (!job.Finished) job.Cancellation.Cancel();
+            }
+            if (wasDownloading) NotifyDownloadStateChanged(false);
+        }
+
+        private static void DetachProgress(ReplayJob job) {
+            if (job.Request != null && job.ProgressListener != null) {
+                job.Request.ProgressChangedEvent -= job.ProgressListener;
+                job.ProgressListener = null;
+            }
+        }
+
+        private static void FinishJob(ReplayJob job) {
+            job.Finished = true;
+            DetachProgress(job);
+            job.Request?.Dispose();
+            job.Cancellation.Dispose();
+        }
+
+        private void SetIdle(ReplayJob job) {
+            if (!IsCurrent(job)) return;
+            _isChecking = false;
+            var wasDownloading = _isDownloading;
+            _isDownloading = false;
+            if (wasDownloading) NotifyDownloadStateChanged(false);
+            if (IsCurrent(job)) ResetButtons();
+        }
+
+        private void FailJob(ReplayJob job, Exception error) {
+            Plugin.Log.Error(error);
+            SetIdle(job);
+            if (IsCurrent(job)) {
+                _downloadText.gameObject.SetActive(true);
+                _downloadText.text = FormatFailString(error.Message);
             }
         }
 
@@ -149,97 +218,154 @@ namespace BeatLeader.Components {
         private IReplayHeader? _replayHeader;
 
         public void SetScore(Score score) {
+            RetireJob();
             _score = score;
-
-            if (!_blockedUntilLoaded) {
-                _replayHeader = ReplayManager.FindReplayByHash(_score);
-            }
-
+            _replayHeader = null;
             ResetButtons();
+            BeginChecking();
+        }
+
+        private void BeginChecking() {
+            if (!CanPresent() || _score == null || _job is { Finished: false }) return;
+            var job = BeginJob();
+            if (job == null) return;
+            _isChecking = true;
+            RefreshDownloadButton(DownloadButtonState.Unavailable);
+            RefreshPlayButton(PlayButtonState.Unavailable);
+            _ = FindLocalReplayAsync(job).RunCatching();
+        }
+
+        private async Task FindLocalReplayAsync(ReplayJob job) {
+            try {
+                await Task.Yield();
+                if (!IsCurrent(job)) return;
+                ReplayManager.StartLoadingIfNeverLoaded();
+                var found = await ReplayManager.FindReplaysByHashAsync(new IReplayHashProvider[] { job.Score }, job.Token);
+                if (!IsCurrent(job)) return;
+                _replayHeader = found.Headers[0];
+                SetIdle(job);
+            } catch (OperationCanceledException) when (job.Token.IsCancellationRequested) {
+            } catch (Exception error) {
+                FailJob(job, error);
+            } finally {
+                FinishJob(job);
+            }
         }
 
         #endregion
 
         #region StartReplay
 
-        private async Task StartReplay(Replay replay) {
-            await _replayerNavigator!.NavigateToReplayAsync(replay, _score!.Player, true).RunCatching();
-
-            SendViewReplayRequest.Send(_score.id);
+        private async Task StartReplayAsync(ReplayJob job, Replay replay, Player player, int scoreId, ReplayerViewNavigatorWrapper navigator) {
+            if (!IsCurrent(job)) return;
+            await navigator.NavigateToReplayAsync(replay, player, true);
+            SendViewReplayRequest.Send(scoreId);
         }
 
-        private async Task LoadAndStartReplay() {
-            if (_replayHeader == null) {
-                throw new InvalidOperationException("Replay header must not be null");
+        private async Task LoadAndStartReplayAsync(ReplayJob job, IReplayHeader header) {
+            try {
+                await Task.Yield();
+                if (!IsCurrent(job)) return;
+                var player = job.Score.Player;
+                var scoreId = job.Score.id;
+                var navigator = _replayerNavigator ?? throw new InvalidOperationException("Replay navigator is unavailable");
+                var replay = await header.LoadReplayAsync(job.Token);
+                if (!IsCurrent(job)) return;
+                if (replay == null) throw new InvalidOperationException("Failed to load the replay");
+                await StartReplayAsync(job, replay, player, scoreId, navigator);
+                SetIdle(job);
+            } catch (OperationCanceledException) when (job.Token.IsCancellationRequested) {
+            } catch (Exception error) {
+                FailJob(job, error);
+            } finally {
+                FinishJob(job);
             }
-
-            var replay = await _replayHeader.LoadReplayAsync(CancellationToken.None);
-            await StartReplay(replay!);
         }
 
         #endregion
 
-        #region Callbacks
+        #region Download
 
-        private bool _blockIncomingEvents = true;
-        private bool _isWaitingToStart;
         private bool _isDownloading;
 
         private void OnSelectedBeatmapChanged(bool selectedAny, LeaderboardKey leaderboardKey, BeatmapKey key, BeatmapLevel level) {
             _playCanBeInteractable = SongCoreInterop.ValidateRequirements(new(level, key));
+            if (_job != null && !_job.Leaderboard.Equals(leaderboardKey)) {
+                RetireJob();
+                _replayHeader = null;
+                _isChecking = true;
+                if (CanPresent()) {
+                    RefreshDownloadButton(DownloadButtonState.Unavailable);
+                    RefreshPlayButton(PlayButtonState.Unavailable);
+                }
+            }
         }
 
-        private void OnDownloadProgressChanged(WebRequests.IWebRequest<Replay> instance, float downloadProgress, float uploadProgress, float overallProgress) {
-            if (_blockIncomingEvents) {
-                return;
-            }
-            _downloadText.text = $"<alpha=#66>Downloading: {downloadProgress * 100:F0}%";
+        private void SubscribeProgress(ReplayJob job, IWebRequest<Replay> request) {
+            job.ProgressListener = (instance, download, upload, overall) => {
+                _ = UnityMainThreadTaskScheduler.Factory.StartNew(() => {
+                    if (job.ProgressListener != null && ReferenceEquals(job.Request, instance) && IsCurrent(job)) {
+                        _downloadText.text = $"<alpha=#66>Downloading: {download * 100:F0}%";
+                    }
+                }).RunCatching();
+            };
+            request.ProgressChangedEvent += job.ProgressListener;
         }
 
-        private void OnDownloadRequestStateChanged(WebRequests.IWebRequest<Replay> instance, WebRequests.RequestState state, string? failReason) {
-            if (_blockIncomingEvents) {
-                return;
-            }
+        private void StartDownload(bool startReplay) {
+            var job = BeginJob();
+            if (job == null) return;
+            _isDownloading = true;
+            _downloadText.gameObject.SetActive(true);
+            _downloadText.text = "<alpha=#66>Starting...";
+            RefreshPlayButton(startReplay ? PlayButtonState.Downloading : PlayButtonState.Unavailable);
+            RefreshDownloadButton(startReplay ? DownloadButtonState.Unavailable : DownloadButtonState.Downloading);
+            NotifyDownloadStateChanged(true);
+            _ = DownloadAsync(job, startReplay).RunCatching();
+        }
 
-            _isDownloading = state is WebRequests.RequestState.Started;
-            NotifyDownloadStateChanged(_isDownloading);
-
-            switch (state) {
-                case WebRequests.RequestState.Started:
-                    _downloadText.text = "<alpha=#66>Starting...";
-
-                    RefreshPlayButton(_isWaitingToStart ? PlayButtonState.Downloading : PlayButtonState.Unavailable);
-                    RefreshDownloadButton(_isWaitingToStart ? DownloadButtonState.Unavailable : DownloadButtonState.Downloading);
-
-                    return;
-                case WebRequests.RequestState.Finished:
+        private async Task DownloadAsync(ReplayJob job, bool startReplay) {
+            try {
+                await Task.Yield();
+                if (!IsCurrent(job)) return;
+                var player = job.Score.Player;
+                var scoreId = job.Score.id;
+                var replayUrl = job.Score.replay;
+                var navigator = _replayerNavigator ?? throw new InvalidOperationException("Replay navigator is unavailable");
+                var request = DownloadReplayRequest.SendRequest(replayUrl, job.Token);
+                job.Request = request;
+                SubscribeProgress(job, request);
+                var response = await request.Join();
+                if (!IsCurrent(job)) return;
+                DetachProgress(job);
+                if (response.RequestState != WebRequests.RequestState.Finished || response.Result is not { } replay) {
+                    throw new InvalidOperationException(response.FailReason ?? "Failed to download the replay");
+                }
+                RefreshDownloadButton(DownloadButtonState.Unavailable);
+                RefreshPlayButton(PlayButtonState.Unavailable);
+                if (startReplay) {
                     _downloadText.text = "<alpha=#66>Finished!";
-
-                    // When initiated using the play button
-                    if (_isWaitingToStart) {
-                        RefreshDownloadButton(DownloadButtonState.Unavailable);
-                        RefreshPlayButton(PlayButtonState.Unavailable);
-
-                        _ = StartReplay(instance.Result!).RunCatching();
+                    await StartReplayAsync(job, replay, player, scoreId, navigator);
+                } else {
+                    _downloadText.text = "<alpha=#66>Saving...";
+                    var result = await ReplayManager.SaveAnyReplayAsync(replay, null, job.Token);
+                    if (!IsCurrent(job)) return;
+                    var header = result.Header;
+                    if (result.Error is ReplaySavingError.AlreadyExists) {
+                        var existing = await ReplayManager.FindReplaysByHashAsync(new IReplayHashProvider[] { replay.info }, job.Token);
+                        if (!IsCurrent(job)) return;
+                        header = existing.Headers[0];
                     }
-                    // When initiated using the download button
-                    else {
-                        _ = Task.Run(async () => {
-                                var result = await ReplayManager.SaveAnyReplayAsync(instance.Result!, null, CancellationToken.None);
-                                _replayHeader = result.Header;
-                            }
-                        ).RunCatching();
-
-                        RefreshDownloadButton(DownloadButtonState.ReadyToNavigate);
-                        RefreshPlayButton(PlayButtonState.ReadyToDownloadOrStart);
-                    }
-
-                    return;
-                case WebRequests.RequestState.Failed:
-                    ResetButtons();
-
-                    _downloadText.text = FormatFailString(failReason);
-                    return;
+                    if (header == null) throw new InvalidOperationException("Failed to save the replay");
+                    _replayHeader = header;
+                    _downloadText.text = "<alpha=#66>Finished!";
+                }
+                SetIdle(job);
+            } catch (OperationCanceledException) when (job.Token.IsCancellationRequested) {
+            } catch (Exception error) {
+                FailJob(job, error);
+            } finally {
+                FinishJob(job);
             }
         }
 
@@ -248,36 +374,30 @@ namespace BeatLeader.Components {
         #region Button Callbacks
 
         private void OnPlayButtonClicked() {
+            if (!CanPresent() || _isChecking) return;
             if (_isDownloading) {
                 ResetDownload();
                 return;
             }
-
-            if (_replayHeader != null) {
-                _downloadButton.interactable = false;
-                _playButton.interactable = false;
-
-                _ = LoadAndStartReplay().RunCatching();
-                return;
-            }
-
-            _isWaitingToStart = true;
-            StartDownload();
+            if (_job is { Finished: false }) return;
+            if (_replayHeader is { } header) {
+                var job = BeginJob();
+                if (job == null) return;
+                RefreshDownloadButton(DownloadButtonState.Unavailable);
+                RefreshPlayButton(PlayButtonState.Unavailable);
+                _ = LoadAndStartReplayAsync(job, header).RunCatching();
+            } else StartDownload(true);
         }
 
         private void OnDownloadButtonClicked() {
+            if (!CanPresent() || _isChecking) return;
             if (_isDownloading) {
                 ResetDownload();
                 return;
             }
-
-            if (_replayHeader != null) {
-                _replayerNavigator!.NavigateToReplayManager(_replayHeader);
-                return;
-            }
-
-            _isWaitingToStart = false;
-            StartDownload();
+            if (_job is { Finished: false }) return;
+            if (_replayHeader != null) _replayerNavigator!.NavigateToReplayManager(_replayHeader);
+            else StartDownload(false);
         }
 
         #endregion
@@ -285,27 +405,16 @@ namespace BeatLeader.Components {
         #region Other
 
         private void ResetButtons() {
-            if (!_blockedUntilLoaded) {
-                RefreshDownloadButton(_replayHeader != null ? DownloadButtonState.ReadyToNavigate : DownloadButtonState.ReadyToDownload);
-            }
-            
-            RefreshPlayButton(PlayButtonState.ReadyToDownloadOrStart);
+            RefreshDownloadButton(_isChecking ? DownloadButtonState.Unavailable
+                : _replayHeader != null ? DownloadButtonState.ReadyToNavigate : DownloadButtonState.ReadyToDownload);
+            RefreshPlayButton(_isChecking ? PlayButtonState.Unavailable : PlayButtonState.ReadyToDownloadOrStart);
         }
 
         private void ResetDownload() {
-            _blockIncomingEvents = true;
-            _isDownloading = false;
+            RetireJob();
+            if (!CanPresent()) return;
             _downloadText.gameObject.SetActive(false);
-
-            NotifyDownloadStateChanged(false);
             ResetButtons();
-        }
-
-        private void StartDownload() {
-            _blockIncomingEvents = false;
-            _downloadText.gameObject.SetActive(true);
-
-            StaticReplayRequest.Send(_score!.replay);
         }
 
         private static string FormatFailString(string? failReason) {
@@ -387,8 +496,11 @@ namespace BeatLeader.Components {
         private bool _active = true;
 
         public void SetActive(bool value) {
+            var changed = _active != value;
+            if (changed && !value) RetireJob();
             Active = value;
             _downloadText.gameObject.SetActive(false);
+            if (changed && value) BeginChecking();
         }
 
         #endregion
