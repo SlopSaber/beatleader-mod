@@ -6,10 +6,18 @@ namespace BeatLeader {
     public class EventsProcessor<T> : IEventsProcessor where T : struct {
         public delegate float TimeSelectorDelegate(T item);
 
-        public EventsProcessor(IEnumerable<T> events, TimeSelectorDelegate timeSelector) {
-            _events = new(events);
+        public EventsProcessor(IEnumerable<T> events, TimeSelectorDelegate timeSelector)
+            : this(timeSelector, new LinkedList<T>(events)) { }
+
+        private EventsProcessor(TimeSelectorDelegate timeSelector, LinkedList<T> events) {
+            _events = events;
             _timeSelectorDelegate = timeSelector;
             ResetNode();
+        }
+
+        // The prepared list transfers ownership; event subscribers can mutate its nodes.
+        internal static EventsProcessor<T> FromPreparedEvents(LinkedList<T> events, TimeSelectorDelegate timeSelector) {
+            return new(timeSelector, events);
         }
 
         public bool CurrentEventHasTimeMismatch { get; private set; }

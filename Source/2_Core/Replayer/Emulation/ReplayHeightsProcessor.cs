@@ -73,7 +73,11 @@ namespace BeatLeader.Replayer.Emulation {
 
         private void HandlePrimaryPlayerChanged(IVirtualPlayer player) {
             if (!_cachedEvents.TryGetValue(player, out _heights)) {
-                _heights = player.Replay.HeightEvents is not { } heights ? null : new(heights);
+                var replay = player.Replay;
+                _heights = replay.GetType() == typeof(GenericReplay)
+                    ? ((GenericReplay)replay).TakePreparedHeightEvents()
+                    : null;
+                _heights ??= replay.HeightEvents is not { } heights ? null : new(heights);
                 _cachedEvents[player] = _heights;
             }
             _lastNode = _heights?.First;

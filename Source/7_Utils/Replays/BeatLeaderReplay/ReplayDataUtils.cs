@@ -75,7 +75,7 @@ namespace BeatLeader.Utils {
 
         private static IReplay CreateAbstractReplay(
             Replay replay, BattleRoyaleReplayData? optionalData, bool mirrorX, GenericReplayData replayData,
-            global::NoteCutInfo bombNoteCutInfo, bool prepareMovementFrames, CancellationToken token
+            global::NoteCutInfo bombNoteCutInfo, bool preparePlaybackQueues, CancellationToken token
         ) {
             var frames = replay.frames.Select(x => {
                     var frame = new PlayerMovementFrame(
@@ -144,7 +144,7 @@ namespace BeatLeader.Utils {
                 heightEvents,
                 replay.customData
             );
-            if (prepareMovementFrames) result.PrepareMovementFrames(token);
+            if (preparePlaybackQueues) result.PreparePlaybackQueues(token);
             token.ThrowIfCancellationRequested();
             return result;
         }

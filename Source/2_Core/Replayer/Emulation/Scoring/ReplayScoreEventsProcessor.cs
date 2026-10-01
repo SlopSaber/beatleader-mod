@@ -79,7 +79,9 @@ namespace BeatLeader.Replayer.Emulation {
         }
 
         private ScoreEvent[] CalculateScoreEvents(IReplay replay) {
-            var noteEvents = replay.NoteEvents;
+            var noteEvents = replay.GetType() == typeof(GenericReplay)
+                ? ((GenericReplay)replay).NoteEventsForScoring
+                : replay.NoteEvents;
             var array = new ScoreEvent[noteEvents.Count];
 
             var startIndex = 0;

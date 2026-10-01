@@ -80,8 +80,15 @@ namespace BeatLeader.Replayer.Emulation {
 
         public void Init(IReplay replay) {
             if (_allowProcess) return;
-            _noteEventsProcessor = new(replay.NoteEvents, static x => x.CutTime);
-            _wallEventsProcessor = new(replay.WallEvents, static x => x.time);
+            var genericReplay = replay.GetType() == typeof(GenericReplay) ? (GenericReplay)replay : null;
+            var preparedNotes = genericReplay?.TakePreparedNoteEvents();
+            _noteEventsProcessor = preparedNotes is null
+                ? new(replay.NoteEvents, static x => x.CutTime)
+                : EventsProcessor<NoteEvent>.FromPreparedEvents(preparedNotes, static x => x.CutTime);
+            var preparedWalls = genericReplay?.TakePreparedWallEvents();
+            _wallEventsProcessor = preparedWalls is null
+                ? new(replay.WallEvents, static x => x.time)
+                : EventsProcessor<WallEvent>.FromPreparedEvents(preparedWalls, static x => x.time);
             _noteComparator = replay.NoteComparator;
             _noteEventsProcessor.EventDequeuedEvent += HandleNoteEventDequeued;
             _noteEventsProcessor.EventQueueAdjustStartedEvent += HandleQueueAdjustStarted;
