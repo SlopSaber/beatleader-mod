@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Version = Hive.Versioning.Version;
 
 namespace BeatLeader.Utils {
@@ -12,9 +13,16 @@ namespace BeatLeader.Utils {
 
         public static IReadOnlyCollection<KeyValuePair<Type, PluginInteropAttribute>> Interops { get; private set; } = null!;
 
+        private static readonly Task<Dictionary<Type, PluginInteropAttribute>> _discoveryTask = Task.Run(static () =>
+            typeof(InteropLoader).Assembly.GetTypesWithAttribute<PluginInteropAttribute>());
+
+        public static void Prewarm() {
+            _ = _discoveryTask;
+        }
+
         public static void Init() {
-            Interops = typeof(InteropLoader).Assembly
-                .GetTypesWithAttribute<PluginInteropAttribute>();
+            // Discovery never waits for the caller that consumes it and registers the interops.
+            Interops = _discoveryTask.GetAwaiter().GetResult();
             foreach (var interop in Interops) {
                 LoadInterop(interop.Key, interop.Value);
             }

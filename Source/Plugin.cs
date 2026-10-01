@@ -36,6 +36,7 @@ namespace BeatLeader {
             Version = metadata.HVersion;
 
             HiddenPlayersCache.Prewarm();
+            InteropLoader.Prewarm();
             ConfigFileData.Initialize();
             BundleLoader.Initialize();
         }
