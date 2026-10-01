@@ -34,7 +34,8 @@ namespace BeatLeader {
         public Plugin(IPALogger logger, PluginMetadata metadata) {
             Log = logger;
             Version = metadata.HVersion;
-            
+
+            HiddenPlayersCache.Prewarm();
             ConfigFileData.Initialize();
             BundleLoader.Initialize();
         }
@@ -80,6 +81,7 @@ namespace BeatLeader {
             ReplayManager.SaveCache();
             ConfigFileData.Instance.LastSessionModVersion = Version.ToString();
             ConfigFileData.Save();
+            HiddenPlayersCache.FlushPendingWrites();
         }
 
         #endregion

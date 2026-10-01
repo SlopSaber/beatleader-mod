@@ -18,7 +18,7 @@ namespace BeatLeader.DataManager {
                 case WebRequests.RequestState.Finished: 
                     var tasks = new List<Task>(instance.Result!.Length);
 
-                    ScoresContexts.allContexts = instance.Result.Select(s => {
+                    var contexts = instance.Result.Select(s => {
                         var context = new ScoresContext {
                             Id = s.Id,
                             Icon = BundleLoader.GeneralContextIcon,
@@ -32,15 +32,25 @@ namespace BeatLeader.DataManager {
                         return context;
                     }).ToArray();
 
-                    _ = Task.WhenAll(tasks)
-                        .ContinueWith(_ => PluginConfig.NotifyScoresContextListWasChanged())
-                        .RunCatching();
+                    ScoresContexts.allContexts = contexts;
+                    _ = NotifyWhenIconsLoadedAsync(tasks, contexts).RunCatching();
 
                     break;
 
                 case WebRequests.RequestState.Failed:
                     Plugin.Log.Debug($"Contexts retrieval failed! {failReason}");
                     break;
+            }
+        }
+
+        private static async Task NotifyWhenIconsLoadedAsync(List<Task> tasks, ScoresContext[] contexts) {
+            try {
+                await Task.WhenAll(tasks);
+            } finally {
+                // Failed icon loads still publish the current list with its fallback icons.
+                if (ReferenceEquals(ScoresContexts.allContexts, contexts)) {
+                    PluginConfig.NotifyScoresContextListWasChanged();
+                }
             }
         }
 
