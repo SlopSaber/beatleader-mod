@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BeatLeader.Models;
 using BeatLeader.Models.Replay;
@@ -14,11 +15,18 @@ namespace BeatLeader {
         [Inject] private readonly BattleRoyaleFlowCoordinator _battleRoyaleFlowCoordinator = null!;
         [Inject] private readonly ReplayerMenuLoader _replayerMenuLoader = null!;
 
-        public async Task NavigateToReplayAsync(FlowCoordinator flowCoordinator, Replay replay, Player player, bool tryLoadSelectedMap) {
+        public Task NavigateToReplayAsync(FlowCoordinator flowCoordinator, Replay replay, Player player, bool tryLoadSelectedMap) {
+            return NavigateToReplayAsync(flowCoordinator, replay, player, tryLoadSelectedMap, CancellationToken.None);
+        }
+
+        internal async Task NavigateToReplayAsync(
+            FlowCoordinator flowCoordinator, Replay replay, Player player, bool tryLoadSelectedMap, CancellationToken token
+        ) {
+            token.ThrowIfCancellationRequested();
             if (tryLoadSelectedMap) {
-                await _replayerMenuLoader.StartReplayFromLeaderboardAsync(replay, player);
+                await _replayerMenuLoader.StartReplayFromLeaderboardAsync(replay, player, token);
             } else {
-                await _replayerMenuLoader.StartReplayAsync(replay, player);
+                await _replayerMenuLoader.StartReplayAsync(replay, player, token: token);
             }
         }
 

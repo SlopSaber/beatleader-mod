@@ -24,42 +24,120 @@ namespace BeatLeader {
 
         #region Impl
 
-        private Replay? _pendingReplay;
-        private Player? _pendingPlayer;
-        private bool _alternativeLoading;
+        private sealed class ReplayNavigation {
+            public readonly Replay Replay;
+            public readonly Player Player;
+            public readonly bool AlternativeLoading;
+            public readonly ReplayerMenuLoader.LeaderboardReplaySelection? Selection;
+            public readonly CancellationTokenSource Cancellation = new();
+            public readonly CancellationToken Token;
+            public int ActiveOperations = 1;
+            public bool Retired;
 
-        public async Task NavigateToReplayAsync(FlowCoordinator flowCoordinator, Replay replay, Player player, bool tryLoadSelectedMap) {
-            _pendingReplay = replay;
-            _pendingPlayer = player;
-            _alternativeLoading = tryLoadSelectedMap;
+            public ReplayNavigation(Replay replay, Player player, bool alternativeLoading) {
+                Replay = replay;
+                Player = player;
+                AlternativeLoading = alternativeLoading;
+                Selection = alternativeLoading ? ReplayerMenuLoader.LeaderboardReplaySelection.Capture() : null;
+                Token = Cancellation.Token;
+            }
 
-            // Loading beatmap data
-            var info = replay.info;
-            var level = await _replayerMenuLoader.LoadBeatmapAsync(
-                info.hash,
-                info.mode,
-                info.difficulty,
-                CancellationToken.None
-            );
+            public void Retire() {
+                if (Retired) return;
+                Retired = true;
+                try {
+                    Cancellation.Cancel();
+                } finally {
+                    if (ActiveOperations == 0) Cancellation.Dispose();
+                }
+            }
 
-            // Initializing
-            var startData = HeckInterop.CreateStartData(
-                info.mode,
-                level.Key,
-                level.Level,
-                null,
-                GameplayModifiers.noModifiers,
-                _playerDataModel.playerData.playerSpecificSettings
-            );
-
-            HeckInitViewManager(flowCoordinator, startData);
+            public void ReleaseOperation() {
+                ActiveOperations--;
+                if (Retired && ActiveOperations == 0) Cancellation.Dispose();
+            }
         }
 
-        private async Task StartReplay() {
-            if (_alternativeLoading) {
-                await _replayerMenuLoader.StartReplayFromLeaderboardAsync(_pendingReplay!, _pendingPlayer!);
-            } else {
-                await _replayerMenuLoader.StartReplayAsync(_pendingReplay!, _pendingPlayer!);
+        private ReplayNavigation? _pendingNavigation;
+        private ReplayNavigation? _presentedNavigation;
+        private bool _disposed;
+
+        public Task NavigateToReplayAsync(FlowCoordinator flowCoordinator, Replay replay, Player player, bool tryLoadSelectedMap) {
+            return NavigateToReplayAsync(flowCoordinator, replay, player, tryLoadSelectedMap, CancellationToken.None);
+        }
+
+        internal async Task NavigateToReplayAsync(
+            FlowCoordinator flowCoordinator, Replay replay, Player player, bool tryLoadSelectedMap, CancellationToken token
+        ) {
+            token.ThrowIfCancellationRequested();
+            RetireNavigation();
+            if (_disposed) throw new OperationCanceledException();
+            var navigation = new ReplayNavigation(replay, player, tryLoadSelectedMap);
+            _pendingNavigation = navigation;
+            try {
+                using var preparation = CancellationTokenSource.CreateLinkedTokenSource(token, navigation.Token);
+                await Task.Yield();
+                preparation.Token.ThrowIfCancellationRequested();
+                EnsureCurrent(navigation);
+                var info = replay.info;
+                var level = await _replayerMenuLoader.LoadBeatmapAsync(
+                    info.hash, info.mode, info.difficulty, preparation.Token);
+                preparation.Token.ThrowIfCancellationRequested();
+                EnsureCurrent(navigation);
+
+                var startData = HeckInterop.CreateStartData(
+                    info.mode,
+                    level.Key,
+                    level.Level,
+                    null,
+                    GameplayModifiers.noModifiers,
+                    _playerDataModel.playerData.playerSpecificSettings
+                );
+                preparation.Token.ThrowIfCancellationRequested();
+                EnsureCurrent(navigation);
+
+                // Presenting configuration transfers ownership from the originating panel.
+                HeckInitViewManager(flowCoordinator, startData, navigation);
+            } catch {
+                if (ReferenceEquals(_presentedNavigation, navigation)) {
+                    _presentedNavigation = null;
+                    _presentingHeck = false;
+                    RestoreFlowCoordinator(_playViewManager);
+                }
+                if (ReferenceEquals(_pendingNavigation, navigation)) RetireNavigation();
+                else navigation.Retire();
+                throw;
+            } finally {
+                navigation.ReleaseOperation();
+            }
+        }
+
+        private void EnsureCurrent(ReplayNavigation navigation) {
+            navigation.Token.ThrowIfCancellationRequested();
+            if (_disposed || !ReferenceEquals(_pendingNavigation, navigation)) throw new OperationCanceledException();
+        }
+
+        private void RetireNavigation() {
+            var navigation = _pendingNavigation;
+            _pendingNavigation = null;
+            navigation?.Retire();
+        }
+
+        private async Task StartReplay(ReplayNavigation navigation) {
+            navigation.ActiveOperations++;
+            try {
+                EnsureCurrent(navigation);
+                if (navigation.AlternativeLoading) {
+                    await _replayerMenuLoader.StartReplayFromLeaderboardAsync(
+                        navigation.Replay, navigation.Player, navigation.Token, navigation.Selection);
+                } else {
+                    await _replayerMenuLoader.StartReplayAsync(navigation.Replay, navigation.Player, token: navigation.Token);
+                }
+            } catch (OperationCanceledException) when (navigation.Token.IsCancellationRequested || _disposed) {
+            } finally {
+                if (ReferenceEquals(_pendingNavigation, navigation)) RetireNavigation();
+                else navigation.Retire();
+                navigation.ReleaseOperation();
             }
         }
 
@@ -84,6 +162,7 @@ namespace BeatLeader {
         private static object? _customFlowCoordinator;
         private object _playViewManager = null!;
         private static bool _presentingHeck;
+        private static bool _flowCoordinatorReplaced;
 
         public void Initialize() {
             var type = HeckInterop.PlayViewManagerType!;
@@ -105,6 +184,7 @@ namespace BeatLeader {
 
             _playViewManagerDismissPatch = new HarmonyPatchDescriptor(
                 _playViewManagerEarlyDismissMethod,
+                prefix: typeof(HeckNavigationController).GetMethodThrowable(nameof(HeckEarlyDismissPrefix)),
                 postfix: typeof(HeckNavigationController).GetMethodThrowable(nameof(HeckEarlyDismissPostfix))
             );
             
@@ -118,49 +198,97 @@ namespace BeatLeader {
         }
 
         public void Dispose() {
+            _disposed = true;
+            RetireNavigation();
+            _presentedNavigation?.Retire();
+            _presentedNavigation = null;
+            if (ReferenceEquals(_heckNavigationController, this) && _presentingHeck) {
+                _presentingHeck = false;
+                RestoreFlowCoordinator(_playViewManager);
+            }
             _playViewManagerStartPatch.Dispose();
             _playViewManagerDismissPatch.Dispose();
-            _heckNavigationController = null;
+            _playViewManagerActivatePatch.Dispose();
+            if (ReferenceEquals(_heckNavigationController, this)) {
+                _heckNavigationController = null;
+                _originalFlowCoordinator = null;
+                _customFlowCoordinator = null;
+            }
         }
 
-        private void HeckInitViewManager(FlowCoordinator flowCoordinator, object data) {
+        private static void RestoreFlowCoordinator(object manager) {
+            if (!_flowCoordinatorReplaced) return;
+            _playViewManagerFlowCoordinatorField!.SetValue(manager, _originalFlowCoordinator);
+            _flowCoordinatorReplaced = false;
+            _originalFlowCoordinator = null;
+            _customFlowCoordinator = null;
+        }
+
+        private void HeckInitViewManager(FlowCoordinator flowCoordinator, object data, ReplayNavigation navigation) {
+            RestoreFlowCoordinator(_playViewManager);
             _presentingHeck = true;
+            _presentedNavigation = navigation;
             _customFlowCoordinator = flowCoordinator;
 
             _playViewManagerInitMethod!.Invoke(_playViewManager, [data, false]);
         }
 
         private static void HeckActivatePrefix(object __instance) {
-            if (!_presentingHeck) {
+            if (!_presentingHeck || _heckNavigationController is not { } controller
+                || !ReferenceEquals(controller._playViewManager, __instance)) {
                 return;
             }
             
-            _originalFlowCoordinator = _playViewManagerFlowCoordinatorField!.GetValue(__instance);
+            if (!_flowCoordinatorReplaced) {
+                _originalFlowCoordinator = _playViewManagerFlowCoordinatorField!.GetValue(__instance);
+                _flowCoordinatorReplaced = true;
+            }
             _playViewManagerFlowCoordinatorField.SetValue(__instance, _customFlowCoordinator);
         }
 
         private static bool HeckStartStandardPrefix(object __instance) {
-            if (!_presentingHeck) {
+            if (!_presentingHeck || _heckNavigationController is not { } controller
+                || !ReferenceEquals(controller._playViewManager, __instance)) {
                 return true;
             }
+            var navigation = controller._presentedNavigation;
+            controller._presentedNavigation = null;
             
             _presentingHeck = false;
-            _playViewManagerFlowCoordinatorField!.SetValue(__instance, _originalFlowCoordinator);
+            RestoreFlowCoordinator(__instance);
+            if (navigation == null || navigation.Retired || controller._disposed
+                || !ReferenceEquals(controller._pendingNavigation, navigation)) return false;
             
-            var viewControllers = (object[])_playViewManagerViewControllersField!.GetValue(__instance);
-
-            foreach (var viewController in viewControllers) {
-                _playViewDataOnPlayMethod!.Invoke(viewController, []);
+            try {
+                var viewControllers = (object[])_playViewManagerViewControllersField!.GetValue(__instance);
+                foreach (var viewController in viewControllers) {
+                    _playViewDataOnPlayMethod!.Invoke(viewController, []);
+                    if (navigation.Retired || !ReferenceEquals(controller._pendingNavigation, navigation)) return false;
+                }
+                _ = controller.StartReplay(navigation).RunCatching();
+                return false;
+            } catch {
+                if (ReferenceEquals(controller._pendingNavigation, navigation)) controller.RetireNavigation();
+                else navigation.Retire();
+                throw;
             }
-
-            _ = _heckNavigationController!.StartReplay().RunCatching();
-
-            return false;
         }
 
-        private static void HeckEarlyDismissPostfix(object __instance) {
+        private static void HeckEarlyDismissPrefix(object __instance, out ReplayNavigation? __state) {
+            __state = _presentingHeck && _heckNavigationController is { } controller
+                && ReferenceEquals(controller._playViewManager, __instance)
+                ? controller._presentedNavigation : null;
+        }
+
+        private static void HeckEarlyDismissPostfix(object __instance, ReplayNavigation? __state) {
+            if (!_presentingHeck || _heckNavigationController is not { } controller
+                || !ReferenceEquals(controller._playViewManager, __instance) || __state == null
+                || !ReferenceEquals(controller._presentedNavigation, __state)) return;
             _presentingHeck = false;
-            _playViewManagerFlowCoordinatorField!.SetValue(__instance, _originalFlowCoordinator);
+            controller._presentedNavigation = null;
+            RestoreFlowCoordinator(__instance);
+            if (ReferenceEquals(controller._pendingNavigation, __state)) controller.RetireNavigation();
+            else __state.Retire();
         }
 
         #endregion

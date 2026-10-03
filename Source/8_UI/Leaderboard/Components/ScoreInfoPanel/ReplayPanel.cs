@@ -259,7 +259,7 @@ namespace BeatLeader.Components {
 
         private async Task StartReplayAsync(ReplayJob job, Replay replay, Player player, int scoreId, ReplayerViewNavigatorWrapper navigator) {
             if (!IsCurrent(job)) return;
-            await navigator.NavigateToReplayAsync(replay, player, true);
+            await navigator.NavigateToReplayAsync(replay, player, true, job.Token);
             SendViewReplayRequest.Send(scoreId);
         }
 
