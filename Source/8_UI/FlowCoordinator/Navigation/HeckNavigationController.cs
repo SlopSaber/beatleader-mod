@@ -243,7 +243,7 @@ namespace BeatLeader {
                 _originalFlowCoordinator = _playViewManagerFlowCoordinatorField!.GetValue(__instance);
                 _flowCoordinatorReplaced = true;
             }
-            _playViewManagerFlowCoordinatorField.SetValue(__instance, _customFlowCoordinator);
+            _playViewManagerFlowCoordinatorField!.SetValue(__instance, _customFlowCoordinator);
         }
 
         private static bool HeckStartStandardPrefix(object __instance) {
