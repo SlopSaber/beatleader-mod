@@ -352,7 +352,11 @@ namespace BeatLeader.Replayer {
             var beatmapLevel = await GetBeatmapLevelByHashAsync(hash, token);
             if (beatmapLevel == null) return default;
 
+#if BEAT_SABER_1453
+            var characteristic = beatmapLevel.GetCharacteristics(GameplayType.BeatSaber)
+#else
             var characteristic = beatmapLevel.GetCharacteristics()
+#endif
                 .FirstOrDefault(x => x.SerializedName() == mode);
             if (token.IsCancellationRequested) return default;
 

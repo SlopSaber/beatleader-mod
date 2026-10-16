@@ -480,7 +480,11 @@ namespace BeatLeader {
         private void FinalizeReplay(LevelCompletionResults results) {
             _replay.notes.RemoveAll(note => note.eventType == NoteEventType.unknown);
 
+#if BEAT_SABER_1453
+            _replay.info.score = results.score.multiplied;
+#else
             _replay.info.score = results.multipliedScore;
+#endif
             MapEnhancer.energy = results.energy;
             MapEnhancer.Enhance(_replay);
             _trackingDeviceEnhancer.Enhance(_replay);

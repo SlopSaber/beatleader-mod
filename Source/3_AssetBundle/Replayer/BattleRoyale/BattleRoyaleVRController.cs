@@ -15,7 +15,7 @@ namespace BeatLeader {
             _saberTrail._whiteSectionMaxDuration = 0.001f;
             _saberTrail._samplingFrequency = 120;
             _saberTrail._granularity = 45;
-            _saberTrail.Setup(coreColor, _movementData);
+            SetupTrail(coreColor);
 
             // Disabling so the trail won't initialize until turned back on
             _saberTrail.enabled = false;
@@ -43,7 +43,7 @@ namespace BeatLeader {
             set {
                 if (coreColor == value) return;
                 coreColor = value;
-                _saberTrail.Setup(value, _movementData);
+                SetupTrail(value);
                 SetPropertyBlockDirty();
             }
         }
@@ -64,6 +64,9 @@ namespace BeatLeader {
         private bool _initialized;
 
         public void Init(DiContainer container) {
+#if BEAT_SABER_1453
+            SetupTrail(coreColor);
+#endif
             container.Inject(_saberTrail);
             // Will be initialized later if not yet turned on
             if (TrailEnabled) {
@@ -106,6 +109,14 @@ namespace BeatLeader {
 
         private readonly SaberMovementData _movementData = new();
         private SaberTrail _saberTrail = null!;
+
+        private void SetupTrail(Color color) {
+#if BEAT_SABER_1453
+            _saberTrail.Setup(color, _movementData, node == UnityEngine.XR.XRNode.LeftHand ? SaberType.SaberA : SaberType.SaberB);
+#else
+            _saberTrail.Setup(color, _movementData);
+#endif
+        }
 
         private void UpdateMovementData() {
             var bottomPos = transform.position;

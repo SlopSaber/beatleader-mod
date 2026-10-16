@@ -50,7 +50,11 @@ namespace BeatLeader.UI.Hub {
             var currentCharacteristic = Enum.GetValues(typeof(BeatmapCharacteristic))
                 .Cast<BeatmapCharacteristic>()
                 .FirstOrDefault(x => x.SerializedName() == characteristic.serializedName);
+#if BEAT_SABER_1453
+            var sets = _beatmapLevel?.GetDifficulties(GameplayType.BeatSaber, currentCharacteristic).ToArray();
+#else
             var sets = _beatmapLevel?.GetDifficulties(currentCharacteristic).ToArray();
+#endif
             _difficultyPanel.SetData(sets);
         }
 

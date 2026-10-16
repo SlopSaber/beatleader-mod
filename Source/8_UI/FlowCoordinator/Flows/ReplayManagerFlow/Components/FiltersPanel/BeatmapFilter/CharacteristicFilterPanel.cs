@@ -39,7 +39,11 @@ namespace BeatLeader.UI.Hub {
         }
 
         public void SetBeatmapLevel(BeatmapLevel? level) {
+#if BEAT_SABER_1453
+            var characteristics = level?.GetCharacteristics(GameplayType.BeatSaber)
+#else
             var characteristics = level?.GetCharacteristics()
+#endif
                 .Select(characteristic => Resources.FindObjectsOfTypeAll<BeatmapCharacteristicSO>()
                     .FirstOrDefault(x => x.serializedName == characteristic.SerializedName()))
                 .Where(characteristic => characteristic != null)

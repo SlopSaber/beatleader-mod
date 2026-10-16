@@ -100,7 +100,11 @@ namespace BeatLeader.Replayer {
 
             if (transitionData != null) {
                 transitionData.Init(
+#if BEAT_SABER_1453
+                    gameMode: GameMode.Solo,
+#else
                     gameMode: "Solo",
+#endif
                     beatmapKey: launchData.BeatmapLevel.Key,
                     beatmapLevel: launchData.BeatmapLevel.Level,
                     overrideEnvironmentSettings: envSettings,
