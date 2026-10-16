@@ -32,7 +32,11 @@ namespace BeatLeader.Replayer.Tweaking {
             new ReplayFinishTweak(),
             new JumpDistanceTweak(),
             new ScoringTweak(),
+#if BSIPA_MODS
+            new DesktopCameraTweak()
+#else
             new SiraFPFCTweak()
+#endif
         };
 
         #region Installation

@@ -13,7 +13,9 @@ using BeatLeader.Utils;
 using BeatSaber.BeatAvatarSDK;
 using JetBrains.Annotations;
 using ModestTree;
+#if !BSIPA_MODS
 using SiraUtil.Tools.FPFC;
+#endif
 using UnityEngine;
 using Zenject;
 
@@ -24,7 +26,9 @@ namespace BeatLeader.Replayer {
 
         [Inject] private readonly ReplayerLauncher _launcher = null!;
         [Inject] private readonly GameScenesManager _scenesManager = null!;
+#if !BSIPA_MODS
         [Inject] private readonly IFPFCSettings _fpfcSettings = null!;
+#endif
         [Inject] private readonly BeatmapLevelsModel _levelsModel = null!;
 
         #endregion
@@ -255,7 +259,11 @@ namespace BeatLeader.Replayer {
         public void StartReplayer(ReplayLaunchData data, Action? finishCallback) {
             data.ReplayWasFinishedEvent += HandleReplayWasFinished;
             if (!_launcher.StartReplay(data, finishCallback)) return;
+#if BSIPA_MODS
+            InputUtils.OverrideUsesFPFC = InputUtils.HasFpfcArg;
+#else
             InputUtils.OverrideUsesFPFC = InputUtils.HasFpfcArg && _fpfcSettings.Ignore ? _fpfcSettings.Enabled : null;
+#endif
         }
 
         public async Task StartLastReplayAsync() {
@@ -273,7 +281,9 @@ namespace BeatLeader.Replayer {
             launchData.ReplayWasFinishedEvent -= HandleReplayWasFinished;
             _scenesManager.PopScenes(0.3f);
 
+#if !BSIPA_MODS
             _fpfcSettings.Enabled = InputUtils.OverrideUsesFPFC ?? InputUtils.HasFpfcArg;
+#endif
             InputUtils.OverrideUsesFPFC = null;
             InputUtils.EnableCursor(!InputUtils.HasFpfcArg);
         }

@@ -1,3 +1,4 @@
+#if !BSIPA_MODS
 ﻿using System;
 using System.Collections;
 using System.Reflection;
@@ -78,3 +79,4 @@ namespace BeatLeader.Replayer.Tweaking {
         }
     }
 }
+#endif
