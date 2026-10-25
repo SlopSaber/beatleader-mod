@@ -21,6 +21,9 @@ namespace BeatLeader.Replayer.Tweaking {
         private readonly HashSet<GameTweak> _initializedTweaks = new();
 
         private readonly ObservableCollection<GameTweak> _tweaks = new() {
+#if BSIPA_MODS
+            new DesktopCameraTweak(),
+#endif
             new AudioTimeSyncControllerTweak(),
             new InputSystemTweak(),
             new GarbageDisablerTweak(),
@@ -33,9 +36,7 @@ namespace BeatLeader.Replayer.Tweaking {
             new ReplayFinishTweak(),
             new JumpDistanceTweak(),
             new ScoringTweak(),
-#if BSIPA_MODS
-            new DesktopCameraTweak()
-#else
+#if !BSIPA_MODS
             new SiraFPFCTweak()
 #endif
         };
