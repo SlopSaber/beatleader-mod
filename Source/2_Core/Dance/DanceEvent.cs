@@ -25,7 +25,7 @@ namespace BeatLeader {
             var prefix = CustomLevelLoader.kCustomLevelPrefixId;
             if (!levelId.StartsWith(prefix) || levelId.Length < prefix.Length + HashLength) return false;
             var hash = levelId.Substring(prefix.Length, HashLength);
-            return _maps.Contains(hash) || _maps.Contains(MapKey(hash, key.characteristic.serializedName, key.difficulty.ToString()));
+            return _maps.Contains(hash) || _maps.Contains(MapKey(hash, key.characteristic.SerializedName(), key.difficulty.ToString()));
         }
 
         #region Events
