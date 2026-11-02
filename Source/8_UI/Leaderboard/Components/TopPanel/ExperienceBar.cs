@@ -134,6 +134,7 @@ namespace BeatLeader.Components {
             UserRequest.StateChangedEvent -= OnProfileRequestStateChanged;
             UploadReplayRequest.StateChangedEvent -= OnUploadStateChanged;
             PrestigeRequest.StateChangedEvent -= OnPrestigeRequestStateChanged;
+            if (_materialInstance != null) Object.Destroy(_materialInstance);
         }
 
         #endregion

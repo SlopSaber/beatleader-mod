@@ -6,11 +6,13 @@ using Zenject;
 namespace BeatLeader.Replayer.Binding {
     public class HotkeysHandler : MonoBehaviour {
         [Inject] private readonly DiContainer _container = null!;
+        private bool _loggedFirstUpdate;
 
         public IList<GameHotkey> Hotkeys { get; } = new List<GameHotkey> {
             new LayoutEditorModeHotkey(),
             new HideCursorHotkey(),
             new PauseHotkey(),
+            new ExitHotkey(),
             new RewindBackwardHotkey(),
             new RewindForwardHotkey()
         };
@@ -22,6 +24,10 @@ namespace BeatLeader.Replayer.Binding {
         }
 
         private void Update() {
+            if (!_loggedFirstUpdate) {
+                _loggedFirstUpdate = true;
+                Plugin.Log.Notice($"[Replayer] HotkeysHandler running; focused={Application.isFocused}");
+            }
             foreach (var item in Hotkeys) {
                 try {
                     if (Input.GetKeyDown(item.Key))

@@ -7,8 +7,12 @@ namespace BeatLeader.Replayer.Tweaking {
         [Inject] private readonly IVirtualPlayersManager _playersManager = null!;
         [Inject] private readonly IBeatmapTimeController _beatmapTimeController = null!;
         [Inject] private readonly BeatmapObjectManager _beatmapObjectManager = null!;
+        [Inject] private readonly ReplayerExtraObjectsProvider _extraObjects = null!;
+        [Inject] private readonly DiContainer _container = null!;
 
         public override void Initialize() {
+            HeckInterop.BeginReplaySeekTracking(_container);
+            ChromaInterop.BeginReplaySeekTracking(_container);
             HandlePrimaryPlayerChanged(_playersManager.PrimaryPlayer);
             _playersManager.PrimaryPlayerWasChangedEvent += HandlePrimaryPlayerChanged;
             _beatmapObjectManager.noteWasDespawnedEvent += HandleNoteWasDespawned;
@@ -16,6 +20,8 @@ namespace BeatLeader.Replayer.Tweaking {
         }
 
         public override void Dispose() {
+            HeckInterop.EndReplaySeekTracking();
+            ChromaInterop.EndReplaySeekTracking();
             Cam2Interop.UnbindMovementProcessor();
             NoodleExtensionsInterop.ClearObjectData();
             _playersManager.PrimaryPlayerWasChangedEvent -= HandlePrimaryPlayerChanged;
@@ -25,7 +31,7 @@ namespace BeatLeader.Replayer.Tweaking {
 
         private void HandlePrimaryPlayerChanged(IVirtualPlayer player) {
             Cam2Interop.UnbindMovementProcessor();
-            Cam2Interop.BindMovementProcessor(player.MovementProcessor);
+            Cam2Interop.BindMovementProcessor(player.MovementProcessor, _extraObjects);
         }
 
         private void HandleNoteWasDespawned(NoteController controller) {

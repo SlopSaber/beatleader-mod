@@ -35,6 +35,7 @@ namespace BeatLeader.Components {
         private void LerpAlpha(float t) {
             if (_currentAlpha.Equals(_targetAlpha)) return;
             _currentAlpha = Mathf.Lerp(_currentAlpha, _targetAlpha, t);
+            if (Mathf.Abs(_currentAlpha - _targetAlpha) < 0.001f) _currentAlpha = _targetAlpha;
             ApplyAlpha();
         }
 

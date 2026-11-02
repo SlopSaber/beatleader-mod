@@ -9,7 +9,6 @@ namespace BeatLeader
 
     class LevelDataEnhancerPatch {
         public static void Postfix(
-        string gameMode,
         ref BeatmapKey beatmapKey,
         BeatmapLevel beatmapLevel,
         OverrideEnvironmentSettings? overrideEnvironmentSettings,
@@ -21,7 +20,11 @@ namespace BeatLeader
         EnvironmentsListModel environmentsListModel) {
             Plugin.Log.Debug($"LevelDataEnhancerPatch.postfix {beatmapKey.levelId} {beatmapLevel.songName}");
 
-            string environmentName = beatmapLevel.GetEnvironmentName(beatmapKey.beatmapCharacteristic, beatmapKey.difficulty);
+#if BEAT_SABER_1453
+            string environmentName = beatmapLevel.GetEnvironmentName(in beatmapKey);
+#else
+            string environmentName = beatmapLevel.GetEnvironmentName(beatmapKey.characteristic, beatmapKey.difficulty);
+#endif
 
             if (overrideEnvironmentSettings?.overrideEnvironments == true) {
                 environmentName = overrideEnvironmentSettings

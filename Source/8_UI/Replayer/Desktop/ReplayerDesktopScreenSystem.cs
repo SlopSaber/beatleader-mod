@@ -1,7 +1,6 @@
 using System.Collections;
 using BeatLeader.Utils;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Screen = HMUI.Screen;
 
@@ -13,6 +12,13 @@ namespace BeatLeader.UI.Replayer.Desktop {
             _screenCanvas.worldCamera = camera;
             _screenCanvas.renderMode = RenderMode.ScreenSpaceCamera;
             _screenCanvas.sortingOrder = 1000;
+        }
+
+        public void SetOverlayMode() {
+            _screenCanvas.worldCamera = null;
+            _screenCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _screenCanvas.sortingOrder = 1000;
+            _screenCanvas.transform.SetParent(null, false);
         }
 
         #endregion
@@ -29,6 +35,14 @@ namespace BeatLeader.UI.Replayer.Desktop {
         private Canvas _screenCanvas = null!;
         private CanvasGroup _canvasGroup = null!;
 
+        public void SetUIEnabled(bool enabled) {
+            if (_screenCanvas.transform.parent == null) {
+                _screenCanvas.gameObject.SetActive(enabled);
+            } else {
+                gameObject.SetActive(enabled);
+            }
+        }
+
         public void ShowImmediate() {
             StopAllCoroutines();
             _canvasGroup.alpha = 1f;
@@ -42,6 +56,12 @@ namespace BeatLeader.UI.Replayer.Desktop {
 
         private void Start() {
             StartCoroutine(FadeAnimationCoroutine(0f, 1f));
+        }
+
+        private void OnDestroy() {
+            if (_screenCanvas != null && _screenCanvas.transform.parent == null) {
+                Destroy(_screenCanvas.gameObject);
+            }
         }
 
         private void CreateViewController() {

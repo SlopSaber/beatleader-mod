@@ -6,4 +6,9 @@ namespace BeatLeader.Models {
 
         event Action SongReachedReplayEndEvent;
     }
+
+    internal interface IReplayScrubController {
+        void BeginScrub();
+        void EndScrub();
+    }
 }

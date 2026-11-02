@@ -11,6 +11,9 @@ namespace BeatLeader.Replayer.Emulation {
         
         private Transform _leftController = null!;
         private Transform _rightController = null!;
+#if BEAT_SABER_1453
+        private BasicBodySettings? _settings;
+#endif
 
         [Inject, UsedImplicitly]
         private void Init() {
@@ -22,9 +25,20 @@ namespace BeatLeader.Replayer.Emulation {
         }
 
         public void ApplySettings(BasicBodySettings basicBodySettings) {
+#if BEAT_SABER_1453
+            _settings = basicBodySettings;
+#endif
             _leftController.gameObject.SetActive(basicBodySettings.LeftSaberEnabled);
             _rightController.gameObject.SetActive(basicBodySettings.RightSaberEnabled);
         }
+
+#if BEAT_SABER_1453
+        internal void RestoreReplayControl() {
+            _vrControllersManager.SetupAutoplayForAllControllers();
+            if (_settings != null) ApplySettings(_settings);
+            Plugin.Log.Notice($"[Replayer] Saber visibility: left={_leftController.gameObject.activeInHierarchy}, right={_rightController.gameObject.activeInHierarchy}; tracking left={_vrControllersManager.leftHandVRController.enabled}, right={_vrControllersManager.rightHandVRController.enabled}.");
+        }
+#endif
 
         public void ApplyPose(Pose headPose, Pose leftHandPose, Pose rightHandPose) {
             _leftController.SetLocalPose(leftHandPose);

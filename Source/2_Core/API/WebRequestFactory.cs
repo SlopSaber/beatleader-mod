@@ -19,16 +19,41 @@ namespace BeatLeader.WebRequests {
         }
 
         public static IWebRequest<object> Send(
-                Func<HttpRequestMessage> requestMessageFactory,
+                HttpRequestMessage requestMessage,
                 WebRequestParams? requestParams = null,
                 CancellationToken token = default,
                 bool waitForLogin = true
             ) {
             requestParams ??= new();
-            PreSendRequestDelegate? preSendCallback = waitForLogin ? (requestToken) => WaitLogin(requestToken) : null;
-            SendRequestDelegate sendCallback = (message, requestToken) => SendInternal(message, requestParams.ResponseCompletionOption, requestToken);
+            SendRequestDelegate sendCallback = waitForLogin
+                ? (message, requestToken) => SendInternalLogin(message, requestParams.ResponseCompletionOption, requestToken)
+                : (message, requestToken) => SendInternal(message, requestParams.ResponseCompletionOption, requestToken);
 
-            return new WebRequestProcessor<object>(preSendCallback, sendCallback, requestMessageFactory, requestParams, null, token);
+            return new WebRequestProcessor<object>(sendCallback, requestMessage, requestParams, null, token);
+        }
+
+        public static IWebRequest<T> Send<T>(
+            HttpRequestMessage requestMessage,
+            IWebRequestResponseParser<T> responseParser,
+            WebRequestParams? requestParams = null,
+            CancellationToken token = default,
+            bool waitForLogin = true
+        ) {
+            requestParams ??= new();
+            SendRequestDelegate sendCallback = waitForLogin
+                ? (message, requestToken) => SendInternalLogin(message, requestParams.ResponseCompletionOption, requestToken)
+                : (message, requestToken) => SendInternal(message, requestParams.ResponseCompletionOption, requestToken);
+
+            return new WebRequestProcessor<T>(sendCallback, requestMessage, requestParams, responseParser, token);
+        }
+
+        public static IWebRequest<object> Send(
+            Func<HttpRequestMessage> requestMessageFactory,
+            WebRequestParams? requestParams = null,
+            CancellationToken token = default,
+            bool waitForLogin = true
+        ) {
+            return Send(requestMessageFactory(), requestParams, token, waitForLogin);
         }
 
         public static IWebRequest<T> Send<T>(
@@ -38,11 +63,7 @@ namespace BeatLeader.WebRequests {
             CancellationToken token = default,
             bool waitForLogin = true
         ) {
-            requestParams ??= new();
-            PreSendRequestDelegate? preSendCallback = waitForLogin ? (requestToken) => WaitLogin(requestToken) : null;
-            SendRequestDelegate sendCallback = (message, requestToken) => SendInternal(message, requestParams.ResponseCompletionOption, requestToken);
-
-            return new WebRequestProcessor<T>(preSendCallback, sendCallback, requestMessageFactory, requestParams, responseParser, token);
+            return Send(requestMessageFactory(), responseParser, requestParams, token, waitForLogin);
         }
 
         private static Task<HttpResponseMessage?> SendInternal(
@@ -54,9 +75,17 @@ namespace BeatLeader.WebRequests {
             return httpClient.SendAsync(requestMessage, completionOption, token);
         }
 
-        private static Task<bool> WaitLogin(CancellationToken token) {
+        private static Task<HttpResponseMessage?> SendInternalLogin(
+            HttpRequestMessage requestMessage,
+            HttpCompletionOption completionOption,
+            CancellationToken token
+        ) {
+            ApplyDefaultHeaders(requestMessage);
+
             return Task.Run(async () => {
-                return await Authentication.WaitLogin();
+                var loggedIn = await Authentication.WaitLogin();
+                if (!loggedIn) return null;
+                return await httpClient.SendAsync(requestMessage, completionOption, token);
             }).RunCatching();
         }
 

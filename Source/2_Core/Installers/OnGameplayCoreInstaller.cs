@@ -12,7 +12,6 @@ using Zenject;
 using BeatLeader.Replayer.Emulation;
 using BeatLeader.Components;
 using BeatLeader.ViewControllers;
-using SiraUtil.Tools.FPFC;
 using System;
 using BeatLeader.Replayer.Tweaking;
 using BeatLeader.Replayer.Binding;
@@ -204,8 +203,13 @@ namespace BeatLeader.Installers {
         #region Game mode stuff
 
         private string GetGameMode() {
+#if BEAT_SABER_1453
+            string singleGM = GetStandardDataSO()?.gameMode.ToString();
+            string multiGM = GetMultiDataSO()?.gameMode.ToString();
+#else
             string singleGM = GetStandardDataSO()?.gameMode;
             string multiGM = GetMultiDataSO()?.gameMode;
+#endif
 
             foreach (string mode in new[] { singleGM, multiGM }) {
                 if (mode != null && mode.Length > 0) {

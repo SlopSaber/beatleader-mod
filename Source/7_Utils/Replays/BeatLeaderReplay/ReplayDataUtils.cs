@@ -56,7 +56,7 @@ namespace BeatLeader.Utils {
                 replay.GetModifiersFromReplay(),
                 player,
                 replay.info.GetPracticeSettingsFromInfo()
-            );
+            ) { RecorderVersion = replayData.version };
 
             var frames = replay.frames.Select(x => {
                     var frame = new PlayerMovementFrame(

@@ -23,29 +23,34 @@ namespace BeatLeader.Interop {
         private static object[] _cachedArgs = null!;
         private static PropertyInfo? _headPosProp;
         private static PropertyInfo? _headRotProp;
+        private static MethodInfo? _updateWorldMethod;
+        private static MethodInfo? _updateWorldFromOriginMethod;
         private static MethodInfo? _setActiveMethod;
         private static object? _genericSourceInstance;
+        private static readonly object[] _worldPoseArgs = new object[2];
+        private static readonly object[] _originPoseArgs = new object[3];
 
         [InteropEntry]
         private static void Init() {
-            var genericSourceType = replaySourcesType.GetNestedType("GenericSource");
+            var worldSourceType = replaySourcesType.GetNestedType("WorldSource");
+            var sourceType = worldSourceType ?? replaySourcesType.GetNestedType("GenericSource");
             var registerMethod = replaySourcesType.GetMethod("Register", ReflectionUtils.StaticFlags);
-            _setActiveMethod = genericSourceType.GetMethod("SetActive", ReflectionUtils.DefaultFlags);
+            _setActiveMethod = sourceType.GetMethod("SetActive", ReflectionUtils.DefaultFlags);
 
-            _genericSourceInstance = Activator.CreateInstance(genericSourceType, "BeatLeaderReplayer");
+            _genericSourceInstance = Activator.CreateInstance(sourceType, "BeatLeaderReplayer");
             registerMethod?.Invoke(null, new[] { _genericSourceInstance });
             _cachedArgs = new object[1];
+            Plugin.Log.Notice($"[Replayer] Camera2 source: {sourceType.Name}");
 
-            _headPosProp = genericSourceType.GetProperty(
-                "localHeadPosition",
-                ReflectionUtils.DefaultFlags
-            );
-            _headRotProp = genericSourceType.GetProperty(
-                "localHeadRotation",
-                ReflectionUtils.DefaultFlags
-            );
-
-            InitHarmonyPatches();
+            if (worldSourceType != null) {
+                _updateWorldMethod = worldSourceType.GetMethod("UpdateWorld", ReflectionUtils.DefaultFlags)
+                    ?? throw new MissingMethodException(worldSourceType.FullName, "UpdateWorld");
+                _updateWorldFromOriginMethod = worldSourceType.GetMethod("UpdateWorldFromOrigin", ReflectionUtils.DefaultFlags);
+            } else {
+                _headPosProp = sourceType.GetProperty("localHeadPosition", ReflectionUtils.DefaultFlags);
+                _headRotProp = sourceType.GetProperty("localHeadRotation", ReflectionUtils.DefaultFlags);
+                InitHarmonyPatches();
+            }
             ReplayerLauncher.ReplayWasStartedEvent += HandleReplayWasStarted;
             ReplayerLauncher.ReplayWasFinishedEvent += HandleReplayWasFinished;
         }
@@ -62,10 +67,24 @@ namespace BeatLeader.Interop {
         private class PoseReceiver : IVirtualPlayerPoseReceiver {
             public Vector3 Position { get; private set; }
             public Quaternion Rotation { get; private set; }
+            public ReplayerExtraObjectsProvider? OriginProvider { get; set; }
 
             public void ApplyPose(Pose headPose, Pose leftHandPose, Pose rightHandPose) {
-                Position = headPose.position;
-                Rotation = headPose.rotation;
+                if (_updateWorldFromOriginMethod != null && OriginProvider != null) {
+                    var origin = OriginProvider.ReplayPoseOrigin;
+                    _originPoseArgs[0] = origin;
+                    _originPoseArgs[1] = headPose.position;
+                    _originPoseArgs[2] = headPose.rotation;
+                    _updateWorldFromOriginMethod.Invoke(_genericSourceInstance, _originPoseArgs);
+                } else if (_updateWorldMethod != null && OriginProvider != null) {
+                    var origin = OriginProvider.ReplayPoseOrigin;
+                    _worldPoseArgs[0] = origin.TransformPoint(headPose.position);
+                    _worldPoseArgs[1] = origin.rotation * headPose.rotation;
+                    _updateWorldMethod.Invoke(_genericSourceInstance, _worldPoseArgs);
+                } else {
+                    Position = headPose.position;
+                    Rotation = headPose.rotation;
+                }
             }
         }
 
@@ -73,7 +92,10 @@ namespace BeatLeader.Interop {
         private static IVirtualPlayerMovementProcessor? _movementProcessor;
         private static bool _hasBoundProcessor;
 
-        public static void BindMovementProcessor(IVirtualPlayerMovementProcessor processor) {
+        public static void BindMovementProcessor(IVirtualPlayerMovementProcessor processor, ReplayerExtraObjectsProvider originProvider) {
+            poseReceiver.OriginProvider = originProvider;
+            var origin = originProvider.ReplayPoseOrigin;
+            Plugin.Log.Debug($"[Replayer] Camera2 pose origin: {origin.name} (parent: {origin.parent?.name})");
             processor.AddListener(poseReceiver);
             _movementProcessor = processor;
             _hasBoundProcessor = true;
@@ -82,6 +104,7 @@ namespace BeatLeader.Interop {
         public static void UnbindMovementProcessor() {
             if (!_hasBoundProcessor) return;
             _movementProcessor!.RemoveListener(poseReceiver);
+            poseReceiver.OriginProvider = null;
             _movementProcessor = null;
             _hasBoundProcessor = false;
         }

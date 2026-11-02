@@ -315,11 +315,13 @@ namespace BeatLeader.UI.Replayer {
         }
 
         private void HandlePointerDown(PointerEventsHandler handler, PointerEventData eventData) {
+            (_timeController as IReplayScrubController)?.BeginScrub();
             _wasPausedBeforeRewind = _pauseController?.IsPaused ?? false;
             _allowTimeUpdate = false;
         }
 
         private void HandlePointerUp(PointerEventsHandler handler, PointerEventData eventData) {
+            (_timeController as IReplayScrubController)?.EndScrub();
             if (!_wasPausedBeforeRewind) {
                 _pauseController?.Resume();
             }

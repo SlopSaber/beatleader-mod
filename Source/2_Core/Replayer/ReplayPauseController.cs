@@ -35,16 +35,12 @@ namespace BeatLeader.Replayer {
 
         private void Awake() {
             UnsubscribeStandardEvents();
-            _vrPlatformHelper.hmdUnmountedEvent += HandleHMDUnmounted;
-            _vrPlatformHelper.inputFocusWasCapturedEvent += HandleInputFocusWasLost;
             _pauseButtonTrigger.menuButtonTriggeredEvent += HandleMenuButtonTriggered;
             pauseControllerDidPause += HandlePausedFromController;
             _pauseMenuManager.didPressContinueButtonEvent += HandleResumeFromPauseManager;
         }
 
         private void OnDestroy() {
-            _vrPlatformHelper.hmdUnmountedEvent -= HandleHMDUnmounted;
-            _vrPlatformHelper.inputFocusWasCapturedEvent -= HandleInputFocusWasLost;
             _pauseButtonTrigger.menuButtonTriggeredEvent -= HandleMenuButtonTriggered;
             pauseControllerDidPause -= HandlePausedFromController;
             _pauseMenuManager.didPressContinueButtonEvent -= HandleResumeFromPauseManager;
@@ -53,10 +49,7 @@ namespace BeatLeader.Replayer {
         }
 
         private void UnsubscribeStandardEvents() {
-            _vrPlatformHelper.inputFocusWasCapturedEvent -= _pauseController.HandleFocusWasCaptured;
-            _vrPlatformHelper.hmdUnmountedEvent -= _pauseController.HandleHMDUnmounted;
             _pauseMenuManager.didFinishResumeAnimationEvent -= _pauseController.HandlePauseMenuManagerDidFinishResumeAnimation;
-            _pauseMenuManager.didPressContinueButtonEvent -= _pauseController.HandlePauseMenuManagerDidPressContinueButton;
             _pauseMenuManager.didPressRestartButtonEvent -= _pauseController.HandlePauseMenuManagerDidPressRestartButton;
             _levelStartController.levelDidStartEvent -= _pauseController.HandleLevelDidStart;
         }

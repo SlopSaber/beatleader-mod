@@ -52,7 +52,8 @@ namespace BeatLeader.Replayer {
 
         public void Exit() {
             ReplayWasLeftEvent?.Invoke();
-            _pauseController?.HandlePauseMenuManagerDidPressMenuButton();
+            Plugin.Log.Notice("[Replayer] Returning to menu");
+            ReplayerLauncher.ExitReplay();
         }
 
         private void HandleLevelFinished() {

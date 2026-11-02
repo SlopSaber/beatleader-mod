@@ -18,8 +18,12 @@ namespace BeatLeader.Replayer.Tweaking {
         [Inject] private readonly DiContainer _container = null!;
 
         public IList<GameTweak> Tweaks => _tweaks;
+        private readonly HashSet<GameTweak> _initializedTweaks = new();
 
         private readonly ObservableCollection<GameTweak> _tweaks = new() {
+#if BSIPA_MODS
+            new DesktopCameraTweak(),
+#endif
             new AudioTimeSyncControllerTweak(),
             new InputSystemTweak(),
             new GarbageDisablerTweak(),
@@ -31,7 +35,9 @@ namespace BeatLeader.Replayer.Tweaking {
             new ReplayFinishTweak(),
             new JumpDistanceTweak(),
             new ScoringTweak(),
+#if !BSIPA_MODS
             new SiraFPFCTweak()
+#endif
         };
 
         #region Installation
@@ -41,7 +47,7 @@ namespace BeatLeader.Replayer.Tweaking {
         }
 
         private void Start() {
-            HandleAddedTweaks(_tweaks);
+            PerformAction(ActionType.LateInitialize, _tweaks);
             _tweaks.CollectionChanged += HandleCollectionChanged;
         }
 
@@ -51,19 +57,21 @@ namespace BeatLeader.Replayer.Tweaking {
 
         private void PerformAction(ActionType action, IEnumerable<GameTweak> tweaks) {
             foreach (var tweak in tweaks) {
-                if (action != ActionType.Inject && !tweak.CanBeInstalled) continue;
                 try {
                     switch (action) {
                         case ActionType.Inject:
                             _container.Inject(tweak);
                             break;
                         case ActionType.Initialize:
+                            if (!tweak.CanBeInstalled || !_initializedTweaks.Add(tweak)) continue;
                             tweak.Initialize();
                             break;
                         case ActionType.LateInitialize:
+                            if (!_initializedTweaks.Contains(tweak)) continue;
                             tweak.LateInitialize();
                             break;
                         case ActionType.Dispose:
+                            if (!_initializedTweaks.Remove(tweak)) continue;
                             tweak.Dispose();
                             break;
                     }
@@ -80,7 +88,8 @@ namespace BeatLeader.Replayer.Tweaking {
         private void HandleAddedTweaks(IEnumerable tweaks, bool late = true) {
             var items = (IEnumerable<GameTweak>)tweaks;
             PerformAction(ActionType.Inject, items);
-            PerformAction(late ? ActionType.LateInitialize : ActionType.Initialize, items);
+            PerformAction(ActionType.Initialize, items);
+            if (late) PerformAction(ActionType.LateInitialize, items);
         }
 
         private void HandleRemovedTweaks(IEnumerable tweaks) {

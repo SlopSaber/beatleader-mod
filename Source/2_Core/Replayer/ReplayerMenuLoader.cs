@@ -7,15 +7,15 @@ using BeatLeader.DataManager;
 using BeatLeader.Interop;
 using BeatLeader.Models;
 using BeatLeader.Models.AbstractReplay;
-using BeatLeader.Models.AbstractReplay;
 using BeatLeader.Models.Replay;
 using BeatLeader.UI.Hub;
 using BeatLeader.Utils;
 using BeatSaber.BeatAvatarSDK;
-using BeatSaber.BeatAvatarSDK;
 using JetBrains.Annotations;
 using ModestTree;
+#if !BSIPA_MODS
 using SiraUtil.Tools.FPFC;
+#endif
 using UnityEngine;
 using Zenject;
 using ModifiersManager = ModifiersCore.ModifiersManager;
@@ -27,7 +27,9 @@ namespace BeatLeader.Replayer {
 
         [Inject] private readonly ReplayerLauncher _launcher = null!;
         [Inject] private readonly GameScenesManager _scenesManager = null!;
+#if !BSIPA_MODS
         [Inject] private readonly IFPFCSettings _fpfcSettings = null!;
+#endif
         [Inject] private readonly BeatmapLevelsModel _levelsModel = null!;
 
         #endregion
@@ -263,7 +265,11 @@ namespace BeatLeader.Replayer {
                 UnpatchModifiers();
                 return;
             }
+#if BSIPA_MODS
+            InputUtils.OverrideUsesFPFC = InputUtils.HasFpfcArg;
+#else
             InputUtils.OverrideUsesFPFC = InputUtils.HasFpfcArg && _fpfcSettings.Ignore ? _fpfcSettings.Enabled : null;
+#endif
         }
 
         public async Task StartLastReplayAsync() {
@@ -277,10 +283,13 @@ namespace BeatLeader.Replayer {
         }
 
         private void HandleReplayWasFinished(StandardLevelScenesTransitionSetupDataSO transitionData, ReplayLaunchData launchData) {
+            Plugin.Log.Notice("[Replayer] Popping replay scenes");
             launchData.ReplayWasFinishedEvent -= HandleReplayWasFinished;
             _scenesManager.PopScenes(0.3f);
 
+#if !BSIPA_MODS
             _fpfcSettings.Enabled = InputUtils.OverrideUsesFPFC ?? InputUtils.HasFpfcArg;
+#endif
             InputUtils.OverrideUsesFPFC = null;
             InputUtils.EnableCursor(!InputUtils.HasFpfcArg);
             UnpatchModifiers();
@@ -386,12 +395,16 @@ namespace BeatLeader.Replayer {
             var beatmapLevel = await GetBeatmapLevelByHashAsync(hash, token);
             if (beatmapLevel == null) return default;
 
+#if BEAT_SABER_1453
+            var characteristic = beatmapLevel.GetCharacteristics(GameplayType.BeatSaber)
+#else
             var characteristic = beatmapLevel.GetCharacteristics()
-                .FirstOrDefault(x => x.serializedName == mode);
-            if (characteristic == null || token.IsCancellationRequested) return default;
+#endif
+                .FirstOrDefault(x => x.SerializedName() == mode);
+            if (token.IsCancellationRequested) return default;
 
             var beatmapKey = beatmapLevel.GetBeatmapKeys()
-                .FirstOrDefault(k => k.beatmapCharacteristic == characteristic && k.difficulty == cdifficulty);
+                .FirstOrDefault(k => k.characteristic == characteristic && k.difficulty == cdifficulty);
             if (beatmapKey == null || token.IsCancellationRequested) return default;
 
             _cachedBeatmap = new(beatmapLevel, beatmapKey);

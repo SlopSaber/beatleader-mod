@@ -9,5 +9,7 @@
         GameplayModifiers GameplayModifiers,
         IPlayer? Player = null,
         PracticeSettings? PracticeSettings = null
-    ) : IReplayData;
+    ) : IReplayData {
+        public string? RecorderVersion { get; init; }
+    }
 }

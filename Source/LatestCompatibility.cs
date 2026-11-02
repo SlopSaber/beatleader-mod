@@ -1,0 +1,3 @@
+global using StandardLevelScenesTransitionSetupDataSO = StandardLevelScenesTransitionSetupData;
+global using MultiplayerLevelScenesTransitionSetupDataSO = MultiplayerLevelScenesTransitionSetupData;
+global using FeatureAsyncInstaller = BGLib.AppFlow.Initialization.FeatureAsyncInstaller;

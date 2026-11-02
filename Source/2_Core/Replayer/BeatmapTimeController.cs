@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using IPA.Utilities;
 using UnityEngine;
 using Zenject;
 using BeatLeader.Interop;
 using BeatLeader.Utils;
 using BeatLeader.Models;
+using BeatLeader.Interop;
 using System.Reflection;
 using System.Linq;
 using JetBrains.Annotations;
@@ -57,6 +59,8 @@ namespace BeatLeader.Replayer {
         private Dictionary<float, CallbacksInTime> _callbacksInTimes = null!;
         private List<IBeatmapObjectController> _spawnedBeatmapObjectControllers = null!;
         private AudioSource _beatmapAudioSource = null!;
+        protected bool DeferAnimationRebuild;
+        protected bool AnimationRebuildPending;
 
         private readonly HarmonyAutoPatch _fetchCutSoundPoolPatch = new HarmonyPatchDescriptor(
             typeof(NoteCutSoundEffectManager).GetMethod(nameof(
@@ -72,6 +76,28 @@ namespace BeatLeader.Replayer {
             _callbacksInTimes = _beatmapCallbacksController
                 .GetField<Dictionary<float, CallbacksInTime>, BeatmapCallbacksController>("_callbacksInTimes");
             _audioTimeSyncController.Start();
+        }
+
+        protected void Start() {
+            StartCoroutine(LogAudioState());
+        }
+
+        private IEnumerator LogAudioState() {
+            yield return new WaitForSecondsRealtime(2f);
+            if (_beatmapAudioSource == null) yield break;
+
+            var clip = _beatmapAudioSource.clip;
+            var mixer = _beatmapAudioSource.outputAudioMixerGroup?.audioMixer;
+            var mainDb = float.NaN;
+            var musicDb = float.NaN;
+            if (mixer != null) {
+                mixer.GetFloat("MainVolume", out mainDb);
+                mixer.GetFloat("MusicVolume", out musicDb);
+            }
+            var listeners = Resources.FindObjectsOfTypeAll<AudioListener>()
+                .Where(listener => listener.isActiveAndEnabled)
+                .Select(listener => listener.name);
+            Plugin.Log.Notice($"[Replayer] Music source: state={_audioTimeSyncController.state}; playing={_beatmapAudioSource.isPlaying}; mute={_beatmapAudioSource.mute}; volume={_beatmapAudioSource.volume}; spatialBlend={_beatmapAudioSource.spatialBlend}; clipSamples={clip?.samples}; clipState={clip?.loadState}; mixer={_beatmapAudioSource.outputAudioMixerGroup?.name}; mainDb={mainDb}; musicDb={musicDb}; mainFade={_audioManager.mainVolumeFade}; listenerPaused={AudioListener.pause}; listenerVolume={AudioListener.volume}; listeners={string.Join(", ", listeners)}");
         }
 
         private void OnDestroy() {
@@ -108,6 +134,13 @@ namespace BeatLeader.Replayer {
 
             _audioTimeSyncController.SetField("_prevAudioSamplePos", -1);
             _audioTimeSyncController.SeekTo((time - SongStartTime) / _audioTimeSyncController.timeScale);
+            if (HeckInterop.IsReplaySeekTrackingActive) {
+                if (DeferAnimationRebuild) {
+                    AnimationRebuildPending = true;
+                } else {
+                    RebuildAnimationsAtCurrentTime(false);
+                }
+            }
             _beatmapCallbacksController.SetField("_prevSongTime", float.MinValue);
             foreach (var pair in _callbacksInTimes) {
                 pair.Value.lastProcessedNode = FindBeatmapItem(time);
@@ -148,6 +181,20 @@ namespace BeatLeader.Replayer {
                 foreach (var trail in FindObjectsByType<TrailRenderer>(FindObjectsSortMode.None)) {
                     trail.Clear();
                 }
+            }
+        }
+
+        protected void RebuildAnimationsAtCurrentTime(bool includeCurrentTime) {
+            if (!HeckInterop.IsReplaySeekTrackingActive || !_callbacksInTimes.TryGetValue(0f, out var callbacks)) return;
+            try {
+                var time = SongTime;
+                _beatmapCallbacksController.SetField("_songTime", time);
+                HeckInterop.RebuildAnimations(_beatmapData, callbacks, time, includeCurrentTime);
+            } catch (Exception ex) {
+                Plugin.Log.Error($"Failed to rebuild replay animations after seeking: {ex}");
+                HeckInterop.EndReplaySeekTracking();
+            } finally {
+                AnimationRebuildPending = false;
             }
         }
 

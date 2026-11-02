@@ -10,9 +10,13 @@ namespace BeatLeader.Utils {
 
         public static bool? OverrideUsesFPFC { get; set; }
 
+#if BSIPA_MODS
+        public static bool HasFpfcArg => BeatLeader.Replayer.Tweaking.DesktopCameraTweak.Requested;
+#else
         public static readonly bool HasFpfcArg = Environment
             .GetCommandLineArgs()
             .Contains("fpfc");
+#endif
 
         #endregion
 
