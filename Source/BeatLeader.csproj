@@ -166,6 +166,10 @@
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.Haptics.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="BeatSaber.Audio.Common" Publicize="true">
+      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.Audio.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="HMLib" Publicize="true">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\HMLib.dll</HintPath>
       <Private>False</Private>

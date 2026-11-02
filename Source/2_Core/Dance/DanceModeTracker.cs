@@ -39,7 +39,7 @@ namespace BeatLeader {
         internal DanceLive? Live => _scorer?.Live;
 
         public void Initialize() {
-            if (_beatmapKey.beatmapCharacteristic.serializedName != "Standard") {
+            if (_beatmapKey.characteristic.serializedName != "Standard") {
                 Plugin.Log.Info("Dance Mode only scores Standard maps");
                 return;
             }
