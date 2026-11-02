@@ -4,7 +4,7 @@ using BeatLeader.Dance;
 using BeatLeader.Models;
 using BeatLeader.Utils;
 using JetBrains.Annotations;
-using Libraries.HM.HMLib.VR;
+using BeatSaber.Haptics;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;

@@ -162,6 +162,10 @@
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\GameplayCore.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="BeatSaber.Haptics">
+      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.Haptics.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="HMLib" Publicize="true">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\HMLib.dll</HintPath>
       <Private>False</Private>
