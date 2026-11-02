@@ -246,7 +246,7 @@ namespace BeatLeader.Utils {
         }
 
         internal static void SaveCache() {
-            lock (tagsCache) {
+            lock (tagsLocker) {
                 tagsCache.Save();
             }
             lock (metaLocker) {
