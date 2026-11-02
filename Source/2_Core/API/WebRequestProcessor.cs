@@ -54,12 +54,8 @@ namespace BeatLeader.WebRequests {
                 contentBuffer = await Task.Run(() => DownloadContent(message.Content, token));
             }
             if (token.IsCancellationRequested) return RequestState.Failed;
-            try {
-                if (_requestResponseParser != null) {
-                    Result = await Task.Run(() => _requestResponseParser.ParseResponse(contentBuffer), token);
-                }
-            } catch (Exception ex) {
-                Plugin.Log.Error($"Failed to parse web request response!\n{ex}");
+            if (_requestResponseParser != null) {
+                Result = await Task.Run(() => _requestResponseParser.ParseResponse(contentBuffer), token);
             }
             return RequestState.Finished;
         }
@@ -289,14 +285,14 @@ namespace BeatLeader.WebRequests {
 
         private async Task ProcessFailure(HttpResponseMessage? httpResponse, Exception? ex) {
             if (ex != null) {
-                RequestState = RequestState.Failed;
-                if (ex is TaskCanceledException) {
+                if (ex is OperationCanceledException && _cancellationToken.IsCancellationRequested) {
                     FailReason = "Request cancelled";
                     Plugin.Log.Debug($"[Request({_requestTask.GetHashCode()})] Cancelled");
                 } else {
-                    FailReason = "Exception occured, please report on Discord";
-                    Plugin.Log.Info($"[Request({_requestTask.GetHashCode()})] Exception: {ex}");
+                    FailReason = "Exception occurred, please report on Discord";
+                    Plugin.Log.Error($"[Request({_requestTask.GetHashCode()})] Exception: {ex}");
                 }
+                RequestState = RequestState.Failed;
             } else if (httpResponse != null) {
                 NetworkingUtils.GetRequestFailReason(httpResponse, out string failReason, out bool shouldRetry);
 
@@ -304,9 +300,13 @@ namespace BeatLeader.WebRequests {
                     await Retry();
                     return;
                 } else {
-                    RequestState = RequestState.Failed;
                     FailReason = failReason;
-                    Plugin.Log.Info($"[Request({_requestTask.GetHashCode()})] Fail reason: {failReason}");
+                    if (httpResponse.StatusCode == HttpStatusCode.NotFound) {
+                        Plugin.Log.Debug($"[Request({_requestTask.GetHashCode()})] Fail reason: {failReason}");
+                    } else {
+                        Plugin.Log.Warn($"[Request({_requestTask.GetHashCode()})] HTTP {(int)httpResponse.StatusCode}: {failReason}");
+                    }
+                    RequestState = RequestState.Failed;
                 }
             }
         }
@@ -337,21 +337,25 @@ namespace BeatLeader.WebRequests {
         private byte[]? _buffer;
 
         private void ReloadBuffer(long size) {
-            ReleaseBufferIfNeeded();
-            size = AdjustBufferSize(size);
-            var buffer = bufferPool.FirstOrDefault(x => x.LongLength >= size);
-            if (buffer is not null) {
-                bufferPool.Remove(buffer);
-            } else {
-                buffer = new byte[size];
+            lock (bufferPool) {
+                ReleaseBufferIfNeeded();
+                size = AdjustBufferSize(size);
+                var buffer = bufferPool.FirstOrDefault(x => x.LongLength >= size);
+                if (buffer is not null) {
+                    bufferPool.Remove(buffer);
+                } else {
+                    buffer = new byte[size];
+                }
+                _buffer = buffer;
             }
-            _buffer = buffer;
         }
 
         private void ReleaseBufferIfNeeded() {
-            if (_buffer is null) return;
-            bufferPool.Add(_buffer);
-            _buffer = null;
+            lock (bufferPool) {
+                if (_buffer is null) return;
+                bufferPool.Add(_buffer);
+                _buffer = null;
+            }
         }
 
         public void Dispose() => ReleaseBufferIfNeeded();
