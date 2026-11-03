@@ -1,23 +1,14 @@
 ﻿<Project>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <PropertyGroup>
-    <GameDirectory>D:\BSManager\BSInstances\1.45.1</GameDirectory>
     <TargetFramework>net48</TargetFramework>
-    <EnableFrameworkPathOverride>true</EnableFrameworkPathOverride>
-    <FrameworkPathOverride>$(GameDirectory)\Beat Saber_Data\Managed</FrameworkPathOverride>
     <OutputType>Library</OutputType>
     <BSMTProjectType>BSIPA</BSMTProjectType>
     <LocalRefsDir Condition="Exists('..\Refs')">..\Refs</LocalRefsDir>
-    <BeatSaberDir>$(LocalRefsDir)</BeatSaberDir>
+    <BeatSaberDir Condition="'$(BeatSaberDir)' == ''">$(LocalRefsDir)</BeatSaberDir>
     <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <ReactiveBeatSaberPath Condition="Exists('$(GameDirectory)\Plugins\Reactive.BeatSaber.dll')">$(GameDirectory)\Plugins\Reactive.BeatSaber.dll</ReactiveBeatSaberPath>
-    <ReactiveBeatSaberPath Condition="'$(ReactiveBeatSaberPath)' == '' AND Exists('$(GameDirectory)\Plugins\Reactive.BeatSaber.dll')">$(GameDirectory)\Plugins\Reactive.BeatSaber.dll</ReactiveBeatSaberPath>
-    <ReactiveComponentsPath Condition="Exists('$(GameDirectory)\Libs\Reactive.Components.dll')">$(GameDirectory)\Libs\Reactive.Components.dll</ReactiveComponentsPath>
-    <ReactiveComponentsPath Condition="'$(ReactiveComponentsPath)' == '' AND Exists('$(GameDirectory)\Libs\Reactive.Components.dll')">$(GameDirectory)\Libs\Reactive.Components.dll</ReactiveComponentsPath>
-    <ReactivePath Condition="Exists('$(GameDirectory)\Libs\Reactive.dll')">$(GameDirectory)\Libs\Reactive.dll</ReactivePath>
-    <ReactivePath Condition="'$(ReactivePath)' == '' AND Exists('$(GameDirectory)\Libs\Reactive.dll')">$(GameDirectory)\Libs\Reactive.dll</ReactivePath>
     <!-- System.Threading.Lock (MA0158) is unavailable in the game's .NET Framework 4.8 runtime. -->
     <NoWarn>$(NoWarn);CS0067;CS0108;CS0109;CS0168;CS0169;CS0414;CS0612;CS0618;CS0649;CS4014;CS8600;CS8601;CS8602;CS8603;CS8604;CS8622;CS8625;CS8629;CS8632;MA0009;MA0012;MA0015;MA0016;MA0025;MA0026;MA0062;MA0065;MA0134;MA0158</NoWarn>
   </PropertyGroup>
@@ -26,6 +17,42 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <WarningLevel>3</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="9_Resources\AssetBundles\asset_bundle" />
+    <EmbeddedResource Include="9_Resources\BSML\**\*.bsml" />
+    <EmbeddedResource Include="9_Resources\Localization.json" />
+    <EmbeddedResource Include="manifest.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="BeatLeader.csproj.user" Condition="Exists('BeatLeader.csproj.user')" />
+    <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" />
+    <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BeatSaberModdingTools.Tasks" Version="2.0.0-beta7" PrivateAssets="all" IncludeAssets="build;buildtransitive" />
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" PrivateAssets="all" IncludeAssets="build;buildtransitive;contentfiles" />
+    <PackageReference Include="Meziantou.Analyzer" Version="2.0.264">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="PolySharp" Version="1.15.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <!-- Resolve game references after the SDK imports local .csproj.user settings. -->
+  <PropertyGroup>
+    <GameDirectory Condition="'$(GameDirectory)' == ''">$(BeatSaberDir)</GameDirectory>
+    <EnableFrameworkPathOverride>true</EnableFrameworkPathOverride>
+    <FrameworkPathOverride>$(GameDirectory)\Beat Saber_Data\Managed</FrameworkPathOverride>
+    <ReactiveBeatSaberPath Condition="Exists('$(GameDirectory)\Plugins\Reactive.BeatSaber.dll')">$(GameDirectory)\Plugins\Reactive.BeatSaber.dll</ReactiveBeatSaberPath>
+    <ReactiveBeatSaberPath Condition="'$(ReactiveBeatSaberPath)' == '' AND Exists('$(GameDirectory)\Plugins\Reactive.BeatSaber.dll')">$(GameDirectory)\Plugins\Reactive.BeatSaber.dll</ReactiveBeatSaberPath>
+    <ReactiveComponentsPath Condition="Exists('$(GameDirectory)\Libs\Reactive.Components.dll')">$(GameDirectory)\Libs\Reactive.Components.dll</ReactiveComponentsPath>
+    <ReactiveComponentsPath Condition="'$(ReactiveComponentsPath)' == '' AND Exists('$(GameDirectory)\Libs\Reactive.Components.dll')">$(GameDirectory)\Libs\Reactive.Components.dll</ReactiveComponentsPath>
+    <ReactivePath Condition="Exists('$(GameDirectory)\Libs\Reactive.dll')">$(GameDirectory)\Libs\Reactive.dll</ReactivePath>
+    <ReactivePath Condition="'$(ReactivePath)' == '' AND Exists('$(GameDirectory)\Libs\Reactive.dll')">$(GameDirectory)\Libs\Reactive.dll</ReactivePath>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="netstandard" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\netstandard.dll" Private="false" />
@@ -352,29 +379,9 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="9_Resources\AssetBundles\asset_bundle" />
-    <EmbeddedResource Include="9_Resources\BSML\**\*.bsml" />
-    <EmbeddedResource Include="9_Resources\Localization.json" />
-    <EmbeddedResource Include="manifest.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="BeatLeader.csproj.user" Condition="Exists('BeatLeader.csproj.user')" />
-    <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" />
-    <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="BeatSaberModdingTools.Tasks" Version="2.0.0-beta7" PrivateAssets="all" IncludeAssets="build;buildtransitive" />
-    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" PrivateAssets="all" IncludeAssets="build;buildtransitive;contentfiles" />
-    <PackageReference Include="Meziantou.Analyzer" Version="2.0.264">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="PolySharp" Version="1.15.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Target Name="ValidateGameReferences" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(GameDirectory)' == '' OR !Exists('$(GameDirectory)\Beat Saber_Data\Managed\mscorlib.dll')"
+           Text="Set BeatSaberDir in BeatLeader.csproj.user or pass -p:GameDirectory=&quot;path to Beat Saber&quot; to an installation containing Beat Saber_Data\Managed\mscorlib.dll." />
+  </Target>
   <Import Project="..\BSIPA.Layout.targets" Condition="Exists('$(GameDirectory)\IPA\Data\Managed\IPA.Loader.dll') OR Exists('$(BeatSaberDir)\IPA\Data\Managed\IPA.Loader.dll')" />
 </Project>
