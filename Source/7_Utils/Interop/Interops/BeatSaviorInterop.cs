@@ -6,7 +6,7 @@ using System.Reflection;
 using BeatLeader.Replayer;
 
 namespace BeatLeader.Interop {
-    [PluginInterop("BeatSaviorData")]
+    [PluginInterop("BeatSaviorData", supersededBy: "BeatSaviorUI")]
     internal static class BeatSaviorInterop {
         [PluginAssembly]
         private static readonly Assembly assembly = null!;
