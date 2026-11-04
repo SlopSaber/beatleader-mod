@@ -24,11 +24,12 @@ namespace BeatLeader.Utils {
             try {
                 var plugin = PluginManager.GetPluginFromId(attr.pluginId);
                 if (plugin == null) {
-                    Plugin.Log.Warn($"Plugin {attr.pluginId} not found, {type.Name} will not be loaded");
+                    if (attr.supersededBy != null && PluginManager.GetPluginFromId(attr.supersededBy) != null) return;
+                    Plugin.Log.Notice($"Optional plugin {attr.pluginId} not found, {type.Name} will not be loaded");
                     return;
                 }
                 if (!IsVersionCorrect(plugin.HVersion, attr.worksUntilVersion!)) {
-                    Plugin.Log.Warn($"Plugin {attr.pluginId} version({plugin.HVersion}) not matches specified({attr.worksUntilVersion}), {type.Name} will not be loaded");
+                    Plugin.Log.Notice($"Optional plugin {attr.pluginId} version({plugin.HVersion}) not matches specified({attr.worksUntilVersion}), {type.Name} will not be loaded");
                     return;
                 }
                 var assembly = plugin.Assembly;
