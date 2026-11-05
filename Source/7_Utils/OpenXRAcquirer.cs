@@ -95,7 +95,7 @@ namespace BeatLeader.Utils {
                     return;
                 }
                 if (res is XrResult.XR_ERROR_SESSION_NOT_RUNNING) {
-                    Plugin.Log.Warn("OpenXR session is not running, info won't be available!");
+                    Plugin.Log.Info("OpenXR session is not running, info won't be available!");
                 } else {
                     Plugin.Log.Error($"Failed to acquire OpenXR data: {res}");
                 }
