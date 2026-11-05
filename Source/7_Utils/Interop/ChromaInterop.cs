@@ -26,7 +26,12 @@ namespace BeatLeader.Interop {
             if (!IsInstalled || _managerType == null) return;
 
             try {
-                _manager = container.Resolve(_managerType);
+                _manager = container.TryResolve(_managerType);
+                if (_manager == null) {
+                    Plugin.Log.Debug("Chroma is not active for this level; replay lighting reset is not needed");
+                    return;
+                }
+
                 _colorizers = (IDictionary?)_managerType.GetProperty("Colorizers")?.GetValue(_manager);
                 _resetMethod = _managerType.GetMethod("ResetForReplaySeek", ReflectionUtils.DefaultFlags);
                 _finishMethod = _managerType.GetMethod("FinishReplaySeek", ReflectionUtils.DefaultFlags);
