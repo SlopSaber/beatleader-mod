@@ -7,8 +7,8 @@ namespace BeatLeader {
     internal static class ReplayHeadersCache {
         #region Cache
 
-        private static readonly AppCache<Dictionary<string, SerializableReplayInfo?>> infoCache = new("ReplayInfoCache");
         private static readonly object locker = new();
+        private static readonly AppCache<Dictionary<string, SerializableReplayInfo?>> infoCache = new("ReplayInfoCache", syncRoot: locker);
 
         public static Task WaitForLoading() {
             // ReSharper disable once InconsistentlySynchronizedField

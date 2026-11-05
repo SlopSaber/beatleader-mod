@@ -23,7 +23,7 @@ namespace BeatLeader.DataManager {
 
                 HiddenPlayers = JsonConvert.DeserializeObject<HashSet<string>>(File.ReadAllText(CacheFileName), SerializerSettings);
             } catch (Exception e) {
-                Plugin.Log.Debug($"HiddenPlayers cache load failed! {e}");
+                Plugin.Log.Error($"HiddenPlayers cache load failed! {e}");
             }
         }
 
@@ -32,7 +32,7 @@ namespace BeatLeader.DataManager {
                 FileManager.EnsureDirectoryExists(CacheFileName);
                 File.WriteAllText(CacheFileName, JsonConvert.SerializeObject(HiddenPlayers, SerializerSettings));
             } catch (Exception e) {
-                Plugin.Log.Debug($"HiddenPlayers cache save failed! {e}");
+                Plugin.Log.Error($"HiddenPlayers cache save failed! {e}");
             }
         }
 
