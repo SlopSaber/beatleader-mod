@@ -66,8 +66,15 @@ namespace BeatLeader.Interop {
                 var dummyType = Assembly.GetType("Heck.CoroutineDummy", true)!;
                 var transformType = Assembly.GetType("Heck.Animation.Transform.TransformController", true)!;
                 var tracksType = typeof(Dictionary<,>).MakeGenericType(typeof(string), trackType);
-                _tracks = (IDictionary)container.Resolve(tracksType);
-                _coroutineDummy = (MonoBehaviour)container.Resolve(dummyType);
+                var tracks = container.TryResolve(tracksType) as IDictionary;
+                var coroutineDummy = container.TryResolve(dummyType) as MonoBehaviour;
+                if (tracks == null || coroutineDummy == null) {
+                    Plugin.Log.Debug("Heck is not active for this level; replay seeking needs no track reset");
+                    return;
+                }
+
+                _tracks = tracks;
+                _coroutineDummy = coroutineDummy;
                 _nullPropertiesMethod = trackType.GetMethod("NullProperties", ReflectionUtils.DefaultFlags)!;
                 var onEnable = transformType.GetMethod("OnEnable", ReflectionUtils.DefaultFlags)!;
                 var capture = typeof(HeckInterop).GetMethod(nameof(CaptureInitialTransform), ReflectionUtils.StaticFlags)!;
