@@ -280,7 +280,7 @@ namespace BeatLeader.Utils {
             }
 
             if (ConfigFileData.Instance.OverrideOldReplays) {
-                Plugin.Log.Warn("[ReplayManager] OverrideOldReplays is enabled, old replays will be deleted");
+                Plugin.Log.Debug("[ReplayManager] OverrideOldReplays is enabled, old replays will be deleted");
                 await DeleteSimilarReplaysAsync(replay, token);
             }
 
