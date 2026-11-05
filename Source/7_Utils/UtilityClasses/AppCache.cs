@@ -7,9 +7,10 @@ using Newtonsoft.Json;
 
 namespace BeatLeader {
     internal class AppCache<T> where T : new() {
-        public AppCache(string path, JsonSerializerSettings? settings = null) {
+        public AppCache(string path, JsonSerializerSettings? settings = null, object? syncRoot = null) {
             _path = Path.Combine(basePath, path);
             _serializerSettings = settings;
+            _syncRoot = syncRoot;
         }
 
         public T Cache {
@@ -23,6 +24,7 @@ namespace BeatLeader {
 
         private readonly JsonSerializerSettings? _serializerSettings;
         private readonly string _path;
+        private readonly object? _syncRoot;
         private T? _cache;
 
         private Task? _saveTask;
@@ -86,7 +88,14 @@ namespace BeatLeader {
             }
 
             try {
-                var ser = JsonConvert.SerializeObject(_cache, Formatting.Indented);
+                string ser;
+                if (_syncRoot != null) {
+                    lock (_syncRoot) {
+                        ser = JsonConvert.SerializeObject(_cache, Formatting.Indented);
+                    }
+                } else {
+                    ser = JsonConvert.SerializeObject(_cache, Formatting.Indented);
+                }
                 File.WriteAllText(_path, ser);
 
                 Plugin.Log.Debug($"Saved cache ({typeof(T).Name})");

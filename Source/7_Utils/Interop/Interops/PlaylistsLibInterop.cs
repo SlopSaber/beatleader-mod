@@ -18,7 +18,7 @@ namespace BeatLeader.Interop {
                 refreshMethodInfo!.Invoke(manager, new object[] {fullRefresh});
                 return true;
             } catch (Exception e) {
-                Plugin.Log.Debug($"RefreshPlaylists failed: {e}");
+                Plugin.Log.Warn($"RefreshPlaylists failed: {e}");
                 return false;
             }
         }
@@ -52,7 +52,7 @@ namespace BeatLeader.Interop {
 
                 return (BeatmapLevelPack)levelPackField.GetValue(playlistWrapper);
             } catch (Exception e) {
-                Plugin.Log.Debug($"TryFindPlaylist failed: {e}");
+                Plugin.Log.Warn($"TryFindPlaylist failed: {e}");
                 return null;
             }
         }
