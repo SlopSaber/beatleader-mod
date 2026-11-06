@@ -21,17 +21,21 @@ namespace BeatLeader.UI.MainMenu {
 
         private void Start() {
             DanceEvent.CurrentChangedEvent += Refresh;
+            PluginConfig.EventMenuDecorEnabledChangedEvent += HandleDecorEnabledChanged;
             DanceEvent.Load();
             Refresh();
         }
 
         private void OnDestroy() {
             DanceEvent.CurrentChangedEvent -= Refresh;
+            PluginConfig.EventMenuDecorEnabledChangedEvent -= HandleDecorEnabledChanged;
             Despawn();
         }
 
+        private void HandleDecorEnabledChanged(bool enabled) => Refresh();
+
         private void Refresh() {
-            if (DanceEvent.Current != null) {
+            if (DanceEvent.Current != null && PluginConfig.EventMenuDecorEnabled) {
                 Spawn();
             } else {
                 Despawn();

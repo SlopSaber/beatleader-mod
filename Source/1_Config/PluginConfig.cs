@@ -27,6 +27,21 @@ namespace BeatLeader {
 
         #endregion
 
+        #region EventMenuDecor
+
+        public static event Action<bool>? EventMenuDecorEnabledChangedEvent;
+
+        public static bool EventMenuDecorEnabled {
+            get => ConfigFileData.Instance.EventMenuDecorEnabled;
+            set {
+                if (ConfigFileData.Instance.EventMenuDecorEnabled == value) return;
+                ConfigFileData.Instance.EventMenuDecorEnabled = value;
+                EventMenuDecorEnabledChangedEvent?.Invoke(value);
+            }
+        }
+
+        #endregion
+
         #region MainServer
 
         public static BeatLeaderServer MainServer {

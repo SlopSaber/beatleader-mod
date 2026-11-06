@@ -87,6 +87,13 @@ namespace BeatLeader.UI.Hub {
                         )
                         .Bind(ref _noticeboardToggle)
                         .InNamedRail("Show Noticeboard"),
+                    new Toggle()
+                        .With(x => x.SetActive(PluginConfig.EventMenuDecorEnabled, false))
+                        .WithListener(
+                            x => x.Active,
+                            x => PluginConfig.EventMenuDecorEnabled = x
+                        )
+                        .InNamedRail("Event Menu Decorations"),
                     new TextDropdown<BLLanguage>()
                         .WithListener(
                             x => x.SelectedKey,

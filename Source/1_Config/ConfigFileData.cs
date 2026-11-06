@@ -64,6 +64,7 @@ namespace BeatLeader {
         
         public bool Enabled = ConfigDefaults.Enabled;
         public bool NoticeboardEnabled = true;
+        public bool EventMenuDecorEnabled = true;
         public bool MenuButtonEnabled = ConfigDefaults.MenuButtonEnabled;
         
         // Accessibility
