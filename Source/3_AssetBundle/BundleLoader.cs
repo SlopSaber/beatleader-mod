@@ -60,6 +60,7 @@ namespace BeatLeader {
         public static Material LogoMaterial;
         public static Material PrestigeIconMaterial;
         public static Material DefaultAvatarMaterial;
+        public static Shader? ShinyAvatarHaloShader;
         public static Material UIAdditiveGlowMaterial;
         public static Material ScoreBackgroundMaterial;
         public static Material ScoreUnderlineMaterial;
@@ -89,6 +90,7 @@ namespace BeatLeader {
             LogoMaterial = assetBundle.LoadAsset<Material>("LogoMaterial");
             PrestigeIconMaterial = assetBundle.LoadAsset<Material>("UIPrestigeIconMaterial");
             DefaultAvatarMaterial = assetBundle.LoadAsset<Material>("DefaultAvatar");
+            ShinyAvatarHaloShader = assetBundle.LoadAsset<Shader>("UIShinyAvatarHalo");
             UIAdditiveGlowMaterial = assetBundle.LoadAsset<Material>("UIAdditiveGlow");
             //UIAdditiveGlowMaterial.renderQueue = 4999;
             ScoreBackgroundMaterial = assetBundle.LoadAsset<Material>("ScoreBackgroundMaterial");

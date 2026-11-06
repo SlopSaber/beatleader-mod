@@ -25,6 +25,8 @@ namespace BeatLeader.Components {
 
         private Material? _baseMaterial;
         private Material? _materialInstance;
+        private Material? _haloMaterialInstance;
+        private ImageView? _haloImage;
         private bool _materialSet;
 
         private void SelectMaterial(IPlayerProfileSettings? profileSettings) {
@@ -39,6 +41,7 @@ namespace BeatLeader.Components {
                 _materialSet = true;
                 var scale = _materialInstance.GetFloat(ScalePropertyId);
                 _image.transform.localScale = new Vector3(scale, scale, scale);
+                SetupHalo(scale);
             }
 
             UpdateMaterialProperties();
@@ -46,10 +49,52 @@ namespace BeatLeader.Components {
 
         private void UpdateMaterialProperties() {
             if (!_materialSet) return;
-            _materialInstance!.SetTexture(AvatarTexturePropertyId, _texture);
-            _materialInstance.SetFloat(FadeValuePropertyId, _fadeValue);
-            _materialInstance.SetFloat(HueShiftPropertyId, _hueShift);
-            _materialInstance.SetFloat(SaturationPropertyId, _saturation);
+            ApplyMaterialProperties(_materialInstance!);
+            if (_haloMaterialInstance != null) ApplyMaterialProperties(_haloMaterialInstance);
+        }
+
+        private void ApplyMaterialProperties(Material material) {
+            material.SetTexture(AvatarTexturePropertyId, _texture);
+            material.SetFloat(FadeValuePropertyId, _fadeValue);
+            material.SetFloat(HueShiftPropertyId, _hueShift);
+            material.SetFloat(SaturationPropertyId, _saturation);
+        }
+
+        // Canvas rendering draws one shader pass per graphic, so the shiny avatar's
+        // additive halo pass is drawn by a second image with the halo-only shader.
+        private void SetupHalo(float scale) {
+            if (_haloMaterialInstance != null) Destroy(_haloMaterialInstance);
+            _haloMaterialInstance = null;
+
+            var haloShader = BundleLoader.ShinyAvatarHaloShader;
+            var needsHalo = haloShader != null && _materialInstance!.shader.name == "BeatLeader/UIShinyAvatar";
+            if (!needsHalo) {
+                if (_haloImage != null) _haloImage.gameObject.SetActive(false);
+                return;
+            }
+
+            if (_haloImage == null) {
+                var haloObject = new GameObject("Halo", typeof(RectTransform));
+                haloObject.transform.SetParent(_image.transform.parent, false);
+                haloObject.transform.SetSiblingIndex(_image.transform.GetSiblingIndex() + 1);
+                _haloImage = haloObject.AddComponent<ImageView>();
+                _haloImage.sprite = _image.sprite;
+                _haloImage.preserveAspect = _image.preserveAspect;
+                _haloImage.raycastTarget = false;
+                var source = _image.rectTransform;
+                var target = _haloImage.rectTransform;
+                target.anchorMin = source.anchorMin;
+                target.anchorMax = source.anchorMax;
+                target.pivot = source.pivot;
+                target.anchoredPosition = source.anchoredPosition;
+                target.sizeDelta = source.sizeDelta;
+            }
+
+            _haloMaterialInstance = new Material(_materialInstance!) { shader = haloShader };
+            _haloImage.material = _haloMaterialInstance;
+            _haloImage.color = _image.color;
+            _haloImage.transform.localScale = new Vector3(scale, scale, scale);
+            _haloImage.gameObject.SetActive(true);
         }
 
         #endregion
@@ -69,6 +114,7 @@ namespace BeatLeader.Components {
 
         protected override void OnDispose() {
             _bufferTexture.Release();
+            if (_haloMaterialInstance != null) Destroy(_haloMaterialInstance);
         }
 
         public void Setup(bool useSmallMaterialVersion) {
@@ -149,6 +195,7 @@ namespace BeatLeader.Components {
 
         public void SetAlpha(float value) {
             _image.color = new Color(1, 1, 1, value);
+            if (_haloImage != null) _haloImage.color = _image.color;
         }
 
         private void ShowSpinner() {
