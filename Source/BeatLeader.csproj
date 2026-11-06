@@ -22,6 +22,9 @@
     <EmbeddedResource Include="9_Resources\AssetBundles\asset_bundle" />
     <EmbeddedResource Include="9_Resources\BSML\**\*.bsml" />
     <EmbeddedResource Include="9_Resources\Localization.json" />
+    <EmbeddedResource Include="9_Resources\Halloween\*.png" />
+    <EmbeddedResource Include="9_Resources\Halloween\*.wav" />
+    <EmbeddedResource Include="9_Resources\Halloween\*.obj.gz" />
     <EmbeddedResource Include="manifest.json" />
   </ItemGroup>
   <ItemGroup>
@@ -419,33 +422,6 @@
       <AdditionalProperties>BeatSaberDir=$(BeatSaberDir)</AdditionalProperties>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="9_Resources\AssetBundles\asset_bundle" />
-    <EmbeddedResource Include="9_Resources\BSML\**\*.bsml" />
-    <EmbeddedResource Include="9_Resources\Localization.json" />
-    <EmbeddedResource Include="9_Resources\Halloween\*.png" />
-    <EmbeddedResource Include="9_Resources\Halloween\*.wav" />
-    <EmbeddedResource Include="9_Resources\Halloween\*.obj.gz" />
-    <EmbeddedResource Include="manifest.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="BeatLeader.csproj.user" Condition="Exists('BeatLeader.csproj.user')" />
-    <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" />
-    <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="BeatSaberModdingTools.Tasks" Version="2.0.0-beta7" PrivateAssets="all" IncludeAssets="build;buildtransitive" />
-    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" PrivateAssets="all" IncludeAssets="build;buildtransitive;contentfiles" />
-    <PackageReference Include="Meziantou.Analyzer" Version="2.0.264">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="PolySharp" Version="1.15.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <Target Name="ValidateGameReferences" BeforeTargets="PrepareForBuild">
     <Error Condition="'$(GameDirectory)' == '' OR !Exists('$(GameDirectory)\Beat Saber_Data\Managed\mscorlib.dll')"
            Text="Set BeatSaberDir in BeatLeader.csproj.user or pass -p:GameDirectory=&quot;path to Beat Saber&quot; to an installation containing Beat Saber_Data\Managed\mscorlib.dll." />
