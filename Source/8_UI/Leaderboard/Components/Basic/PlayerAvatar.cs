@@ -41,7 +41,7 @@ namespace BeatLeader.Components {
                 _materialSet = true;
                 var scale = _materialInstance.GetFloat(ScalePropertyId);
                 _image.transform.localScale = new Vector3(scale, scale, scale);
-                SetupHalo(scale);
+                SetupHalo();
             }
 
             UpdateMaterialProperties();
@@ -62,7 +62,7 @@ namespace BeatLeader.Components {
 
         // Canvas rendering draws one shader pass per graphic, so the shiny avatar's
         // additive halo pass is drawn by a second image with the halo-only shader.
-        private void SetupHalo(float scale) {
+        private void SetupHalo() {
             if (_haloMaterialInstance != null) Destroy(_haloMaterialInstance);
             _haloMaterialInstance = null;
 
@@ -74,26 +74,25 @@ namespace BeatLeader.Components {
             }
 
             if (_haloImage == null) {
+                // A child covering the avatar image stays out of the parent's layout and
+                // inherits the avatar's scale, so both quads match exactly.
                 var haloObject = new GameObject("Halo", typeof(RectTransform));
-                haloObject.transform.SetParent(_image.transform.parent, false);
-                haloObject.transform.SetSiblingIndex(_image.transform.GetSiblingIndex() + 1);
+                haloObject.transform.SetParent(_image.transform, false);
                 _haloImage = haloObject.AddComponent<ImageView>();
                 _haloImage.sprite = _image.sprite;
                 _haloImage.preserveAspect = _image.preserveAspect;
                 _haloImage.raycastTarget = false;
-                var source = _image.rectTransform;
                 var target = _haloImage.rectTransform;
-                target.anchorMin = source.anchorMin;
-                target.anchorMax = source.anchorMax;
-                target.pivot = source.pivot;
-                target.anchoredPosition = source.anchoredPosition;
-                target.sizeDelta = source.sizeDelta;
+                target.anchorMin = Vector2.zero;
+                target.anchorMax = Vector2.one;
+                target.pivot = new Vector2(0.5f, 0.5f);
+                target.anchoredPosition = Vector2.zero;
+                target.sizeDelta = Vector2.zero;
             }
 
             _haloMaterialInstance = new Material(_materialInstance!) { shader = haloShader };
             _haloImage.material = _haloMaterialInstance;
             _haloImage.color = _image.color;
-            _haloImage.transform.localScale = new Vector3(scale, scale, scale);
             _haloImage.gameObject.SetActive(true);
         }
 
