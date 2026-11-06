@@ -22,7 +22,7 @@ namespace BeatLeader {
         }
     }
 
-    [HarmonyPatch(typeof(LightWithIdManager), nameof(LightWithIdManager.SetColorForId))]
+    [HarmonyPatch(typeof(LightWithIdManager), nameof(LightWithIdManager.SetColorForId), typeof(int), typeof(Color))]
     internal static class DanceDreadLights {
         private static readonly Color bloodRed = new(0.9f, 0.04f, 0.03f);
         private static readonly Dictionary<LightWithIdManager, Color?[]> rawColors = new();
