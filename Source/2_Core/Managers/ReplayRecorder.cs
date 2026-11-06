@@ -498,7 +498,11 @@ namespace BeatLeader {
             if (playEndData.EndType == LevelEndType.Fail) {
                 _replay.info.failTime = _timeSyncController.songTime;
             }
-            _danceModeTracker?.Finish();
+            try {
+                _danceModeTracker?.Finish();
+            } catch (Exception ex) {
+                Plugin.Log.Error($"Dance mode finish exception: {ex}");
+            }
 
             try {
                 OnFinalizeReplay?.Invoke();
